@@ -130,6 +130,26 @@ export default async function MyStorePage() {
         <p className="mt-3 text-sm text-mist">
           O QR de cada produto continua em Produtos → Link e QR e abre direto a vitrine daquele produto.
         </p>
+
+        <section aria-labelledby="feira-titulo" className="mt-8 rounded-2xl border border-line bg-panel p-5 sm:p-6">
+          <h2 id="feira-titulo" className="text-lg font-semibold text-snow">
+            Modo Feira <span className="text-sm font-normal text-mist">· extra</span>
+          </h2>
+          <p className="mt-1 text-sm text-mist">
+            Cartão comercial em português e chinês, pronto para imprimir ou salvar em PDF, com o nome do produtor, a região, a
+            foto do produto em destaque e este mesmo QR da loja.
+          </p>
+          {featured ? (
+            <Link
+              href="/meu-espaco/minha-loja/cartao"
+              className="mt-4 inline-flex min-h-11 items-center rounded-lg bg-brand px-5 text-sm font-semibold text-white hover:bg-brand-strong"
+            >
+              Criar cartão para feira
+            </Link>
+          ) : (
+            <p className="mt-4 text-sm text-snow">Publique um produto para criar o cartão: o QR abriria um catálogo vazio.</p>
+          )}
+        </section>
       </div>
 
       <aside className="mt-8 lg:mt-0" aria-labelledby="previa-loja">

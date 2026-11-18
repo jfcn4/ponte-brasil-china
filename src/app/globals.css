@@ -62,6 +62,14 @@ body {
   }
 }
 
+/* Impressão (Modo Feira): papel branco, sem o fundo escuro do painel. */
+@media print {
+  body {
+    background: #ffffff;
+    color: var(--color-ink);
+  }
+}
+
 dialog::backdrop {
   background: rgb(10 9 10 / 0.7);
 }

@@ -21,7 +21,7 @@ export default async function SpaceLayout({ children }: { children: React.ReactN
   const unread = await unreadCount();
   return (
     <div className="flex min-h-dvh flex-col">
-      <header className="border-b border-line bg-night/95">
+      <header className="border-b border-line bg-night/95 print:hidden">
         <div className="mx-auto flex w-full max-w-6xl flex-wrap items-end justify-between gap-x-6 px-4 pt-4 sm:px-6">
           <div className="flex items-center gap-3 pb-3">
             <Logo />
@@ -31,7 +31,7 @@ export default async function SpaceLayout({ children }: { children: React.ReactN
         </div>
       </header>
       <main className="flex-1">{children}</main>
-      <footer className="border-t border-line/70">
+      <footer className="border-t border-line/70 print:hidden">
         <p className="mx-auto w-full max-w-6xl px-4 py-5 text-xs leading-relaxed text-mist sm:px-6">
           Seu acesso a esta loja fica guardado neste navegador, sem conta. Limpar os dados do navegador ou usar uma janela
           anônima abre um espaço separado.
