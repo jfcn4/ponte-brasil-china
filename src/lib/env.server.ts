@@ -5,7 +5,13 @@ const ServerEnv = z.object({
   NEXT_PUBLIC_SUPABASE_URL: z.url(),
   SUPABASE_SECRET_KEY: z.string().min(20),
   SUPABASE_STORAGE_BUCKET: z.string().min(3).default("product-images"),
-  APP_URL: z.url().default("http://localhost:3000"),
+  /** Origem pública dos links e QRs. Sem valor, usa o domínio de produção da Vercel ou o host da requisição. */
+  APP_URL: z.url().optional().or(z.literal("").transform(() => undefined)),
+  VERCEL_PROJECT_PRODUCTION_URL: z.string().optional(),
+  /** "gemini" chama a API real; "test" usa respostas determinísticas (testes e ensaio sem cota). */
+  AI_MODE: z.preprocess((v) => (v === "" ? undefined : v), z.enum(["gemini", "test"]).default("gemini")),
+  GEMINI_API_KEY: z.string().optional(),
+  GEMINI_MODEL: z.string().regex(/^[a-z0-9.-]+$/).optional().or(z.literal("").transform(() => undefined)),
 });
 
 export type ServerEnv = z.infer<typeof ServerEnv>;

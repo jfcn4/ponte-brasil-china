@@ -10,10 +10,13 @@ import { Gallery } from "./Gallery";
 export function ProductShowcase({
   view,
   inquiry,
+  titleAs: Title = "h2",
 }: {
   view: ShowcaseView;
   /** Na prévia o botão de consulta aparece desativado. */
-  inquiry: { enabled: false; reason: string } | { enabled: true; href: string };
+  inquiry: { enabled: false; reason: string; reasonLang?: "pt-BR" | "zh-Hans" } | { enabled: true; href: string };
+  /** Na página pública o nome do produto é o título principal (h1). */
+  titleAs?: "h1" | "h2";
 }) {
   const lang = view.contentLang;
   return (
@@ -22,23 +25,49 @@ export function ProductShowcase({
 
       <header className="mt-6">
         <p className="text-sm font-medium tracking-wide text-brand">{CATEGORY_ZH}</p>
-        <h2
-          lang={lang}
-          className="mt-2 font-[family-name:var(--font-zh-serif)] text-3xl font-bold leading-tight tracking-tight text-ink"
+        <Title
+          lang={view.titleLang}
+          className="mt-2 font-[family-name:var(--font-zh-serif)] text-3xl font-bold leading-tight tracking-tight text-ink sm:text-4xl"
         >
           {view.title ?? <span className="text-ink-soft/70">Nome do produto</span>}
-        </h2>
+        </Title>
+        {view.pinyin && (
+          <p lang="zh-Latn-pinyin" className="mt-1 text-base tracking-wide text-ink-soft">
+            {view.pinyin}
+          </p>
+        )}
         {(view.originalName || view.brand) && (
           <p lang="pt-BR" className="mt-1 text-sm text-ink-soft">
             {[view.originalName, view.brand].filter(Boolean).join(" · ")}
           </p>
         )}
         {view.tagline && (
-          <p lang={lang} className="mt-4 text-base leading-relaxed text-ink">
+          <p lang={lang} className="mt-4 text-lg leading-relaxed text-ink">
             {view.tagline}
           </p>
         )}
+        {view.description && (
+          <p lang={lang} className="mt-2 leading-relaxed text-ink-soft">
+            {view.description}
+          </p>
+        )}
       </header>
+
+      {view.highlights.length > 0 && (
+        <section className="mt-6" aria-labelledby="showcase-highlights">
+          <h3 id="showcase-highlights" className="text-sm font-semibold text-ink">
+            产品亮点
+          </h3>
+          <ul className="mt-2 space-y-2">
+            {view.highlights.map((highlight) => (
+              <li key={highlight} lang={lang} className="flex gap-2 leading-relaxed text-ink">
+                <span aria-hidden="true" className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-brand" />
+                {highlight}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {view.facts.length > 0 && (
         <dl className="mt-6 grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-sand bg-sand">
@@ -100,7 +129,7 @@ export function ProductShowcase({
             >
               询价
             </button>
-            <p id="inquiry-disabled-reason" lang="pt-BR" className="mt-2 text-center text-xs text-ink-soft">
+            <p id="inquiry-disabled-reason" lang={inquiry.reasonLang ?? "pt-BR"} className="mt-2 text-center text-xs text-ink-soft">
               {inquiry.reason}
             </p>
           </>

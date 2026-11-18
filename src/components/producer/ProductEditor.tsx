@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ProductShowcase } from "@/components/public/ProductShowcase";
 import { type ProductForm, formToDraft, maxLengthOf } from "@/modules/products/form";
@@ -15,6 +16,7 @@ import {
   LIMITS,
   PERSONALITY_LABELS,
   PERSONALITY_TRAITS,
+  type DisplayStatus,
   type ProductImageView,
   SaveDraftResponse,
   missingForGeneration,
@@ -23,6 +25,7 @@ import { buildDraftPreview } from "@/modules/products/showcase";
 import { Section, SelectField, TextArea, TextField, UnitField } from "./fields";
 import { type PendingUpload, PhotoManager } from "./PhotoManager";
 import { ImagePrepError, prepareImage } from "./prepareImage";
+import { StatusBadge } from "./StatusBadge";
 
 export type EditorInitial = {
   productId: string | null;
@@ -30,6 +33,9 @@ export type EditorInitial = {
   updatedAt: string | null;
   form: ProductForm;
   images: ProductImageView[];
+  status: DisplayStatus;
+  /** Endereço público da versão no ar, se houver. */
+  publicPath: string | null;
 };
 
 type SaveState =
@@ -50,6 +56,12 @@ async function readError(response: Response): Promise<string> {
 }
 
 export function ProductEditor({ initial }: { initial: EditorInitial }) {
+  const router = useRouter();
+  const [generateNotice, setGenerateNotice] = useState<string | null>(null);
+  const [leaving, setLeaving] = useState(false);
+  // Publicado + qualquer edição salva nesta página = alterações pendentes.
+  const [touched, setTouched] = useState(false);
+  const status: DisplayStatus = initial.status === "published" && touched ? "pending" : initial.status;
   const [form, setForm] = useState<ProductForm>(initial.form);
   const [productId, setProductId] = useState<string | null>(initial.productId);
   const [images, setImages] = useState<ProductImageView[]>(initial.images);
@@ -158,6 +170,7 @@ export function ProductEditor({ initial }: { initial: EditorInitial }) {
         return next;
       });
       if (conflicted.current) return;
+      setTouched(true);
       setSave({ kind: "dirty" });
       if (timer.current) clearTimeout(timer.current);
       timer.current = setTimeout(() => void persist(), AUTOSAVE_MS);
@@ -233,6 +246,7 @@ export function ProductEditor({ initial }: { initial: EditorInitial }) {
             return;
           }
           setImages(ImagesResponse.parse(await response.json()).images);
+          setTouched(true);
           dropUpload(key);
         } catch (error) {
           patchUpload(key, {
@@ -279,6 +293,7 @@ export function ProductEditor({ initial }: { initial: EditorInitial }) {
         return;
       }
       setImages(ImagesResponse.parse(await response.json()).images);
+      setTouched(true);
     } catch {
       setPhotoNotice("Sem conexão com o servidor. Tente novamente.");
     } finally {
@@ -296,6 +311,25 @@ export function ProductEditor({ initial }: { initial: EditorInitial }) {
     imageCount: images.length,
   });
   const cnyFen = convertBrlCentsToCnyFen(draft.product.price_brl_cents);
+
+  /** Conclui o cadastro: salva o que falta e abre o laboratório, que gera a apresentação. */
+  const goToGeneration = async () => {
+    setGenerateNotice(null);
+    if (!draft.ok) {
+      setGenerateNotice("Corrija os campos destacados antes de gerar.");
+      return;
+    }
+    if (missing.length > 0) return;
+    setLeaving(true);
+    const pendingSave = timer.current !== null || save.kind === "dirty" || save.kind === "error" || !productIdRef.current;
+    const ok = pendingSave ? await flush() : inflight.current ? await inflight.current : true;
+    if (!ok || !productIdRef.current) {
+      setLeaving(false);
+      setGenerateNotice("Não foi possível salvar o rascunho agora. Tente novamente; nada foi perdido nesta página.");
+      return;
+    }
+    router.push(`/meu-espaco/produtos/${productIdRef.current}/apresentacao?gerar=1`);
+  };
 
   const showcase = (
     <ProductShowcase
@@ -321,7 +355,19 @@ export function ProductEditor({ initial }: { initial: EditorInitial }) {
             <h1 className="mt-1 text-2xl font-semibold tracking-tight text-snow">
               {productId ? "Editar cachaça" : "Nova cachaça"}
             </h1>
-            <p className="mt-1 text-sm text-mist">Categoria: cachaça artesanal · status: Rascunho</p>
+            <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-mist">
+              Categoria: cachaça artesanal <StatusBadge status={status} />
+              {initial.publicPath && (
+                <a href={initial.publicPath} target="_blank" rel="noreferrer" className="text-coral underline underline-offset-2">
+                  Ver vitrine no ar <span className="sr-only">(nova aba)</span>
+                </a>
+              )}
+            </p>
+            {initial.status !== "draft" && (
+              <p className="mt-1 text-sm text-mist">
+                Edições ficam privadas: a vitrine publicada só muda quando você republicar.
+              </p>
+            )}
           </div>
           <div className="hidden items-center gap-3 lg:flex">
             <SaveStatus state={save} onRetry={() => void flush()} />
@@ -672,17 +718,27 @@ export function ProductEditor({ initial }: { initial: EditorInitial }) {
             </ul>
             <button
               type="button"
-              disabled
+              onClick={() => void goToGeneration()}
+              disabled={missing.length > 0 || leaving || save.kind === "conflict"}
               aria-describedby="gerar-nota"
-              className="mt-4 inline-flex min-h-11 cursor-not-allowed items-center rounded-lg bg-brand/40 px-5 font-semibold text-white/80"
+              className="mt-4 inline-flex min-h-11 items-center rounded-lg bg-brand px-5 font-semibold text-white hover:bg-brand-strong disabled:cursor-not-allowed disabled:bg-brand/40 disabled:text-white/80"
             >
-              Gerar apresentação chinesa
+              {leaving
+                ? "Salvando e abrindo…"
+                : initial.status === "draft"
+                  ? "Gerar apresentação chinesa"
+                  : "Revisar apresentação e republicar"}
             </button>
             <p id="gerar-nota" className="mt-2 text-sm text-mist">
               {missing.length === 0
-                ? "Seu rascunho já tem o necessário. A geração dos nomes em chinês será liberada na próxima versão; o rascunho fica salvo até lá."
-                : "Complete os itens acima. A geração dos nomes em chinês será liberada na próxima versão."}
+                ? "Você compara três nomes chineses e confere a vitrine antes de publicar. Nada é publicado sem sua confirmação."
+                : "Complete os itens acima para gerar os nomes em chinês. O rascunho continua salvo enquanto isso."}
             </p>
+            {generateNotice && (
+              <p role="alert" className="mt-2 text-sm text-coral">
+                {generateNotice}
+              </p>
+            )}
           </section>
         </form>
       </div>
@@ -691,8 +747,7 @@ export function ProductEditor({ initial }: { initial: EditorInitial }) {
         <div className="sticky top-6">
           <p className="mb-2 text-sm font-medium text-snow">Prévia da vitrine</p>
           <p className="mb-3 text-xs text-mist">
-            Texto em português por enquanto. A versão chinesa será criada a partir destes dados, e você revisa antes de
-            publicar.
+            Rascunho em português. A versão chinesa é criada a partir destes dados, e você revisa antes de publicar.
           </p>
           <div className="max-h-[calc(100dvh-7rem)] overflow-y-auto rounded-3xl">{showcase}</div>
         </div>
@@ -734,7 +789,7 @@ export function ProductEditor({ initial }: { initial: EditorInitial }) {
           </button>
         </div>
         <div className="p-4">
-          <p className="mb-3 text-xs text-mist">Texto em português por enquanto. A versão chinesa vem na próxima etapa.</p>
+          <p className="mb-3 text-xs text-mist">Rascunho em português. A versão chinesa aparece na revisão.</p>
           {showcase}
         </div>
       </dialog>

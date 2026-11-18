@@ -11,7 +11,15 @@ export default async function NewProductPage() {
   const origin = await getStoreOrigin(await findCurrentStoreId());
   return (
     <ProductEditor
-      initial={{ productId: null, revision: null, updatedAt: null, form: draftToForm(null, origin), images: [] }}
+      initial={{
+        productId: null,
+        revision: null,
+        updatedAt: null,
+        form: draftToForm(null, origin),
+        images: [],
+        status: "draft",
+        publicPath: null,
+      }}
     />
   );
 }
