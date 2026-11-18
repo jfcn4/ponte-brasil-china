@@ -1,7 +1,24 @@
 import { Logo } from "@/components/brand/Logo";
 import { SpaceNav } from "@/components/producer/SpaceNav";
+import { logEvent } from "@/lib/log";
+import { countUnreadConversations } from "@/modules/messaging/service";
+import { findCurrentStoreId } from "@/modules/stores/session";
 
-export default function SpaceLayout({ children }: { children: React.ReactNode }) {
+async function unreadCount(): Promise<number> {
+  // Fora do try: a leitura do cookie sinaliza ao Next que a página é dinâmica.
+  const storeId = await findCurrentStoreId();
+  if (!storeId) return 0;
+  try {
+    return await countUnreadConversations(storeId);
+  } catch (error) {
+    // O badge é secundário: o painel abre mesmo se a contagem falhar.
+    logEvent("space.unread_failed", { message: error instanceof Error ? error.message.slice(0, 80) : "unknown" });
+    return 0;
+  }
+}
+
+export default async function SpaceLayout({ children }: { children: React.ReactNode }) {
+  const unread = await unreadCount();
   return (
     <div className="flex min-h-dvh flex-col">
       <header className="border-b border-line bg-night/95">
@@ -10,7 +27,7 @@ export default function SpaceLayout({ children }: { children: React.ReactNode })
             <Logo />
             <span className="hidden text-sm text-mist sm:inline">· Meu espaço</span>
           </div>
-          <SpaceNav />
+          <SpaceNav unreadInitial={unread} />
         </div>
       </header>
       <main className="flex-1">{children}</main>

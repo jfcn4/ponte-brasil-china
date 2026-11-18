@@ -275,7 +275,12 @@ function stripUnsupported(node: unknown): unknown {
   return out;
 }
 
-/** JSON Schema da saída, sem padrões regex (a validação completa é local). */
+/** JSON Schema de um contrato, sem padrões regex (a validação completa é local). */
+export function jsonSchemaFor(schema: z.ZodType): JsonSchema {
+  return stripUnsupported(z.toJSONSchema(schema, { io: "input" })) as JsonSchema;
+}
+
+/** JSON Schema da saída da operação 1. */
 export function identityResponseSchema(): JsonSchema {
-  return stripUnsupported(z.toJSONSchema(IdentityOutput, { io: "input" })) as JsonSchema;
+  return jsonSchemaFor(IdentityOutput);
 }

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { cache } from "react";
+import { InquiryPanel } from "@/components/public/InquiryPanel";
 import { ProductShowcase } from "@/components/public/ProductShowcase";
 import { getPublicProduct } from "@/modules/products/publication";
 
@@ -23,7 +24,8 @@ export async function generateMetadata({ params }: PageProps<"/p/[slug]">): Prom
 
 /**
  * Vitrine pública do produto: lê só a versão publicada apontada pelo link.
- * Não usa sessão; abrir este endereço não concede acesso à gestão.
+ * Não usa sessão; abrir este endereço não concede acesso à gestão. A consulta
+ * leva a versão exibida, para que a conversa fique presa ao que o comprador viu.
  */
 export default async function PublicProductPage({ params }: PageProps<"/p/[slug]">) {
   const { slug } = await params;
@@ -44,7 +46,7 @@ export default async function PublicProductPage({ params }: PageProps<"/p/[slug]
       <ProductShowcase
         view={product.view}
         titleAs="h1"
-        inquiry={{ enabled: false, reason: "在线询价功能即将开放。", reasonLang: "zh-Hans" }}
+        inquiry={{ enabled: true, panel: <InquiryPanel slug={slug} version={product.version} /> }}
       />
     </div>
   );

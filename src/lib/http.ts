@@ -14,6 +14,13 @@ export type ApiErrorCode =
   | "adaptation_stale"
   | "adaptation_not_ready"
   | "missing_producer"
+  | "product_unavailable"
+  | "version_changed"
+  | "token_conflict"
+  | "conversation_full"
+  | "translation_stale"
+  | "translation_failed"
+  | "translation_in_progress"
   | "server_error";
 
 export function apiError(status: number, code: ApiErrorCode, message: string, details?: unknown) {

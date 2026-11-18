@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { formatBrlForBuyer, formatCny } from "@/modules/products/pricing";
 import { CATEGORY_ZH, type ShowcaseView } from "@/modules/products/showcase";
 import { Gallery } from "./Gallery";
@@ -13,8 +14,8 @@ export function ProductShowcase({
   titleAs: Title = "h2",
 }: {
   view: ShowcaseView;
-  /** Na prévia o botão de consulta aparece desativado. */
-  inquiry: { enabled: false; reason: string; reasonLang?: "pt-BR" | "zh-Hans" } | { enabled: true; href: string };
+  /** Na prévia o botão de consulta aparece desativado; na vitrine, o formulário de consulta. */
+  inquiry: { enabled: false; reason: string; reasonLang?: "pt-BR" | "zh-Hans" } | { enabled: true; panel: ReactNode };
   /** Na página pública o nome do produto é o título principal (h1). */
   titleAs?: "h1" | "h2";
 }) {
@@ -113,21 +114,16 @@ export function ProductShowcase({
           </div>
         )}
         {inquiry.enabled ? (
-          <a
-            href={inquiry.href}
-            className="flex min-h-12 w-full items-center justify-center rounded-xl bg-brand text-lg font-semibold text-white hover:bg-brand-strong"
-          >
-            询价
-          </a>
+          inquiry.panel
         ) : (
           <>
             <button
               type="button"
               disabled
               aria-describedby="inquiry-disabled-reason"
-              className="flex min-h-12 w-full cursor-not-allowed items-center justify-center rounded-xl bg-brand/80 text-lg font-semibold text-white"
+              className="flex min-h-12 w-full cursor-not-allowed items-center justify-center gap-2 rounded-xl bg-brand/80 text-lg font-semibold text-white"
             >
-              询价
+              <InquiryLabel />
             </button>
             <p id="inquiry-disabled-reason" lang={inquiry.reasonLang ?? "pt-BR"} className="mt-2 text-center text-xs text-ink-soft">
               {inquiry.reason}
@@ -136,5 +132,18 @@ export function ProductShowcase({
         )}
       </section>
     </article>
+  );
+}
+
+/** Rótulo do botão de consulta: ação em chinês com o equivalente em português. */
+export function InquiryLabel() {
+  return (
+    <>
+      <span>询价</span>
+      <span aria-hidden="true">·</span>
+      <span lang="pt-BR" className="text-base font-medium">
+        Solicitar cotação
+      </span>
+    </>
   );
 }
