@@ -16,6 +16,8 @@ import { formatBrl, formatCny } from "@/modules/products/pricing";
 import { ConversationBadges } from "./ConversationList";
 
 const POLL_MS = 8_000;
+/** Espera antes de repetir sozinho uma análise que falhou por instabilidade da IA. */
+const AUTO_RETRY_MS = 4_000;
 /** Pausa na digitação antes de traduzir automaticamente. */
 const AUTO_TRANSLATE_MS = 1_200;
 const OFFLINE = "Sem conexão com o servidor. Seu texto continua aqui; tente novamente quando a conexão voltar.";
@@ -196,6 +198,28 @@ export function ConversationView({ initial }: { initial: ConversationDetail }) {
       setNotice({ tone: "error", text: result.status === 502 ? "A tradução falhou de novo. A mensagem original continua salva." : result.message });
     }
   };
+
+  // Instabilidade do provedor (503, tempo esgotado): repete sozinho uma vez por
+  // entrada, alguns segundos depois. Saída inválida ou nova falha esperam o produtor.
+  const [autoRetried, setAutoRetried] = useState<ReadonlySet<string>>(() => new Set());
+  const autoRetryId =
+    detail.messages.find(
+      (m) =>
+        m.author === "buyer" &&
+        m.interpretation.status === "failed" &&
+        (m.interpretation.error === "provider_error" || m.interpretation.error === "timeout") &&
+        !autoRetried.has(m.id),
+    )?.id ?? null;
+  useEffect(() => {
+    if (!autoRetryId || retrying) return;
+    const timer = setTimeout(() => {
+      setAutoRetried((done) => new Set(done).add(autoRetryId));
+      void retryInterpretation(autoRetryId);
+    }, AUTO_RETRY_MS);
+    return () => clearTimeout(timer);
+    // retryInterpretation lê o estado atual; o efeito só depende da entrada alvo.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoRetryId, retrying]);
 
   const applySuggestion = (text: string) => {
     setBody(text);

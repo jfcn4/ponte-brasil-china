@@ -54,7 +54,8 @@ Importe o repositório como projeto Next.js e configure, em *Settings → Enviro
 |---|---|
 | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`, `SUPABASE_STORAGE_BUCKET` | Os mesmos do `.env.local`. |
 | `GEMINI_API_KEY` | Chave do Google AI Studio. Fica só no servidor. |
-| `GEMINI_MODEL` | Identificador do modelo Flash (o `.env.local` usa `gemini-3.5-flash-lite`). |
+| `GEMINI_MODEL` | Identificador do modelo Flash (o `.env.local` usa `gemini-3.5-flash-lite`, que também é o padrão). |
+| `GEMINI_FALLBACK_MODEL` | Opcional. Modelos reserva separados por vírgula; vazio usa `gemini-3.1-flash-lite,gemini-3.5-flash,gemini-3-flash-preview`. Quando o principal responde 503 (sobrecarga, frequente em horário de pico), 429 ou demora mais de 10–14 s, o servidor chama o próximo modelo e fica com a primeira resposta válida, sempre dentro dos 60 s da função. `off` desliga. |
 | `APP_URL` | Opcional. Endereço público do deploy, sem barra final (neste projeto, `https://ponte-brasil-china.vercel.app`). É o endereço gravado nos links e QRs. **Não copie o valor do `.env.local`** (`localhost` não abre no celular; na Vercel ele é ignorado). Sem `APP_URL`, a aplicação usa o domínio de produção da Vercel, o que basta aqui. |
 | `AI_MODE` | Não defina em produção (o padrão é `gemini`). `test` usa respostas fixas, identificadas na tela como teste. |
 
@@ -92,7 +93,21 @@ Use um produto publicado com volume **700 mL** e preço **79,00** (passos acima)
 
 Nos logs da função (Vercel → *Logs*), `store.reordered` registra loja, quantidade e revisão de cada reordenação; `store.intro_approved` registra a aprovação da apresentação.
 
-Nos logs da função (Vercel → *Logs*), procure `ai.call` (`op` = `identity`, `interpret` ou `translate`) para ver modelo, tentativa, estado e duração de cada geração, sem conteúdo do produtor.
+Nos logs da função (Vercel → *Logs*), procure `ai.call` (`op` = `identity`, `interpret` ou `translate`) para ver modelo, tentativa, estado e duração de cada geração, sem conteúdo do produtor. A tabela `ai_calls` guarda em `detail` a trilha do rodízio (ex.: `gemini-3.5-flash-lite:http_503 > gemini-3.1-flash-lite:ok`). Se a análise de uma consulta falhar por instabilidade, o painel repete sozinho uma vez ao abrir a conversa; depois disso, **Tentar novamente** fica com o produtor.
+
+### Ensaio automático com a IA real
+
+`tests/ensaio/jornada.spec.ts` percorre a jornada da banca com o Gemini real, em três navegadores isolados (produtor A no desktop, comprador num Pixel 7, produtor B): duas cachaças com foto geradas e publicadas e um rascunho; catálogo e QRs no outro navegador; reordenação e destaque; ¥90.85 → ¥102.35 só após republicar no mesmo link; consulta em chinês sobre 500 garrafas e Xangai, tradução, copiloto, sugestão, resposta revisada e confirmação em clique duplo, com uma única resposta em chinês no link privado; tentativas da sessão B de editar, gerar, publicar e ler conversa da loja A; isolamento entre links privados. Gasta cerca de 8 chamadas de IA e remove as lojas criadas ao final.
+
+```bash
+ENSAIO_URL=http://localhost:3000 npx playwright test -c playwright.ensaio.config.ts
+```
+
+`ENSAIO_URL` pode apontar para a Vercel; a limpeza usa o Supabase do `.env.local`. Para ensaiar também a falha da IA (etapa 5b), suba uma segunda instância com modelos inexistentes e informe `ENSAIO_FALHA_URL`:
+
+```bash
+npm run build && GEMINI_MODEL=modelo-inexistente GEMINI_FALLBACK_MODEL=reserva-inexistente APP_URL=http://localhost:3101 npx next start -p 3101
+```
 
 ### Configuração prevista para o ambiente
 

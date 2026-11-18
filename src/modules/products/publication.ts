@@ -46,6 +46,10 @@ export class PublicationError extends Error {
 }
 
 const MAX_ATTEMPTS = 2;
+/** Prazo da geração inteira (rota com 60 s na Vercel, já descontado o trabalho no banco). */
+const GENERATION_BUDGET_MS = 50_000;
+/** Uma nova tentativa após saída inválida só começa com esta folga. */
+const MIN_RETRY_WINDOW_MS = 12_000;
 
 export function hashAdaptationInput(input: AdaptationInput): string {
   return createHash("sha256").update(canonicalJson(input)).digest("hex");
@@ -139,20 +143,24 @@ export async function generateAdaptation(
 
   let output: IdentityOutput | null = null;
   let errorCode: "invalid_output" | "provider_error" | "timeout" | "not_configured" = "provider_error";
+  const deadline = Date.now() + GENERATION_BUDGET_MS;
   try {
     for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
+      if (attempt > 1 && deadline - Date.now() < MIN_RETRY_WINDOW_MS) break;
       const started = Date.now();
-      const result = await adapter.generateIdentity(input, attempt);
+      // O adaptador real já repete instabilidades (503, 429, rede) e troca de modelo dentro do prazo.
+      const result = await adapter.generateIdentity(input, attempt, { deadline });
       const durationMs = Date.now() - started;
+      const model = result.model ?? adapter.model;
       if (result.kind === "error") {
         errorCode = result.code;
-        await logAiCall({ storeId, productId, adaptationId, model: adapter.model, attempt, status: result.code, durationMs, detail: result.detail });
-        break; // falha do provedor: o produtor decide quando repetir
+        await logAiCall({ storeId, productId, adaptationId, model, attempt, status: result.code, durationMs, detail: result.detail });
+        break; // falha do provedor após as repetições: o produtor decide quando tentar de novo
       }
       const checked = validateIdentityOutput(result.raw, input);
       if (checked.ok) {
         output = checked.output;
-        await logAiCall({ storeId, productId, adaptationId, model: adapter.model, attempt, status: "ok", durationMs });
+        await logAiCall({ storeId, productId, adaptationId, model, attempt, status: "ok", durationMs, detail: result.detail });
         break;
       }
       errorCode = "invalid_output";
@@ -160,7 +168,7 @@ export async function generateAdaptation(
         storeId,
         productId,
         adaptationId,
-        model: adapter.model,
+        model,
         attempt,
         status: "invalid_output",
         durationMs,

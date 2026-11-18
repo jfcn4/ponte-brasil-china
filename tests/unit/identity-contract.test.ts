@@ -151,14 +151,17 @@ describe("validação da saída (T03)", () => {
     expect(validateIdentityOutput(output, input).ok).toBe(true);
   });
 
-  it("exige tradução dos atributos presentes e recusa tradução sem fonte", () => {
+  it("exige tradução dos atributos presentes e descarta tradução sem fonte", () => {
     const missing = structuredClone(validTestOutput(input));
     missing.attributes_zh.wood = null;
     expect(validateIdentityOutput(missing, input).ok).toBe(false);
 
+    // Aroma citado só na descrição: a tradução extra some, a geração continua válida.
     const extra = structuredClone(validTestOutput(input));
     extra.attributes_zh.aroma = "香草";
-    expect(validateIdentityOutput(extra, input).ok).toBe(false);
+    const checked = validateIdentityOutput(extra, input);
+    expect(checked.ok).toBe(true);
+    if (checked.ok) expect(checked.output.attributes_zh.aroma).toBeNull();
   });
 
   it("recusa JSON malformado ou vazio", () => {

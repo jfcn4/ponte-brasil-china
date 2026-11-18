@@ -27,7 +27,7 @@ CONTEÚDO DA VITRINE (content), em chinês simplificado (zh) com versão fiel em
 
 APRESENTAÇÃO DA LOJA (store_intro): 1 a 2 frases em chinês simplificado (zh), com versão fiel em português (pt), apresentando o produtor ou engenho e sua origem, para o topo do catálogo da loja. Baseie-se só em "producer", "story" e "differentiator"; não cite o nome deste produto nem números. Use null se "producer.name" for null.
 
-ATRIBUTOS (attributes_zh): traduza para o chinês "wood", "aroma" e "flavor" quando existirem; use null quando o campo de origem for null.
+ATRIBUTOS (attributes_zh): traduza para o chinês "wood", "aroma" e "flavor" quando existirem; use null quando o campo de origem for null, mesmo que a descrição mencione aroma ou sabor.
 
 FIDELIDADE:
 - Use apenas fatos presentes no cadastro. Não invente prêmios, idade da empresa, certificações, benefícios à saúde, volumes de produção ou origem.

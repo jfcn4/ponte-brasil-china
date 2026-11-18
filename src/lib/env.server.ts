@@ -12,6 +12,8 @@ const ServerEnv = z.object({
   AI_MODE: z.preprocess((v) => (v === "" ? undefined : v), z.enum(["gemini", "test"]).default("gemini")),
   GEMINI_API_KEY: z.string().optional(),
   GEMINI_MODEL: z.string().regex(/^[a-z0-9.-]+$/).optional().or(z.literal("").transform(() => undefined)),
+  /** Modelos reserva (separados por vírgula) para sobrecarga do principal; "off" desliga. */
+  GEMINI_FALLBACK_MODEL: z.string().regex(/^[a-z0-9.-]+(,[a-z0-9.-]+)*$/).optional().or(z.literal("").transform(() => undefined)),
 });
 
 export type ServerEnv = z.infer<typeof ServerEnv>;

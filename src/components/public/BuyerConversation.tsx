@@ -230,6 +230,7 @@ export function BuyerConversation() {
         <h2 id="thread-title" className="sr-only">
           对话记录
         </h2>
+        <p className="mb-2 text-right text-xs text-ink-soft">时间均为北京时间</p>
         <ol className="space-y-3" aria-live="polite" aria-relevant="additions">
           {view.messages.map((m) =>
             m.author === "buyer" ? (

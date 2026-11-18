@@ -3,7 +3,7 @@ import { logEvent } from "@/lib/log";
 import { productPath } from "@/lib/public-url";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { messagingAdapter } from "@/modules/ai";
-import type { AdapterResult, MessagingAdapter } from "@/modules/ai/adapter";
+import type { AdapterResult, CallOptions, MessagingAdapter } from "@/modules/ai/adapter";
 import {
   INTERPRET_PROMPT_VERSION,
   INTERPRET_SCHEMA_VERSION,
@@ -84,6 +84,10 @@ const MAX_TRANSIENT_RETRIES = 2;
 const TRANSIENT_DELAY_MS = process.env.NODE_ENV === "test" ? 0 : 1_000;
 /** Sem resultado após este tempo, o produtor pode pedir a interpretação de novo. */
 const STUCK_AFTER_MS = 90_000;
+/** Prazo de uma operação de IA (rotas com 60 s na Vercel). */
+const AI_BUDGET_MS = 50_000;
+/** Nova chamada só começa com esta folga antes do prazo. */
+const MIN_CALL_WINDOW_MS = 8_000;
 
 // ---------------------------------------------------------------------------
 // Linhas do banco
@@ -237,20 +241,22 @@ type AiErrorCode = "invalid_output" | "provider_error" | "timeout" | "not_config
 
 /** Até duas saídas inválidas e duas instabilidades do provedor; cota, tempo esgotado e configuração devolvem ao usuário. */
 async function runWithContract<T>(
-  call: (attempt: number) => Promise<AdapterResult>,
+  call: (attempt: number, options: CallOptions) => Promise<AdapterResult>,
   validate: (raw: unknown) => ContractResult<T>,
-  log: (attempt: number, status: "ok" | AiErrorCode, durationMs: number, detail?: string) => Promise<void>,
+  log: (attempt: number, status: "ok" | AiErrorCode, durationMs: number, detail?: string, model?: string) => Promise<void>,
 ): Promise<{ ok: true; output: T } | { ok: false; code: AiErrorCode }> {
   let code: AiErrorCode = "provider_error";
   let invalid = 0;
   let transientRetries = 0;
+  const deadline = Date.now() + AI_BUDGET_MS;
   for (let attempt = 1; attempt <= MAX_ATTEMPTS + MAX_TRANSIENT_RETRIES; attempt += 1) {
+    if (attempt > 1 && deadline - Date.now() < MIN_CALL_WINDOW_MS) break;
     const started = Date.now();
     // A tentativa seguinte a uma saída inválida pede resposta mais conservadora.
-    const result = await call(invalid + 1);
+    const result = await call(invalid + 1, { deadline });
     const durationMs = Date.now() - started;
     if (result.kind === "error") {
-      await log(attempt, result.code, durationMs, result.detail);
+      await log(attempt, result.code, durationMs, result.detail, result.model);
       // Instabilidade passageira (5xx, rede) repete após uma pausa curta; cota, tempo esgotado e configuração, não.
       const transient = result.code === "provider_error" && /^(http_5\d\d|network:)/.test(result.detail);
       if (transient && transientRetries < MAX_TRANSIENT_RETRIES) {
@@ -263,12 +269,12 @@ async function runWithContract<T>(
     }
     const checked = validate(result.raw);
     if (checked.ok) {
-      await log(attempt, "ok", durationMs);
+      await log(attempt, "ok", durationMs, result.detail, result.model);
       return { ok: true, output: checked.output };
     }
     code = "invalid_output";
     invalid += 1;
-    await log(attempt, "invalid_output", durationMs, checked.issues.join(" | "));
+    await log(attempt, "invalid_output", durationMs, checked.issues.join(" | "), result.model);
     if (invalid >= MAX_ATTEMPTS) break;
   }
   return { ok: false, code };
@@ -466,15 +472,15 @@ export async function interpretMessage(
       product: { name: snapshot.name.display, original_name: snapshot.name.original, facts: factsFromSnapshot(snapshot) },
     };
     result = await runWithContract(
-      (attempt) => adapter.interpretInquiry(input, attempt),
+      (attempt, options) => adapter.interpretInquiry(input, attempt, options),
       (raw) => validateInterpretOutput(raw, input),
-      (attempt, status, durationMs, detail) =>
+      (attempt, status, durationMs, detail, model) =>
         logAiCall({
           operation: "interpret",
           storeId,
           productId: conversation.product_id,
           conversationId: conversation.id,
-          model: adapter.model,
+          model: model ?? adapter.model,
           attempt,
           status,
           durationMs,
@@ -813,20 +819,20 @@ export async function translateReplyDraft(
       context: { buyer_message: (lastBuyer?.body as string | undefined) ?? null, product_name: snapshot.name.display },
     };
     result = await runWithContract(
-      (attempt) => adapter.translateReply(input, attempt),
+      (attempt, options) => adapter.translateReply(input, attempt, options),
       (raw) => {
         const checked = validateTranslateOutput(raw, input);
         return checked.ok
           ? { ok: true, output: { translation: checked.output.translation, warnings: reviewWarnings(input, checked.output) } }
           : checked;
       },
-      (attempt, status, durationMs, detail) =>
+      (attempt, status, durationMs, detail, model) =>
         logAiCall({
           operation: "translate",
           storeId,
           productId: conversation.product_id,
           conversationId,
-          model: adapter.model,
+          model: model ?? adapter.model,
           attempt,
           status,
           durationMs,

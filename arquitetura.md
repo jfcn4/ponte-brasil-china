@@ -11,7 +11,7 @@ Uma única aplicação Next.js com TypeScript atende ao produtor em português e
 | Messaging | Consultas, acesso do comprador, histórico, leitura e confirmação de respostas. | PostgreSQL, AI e atualização periódica dos dois lados. |
 | AI | Três operações com esquemas e prompts versionados, verificação factual e registro de resultado. | Gemini Flash em chamadas de servidor. Adaptador local determinístico para testes. |
 
-Adotar como base proposta migrações SQL e SDK Supabase. A chamada de IA pode ocorrer durante uma requisição com estado real de processamento. Um único adaptador concentra limites, erros e repetição explícita. Microsserviços, múltiplos agentes e filas distribuídas ficam fora da arquitetura do MVP.
+Adotar como base proposta migrações SQL e SDK Supabase. A chamada de IA pode ocorrer durante uma requisição com estado real de processamento. Um único adaptador concentra limites, erros e repetição explícita. **Implementado:** cada operação recebe um prazo único (50 s, dentro dos 60 s da rota). Respostas 5xx, 429, erro de rede e tempo esgotado passam ao próximo modelo de um rodízio (`GEMINI_MODEL` + `GEMINI_FALLBACK_MODEL`); chamada sem resposta após 14 s (identidade) ou 10 s (mensagens) recebe uma chamada paralela ao modelo seguinte, e vale a primeira resposta. 404 tira o modelo do rodízio; 400/401/403 encerram. `ai_calls.detail` registra a trilha, sem conteúdo. Tradução de atributo sem campo de origem (ex.: aroma citado só na descrição) é descartada em vez de reprovar a geração. Microsserviços, múltiplos agentes e filas distribuídas ficam fora da arquitetura do MVP.
 
 ## Modelo relacional
 

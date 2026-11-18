@@ -14,7 +14,7 @@ import { PERSONALITY_LABELS, type CachacaAttributes, type ProductDraft, type Sto
  * também uma apresentação curta da loja (store_intro), que o produtor aprova
  * ao publicar. Saídas v1 (sem store_intro) continuam válidas.
  */
-export const IDENTITY_PROMPT_VERSION = "identity-v2";
+export const IDENTITY_PROMPT_VERSION = "identity-v3";
 export const IDENTITY_SCHEMA_VERSION = "identity-output-v2";
 
 export const STRATEGIES = ["fonetica", "semantica", "equilibrada"] as const;
@@ -247,7 +247,9 @@ export function validateIdentityOutput(raw: unknown, input: AdaptationInput): Co
     const source = isPresent(input.attributes[key]);
     const translated = output.attributes_zh[key] !== null;
     if (source && !translated) issues.push(`attributes_zh.${key}: ausente`);
-    if (!source && translated) issues.push(`attributes_zh.${key}: sem fonte no cadastro`);
+    // Tradução de um campo vazio (ex.: aroma citado só na descrição) é descartada,
+    // não reprova a geração inteira: a ficha nunca exibe atributo sem fonte.
+    if (!source && translated) output.attributes_zh[key] = null;
   }
 
   const allowed = allowedNumbers(input);

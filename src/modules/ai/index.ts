@@ -5,7 +5,20 @@ import { GeminiIdentityAdapter, GeminiMessagingAdapter } from "./gemini";
 import { createTestAdapter, createTestMessagingAdapter } from "./test-adapter";
 
 /** Modelo Flash usado quando GEMINI_MODEL não é informado. */
-export const DEFAULT_GEMINI_MODEL = "gemini-2.5-flash";
+export const DEFAULT_GEMINI_MODEL = "gemini-3.5-flash-lite";
+/**
+ * Modelos reserva, de capacidade separada, usados em rodízio quando o principal
+ * está sobrecarregado (503) ou indisponível. GEMINI_FALLBACK_MODEL aceita uma
+ * lista separada por vírgula; "off" desliga.
+ */
+export const DEFAULT_GEMINI_FALLBACK_MODELS = ["gemini-3.1-flash-lite", "gemini-3.5-flash", "gemini-3-flash-preview"];
+
+function geminiModels(env: ReturnType<typeof serverEnv>) {
+  const model = env.GEMINI_MODEL ?? DEFAULT_GEMINI_MODEL;
+  const configured = env.GEMINI_FALLBACK_MODEL;
+  const fallbacks = configured === "off" ? [] : configured ? configured.split(",") : DEFAULT_GEMINI_FALLBACK_MODELS;
+  return [model, fallbacks.filter((m) => m !== model)] as const;
+}
 
 const NOT_CONFIGURED_MODEL = "gemini:not-configured";
 const notConfiguredResult = async (): Promise<AdapterResult> => ({
@@ -26,7 +39,7 @@ export function identityAdapter(): IdentityAdapter {
   const env = serverEnv();
   if (env.AI_MODE === "test") return createTestAdapter();
   if (!env.GEMINI_API_KEY) return notConfigured;
-  return new GeminiIdentityAdapter(env.GEMINI_API_KEY, env.GEMINI_MODEL ?? DEFAULT_GEMINI_MODEL);
+  return new GeminiIdentityAdapter(env.GEMINI_API_KEY, ...geminiModels(env));
 }
 
 /** Adaptador das operações 2 e 3 configurado para este ambiente (somente servidor). */
@@ -34,5 +47,5 @@ export function messagingAdapter(): MessagingAdapter {
   const env = serverEnv();
   if (env.AI_MODE === "test") return createTestMessagingAdapter();
   if (!env.GEMINI_API_KEY) return messagingNotConfigured;
-  return new GeminiMessagingAdapter(env.GEMINI_API_KEY, env.GEMINI_MODEL ?? DEFAULT_GEMINI_MODEL);
+  return new GeminiMessagingAdapter(env.GEMINI_API_KEY, ...geminiModels(env));
 }
