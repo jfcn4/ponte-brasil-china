@@ -35,6 +35,10 @@ export type CatalogItem = {
   specs: string | null;
   image: { url: string; alt: string } | null;
   price: { cnyFen: number; brlCents: number } | null;
+  /** Categoria exibida no destaque; ausente = cachaça (o MVP). */
+  category?: string;
+  /** Selo curto no cartão, ex. a identificação de demonstração das lojas fictícias. */
+  tag?: string;
 };
 
 export type StoreCatalogView = {
@@ -42,6 +46,8 @@ export type StoreCatalogView = {
   producer: string;
   origin: string | null;
   intro: string | null;
+  /** Linha acima do nome; ausente = produtor de cachaça (o MVP). */
+  kicker?: string;
   /** Produtos publicados na ordem da loja; o primeiro é o destaque. */
   items: CatalogItem[];
 };

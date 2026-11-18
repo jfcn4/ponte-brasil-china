@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { cache } from "react";
-import { storePath } from "@/lib/paths";
+import { productPath, storePath } from "@/lib/paths";
+import { ExploreLink } from "@/components/public/explore/ExploreLink";
 import { InquiryPanel } from "@/components/public/InquiryPanel";
 import { ProductShowcase } from "@/components/public/ProductShowcase";
 import { getPublicProduct } from "@/modules/products/publication";
@@ -48,6 +49,9 @@ export default async function PublicProductPage({ params }: PageProps<"/p/[slug]
         <h1 className="text-2xl font-semibold text-ink">该产品暂时无法查看</h1>
         <p className="mt-3 text-ink-soft">生产者已将此产品下架。链接会保留，重新上架后可再次访问。</p>
         {backToStore && <p className="mt-6">{backToStore}</p>}
+        <div className="mt-10">
+          <ExploreLink from={productPath(slug)} />
+        </div>
       </div>
     );
   }
@@ -60,6 +64,9 @@ export default async function PublicProductPage({ params }: PageProps<"/p/[slug]
         titleAs="h1"
         inquiry={{ enabled: true, panel: <InquiryPanel slug={slug} version={product.version} /> }}
       />
+      <div className="mt-6">
+        <ExploreLink from={productPath(slug)} />
+      </div>
     </div>
   );
 }

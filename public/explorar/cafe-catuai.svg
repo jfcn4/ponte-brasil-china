@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" width="800" height="1000">
+<defs>
+<linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f6f1e9"/><stop offset="1" stop-color="#e9e3dc"/></linearGradient>
+<radialGradient id="shadow" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#24201f" stop-opacity="0.22"/><stop offset="1" stop-color="#24201f" stop-opacity="0"/></radialGradient>
+</defs>
+<rect width="800" height="1000" fill="url(#bg)"/>
+<ellipse cx="400" cy="878" rx="230" ry="34" fill="url(#shadow)"/>
+<path d="M250 210 h300 l26 650 c1 20 -14 32 -32 32 h-288 c-18 0 -33 -12 -32 -32 z" fill="#b8875a"/>
+<path d="M250 210 h300 l4 70 h-308 z" fill="#9c7048"/>
+<path d="M262 236 h276" stroke="#ffffff" stroke-opacity="0.25" stroke-width="4"/>
+<circle cx="400" cy="340" r="16" fill="#9c7048"/><circle cx="400" cy="340" r="7" fill="#b8875a"/>
+<rect x="290" y="420" width="220" height="300" rx="12" fill="#fbf8f2"/>
+<circle cx="400" cy="500" r="44" fill="none" stroke="#b82d35" stroke-width="4"/>
+<path d="M378 476 c26 10 26 38 0 48 M422 476 c-26 10 -26 38 0 48" stroke="#b82d35" stroke-width="4" fill="none" stroke-linecap="round"/>
+<text x="400" y="596" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="30" font-weight="700" letter-spacing="2" fill="#24201f">BRUMA ALTA</text>
+<line x1="330" y1="618" x2="470" y2="618" stroke="#b82d35" stroke-width="2"/>
+<text x="400" y="652" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="18" letter-spacing="3" fill="#24201f">CATUAÍ AMARELO</text>
+<text x="400" y="690" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="16" letter-spacing="2" fill="#b82d35">250 g</text>
+</svg>

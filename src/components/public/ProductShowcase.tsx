@@ -12,12 +12,15 @@ export function ProductShowcase({
   view,
   inquiry,
   titleAs: Title = "h2",
+  notice,
 }: {
   view: ShowcaseView;
   /** Na prévia o botão de consulta aparece desativado; na vitrine, o formulário de consulta. */
   inquiry: { enabled: false; reason: string; reasonLang?: "pt-BR" | "zh-Hans" } | { enabled: true; panel: ReactNode };
   /** Na página pública o nome do produto é o título principal (h1). */
   titleAs?: "h1" | "h2";
+  /** Aviso acima do nome, ex. a identificação de demonstração. */
+  notice?: ReactNode;
 }) {
   const lang = view.contentLang;
   return (
@@ -25,7 +28,8 @@ export function ProductShowcase({
       <Gallery images={view.images} />
 
       <header className="mt-6">
-        <p className="text-sm font-medium tracking-wide text-brand">{CATEGORY_ZH}</p>
+        {notice}
+        <p className="text-sm font-medium tracking-wide text-brand">{view.category ?? CATEGORY_ZH}</p>
         <Title
           lang={view.titleLang}
           className="mt-2 font-[family-name:var(--font-zh-serif)] text-3xl font-bold leading-tight tracking-tight text-ink sm:text-4xl"

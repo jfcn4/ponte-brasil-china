@@ -95,6 +95,17 @@ Nos logs da função (Vercel → *Logs*), `store.reordered` registra loja, quant
 
 Nos logs da função (Vercel → *Logs*), procure `ai.call` (`op` = `identity`, `interpret` ou `translate`) para ver modelo, tentativa, estado e duração de cada geração, sem conteúdo do produtor. A tabela `ai_calls` guarda em `detail` a trilha do rodízio (ex.: `gemini-3.5-flash-lite:http_503 > gemini-3.1-flash-lite:ok`). Se a análise de uma consulta falhar por instabilidade, o painel repete sozinho uma vez ao abrir a conversa; depois disso, **Tentar novamente** fica com o produtor.
 
+### Como conferir o diretório de marcas fictícias na Vercel (extra)
+
+Não há migração nem variável nova: as páginas são estáticas. Use uma loja real já publicada (roteiro acima).
+
+1. **Celular:** escaneie o QR da loja real. No fim da página, depois dos produtos, toque em **探索更多巴西品牌**. A loja real não mostra nenhum selo de demonstração.
+2. O diretório (`…/zh/explorar`) lista três lojas, cada uma com o selo **虚构品牌 · 演示**: um alambique de cachaça, um café e um apiário.
+3. Toque em **Alambique Vale Sereno**. O catálogo mostra o selo no topo e em cada produto; o convite é **查看详情**, sem “询价”.
+4. Abra **静谷·琥珀**. A ficha mostra o selo acima do nome, **参考价格 ¥148.35 / BRL 129.00** (mesma regra de câmbio) e o botão **询价 · Solicitar cotação** desativado, com o aviso de que não é possível consultar.
+5. Toque em **返回品牌目录** e, no diretório, em **← 返回之前浏览的真实店铺**. Volta à loja real do passo 1.
+6. Abra um produto real, toque em **询价 · Solicitar cotação** e envie uma pergunta. Abre o **询价对话** como antes, e a conversa aparece em **Mensagens** no computador.
+
 ### Ensaio automático com a IA real
 
 `tests/ensaio/jornada.spec.ts` percorre a jornada da banca com o Gemini real, em três navegadores isolados (produtor A no desktop, comprador num Pixel 7, produtor B): duas cachaças com foto geradas e publicadas e um rascunho; catálogo e QRs no outro navegador; reordenação e destaque; ¥90.85 → ¥102.35 só após republicar no mesmo link; consulta em chinês sobre 500 garrafas e Xangai, tradução, copiloto, sugestão, resposta revisada e confirmação em clique duplo, com uma única resposta em chinês no link privado; tentativas da sessão B de editar, gerar, publicar e ler conversa da loja A; isolamento entre links privados. Gasta cerca de 8 chamadas de IA e remove as lojas criadas ao final.

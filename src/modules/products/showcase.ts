@@ -32,6 +32,8 @@ export type ShowcaseView = {
   producer: string | null;
   story: string | null;
   price: { cnyFen: number; brlCents: number } | null;
+  /** Categoria acima do nome; ausente = cachaça (o MVP). */
+  category?: string;
 };
 
 export const CATEGORY_ZH = "卡沙萨 · 巴西甘蔗蒸馏酒";

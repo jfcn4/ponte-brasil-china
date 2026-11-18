@@ -1,19 +1,40 @@
+import type { ReactNode } from "react";
 import { productPath } from "@/lib/paths";
 import { formatCny } from "@/modules/products/pricing";
 import { CATEGORY_ZH } from "@/modules/products/showcase";
 import type { CatalogItem, StoreCatalogView } from "@/modules/stores/catalog-view";
 
+type CardOptions = { href: (slug: string) => string; inquiry: boolean };
+
 /**
  * Catálogo público da loja (direção B, editorial clara). Usado na página do
- * comprador (/l/<código>) e na prévia de "Minha loja". Só recebe produtos
- * publicados, na ordem da loja; o primeiro ocupa o destaque.
+ * comprador (/l/<código>), na prévia de "Minha loja" e nas lojas fictícias do
+ * diretório (/zh/explorar). Só recebe produtos publicados, na ordem da loja;
+ * o primeiro ocupa o destaque.
  */
-export function StoreCatalog({ view, titleAs: Title = "h1" }: { view: StoreCatalogView; titleAs?: "h1" | "h2" }) {
+export function StoreCatalog({
+  view,
+  titleAs: Title = "h1",
+  productHref = productPath,
+  inquiry = true,
+  notice,
+}: {
+  view: StoreCatalogView;
+  titleAs?: "h1" | "h2";
+  /** Destino de cada produto; por padrão a vitrine real (/p/<código>). */
+  productHref?: (slug: string) => string;
+  /** Sem consulta comercial (lojas fictícias), o convite fala só em detalhes. */
+  inquiry?: boolean;
+  /** Aviso acima do título, ex. a identificação de demonstração. */
+  notice?: ReactNode;
+}) {
   const [featured, ...others] = view.items;
+  const card: CardOptions = { href: productHref, inquiry };
   return (
     <div lang="zh-Hans" className="theme-light @container rounded-3xl bg-ivory text-ink">
       <header className="px-1 pb-6 pt-2">
-        <p className="text-sm font-medium tracking-wide text-brand">巴西卡沙萨生产者</p>
+        {notice}
+        <p className="text-sm font-medium tracking-wide text-brand">{view.kicker ?? "巴西卡沙萨生产者"}</p>
         <Title lang="pt-BR" className="mt-2 font-[family-name:var(--font-zh-serif)] text-3xl font-bold leading-tight tracking-tight sm:text-4xl">
           {view.producer}
         </Title>
@@ -36,7 +57,7 @@ export function StoreCatalog({ view, titleAs: Title = "h1" }: { view: StoreCatal
             <h2 id="catalog-featured" className="sr-only">
               精选推荐
             </h2>
-            <FeaturedCard item={featured} />
+            <FeaturedCard item={featured} card={card} />
           </section>
 
           {others.length > 0 && (
@@ -47,7 +68,7 @@ export function StoreCatalog({ view, titleAs: Title = "h1" }: { view: StoreCatal
               <ul className="mt-3 grid gap-4 @xl:grid-cols-2">
                 {others.map((item) => (
                   <li key={item.slug}>
-                    <ItemCard item={item} />
+                    <ItemCard item={item} card={card} />
                   </li>
                 ))}
               </ul>
@@ -99,10 +120,18 @@ function Photo({ item, className }: { item: CatalogItem; className: string }) {
   );
 }
 
-function FeaturedCard({ item }: { item: CatalogItem }) {
+function Tag({ item }: { item: CatalogItem }) {
+  return item.tag ? (
+    <span className="inline-flex w-fit rounded-full border border-brand/40 bg-brand/5 px-2.5 py-0.5 text-xs font-medium text-brand">
+      {item.tag}
+    </span>
+  ) : null;
+}
+
+function FeaturedCard({ item, card }: { item: CatalogItem; card: CardOptions }) {
   return (
     <a
-      href={productPath(item.slug)}
+      href={card.href(item.slug)}
       className="group block overflow-hidden rounded-3xl border border-sand bg-paper focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand @lg:grid @lg:grid-cols-2"
     >
       <div className="relative bg-sand/40">
@@ -110,7 +139,8 @@ function FeaturedCard({ item }: { item: CatalogItem }) {
         <Photo item={item} className="aspect-square w-full object-contain" />
       </div>
       <div className="flex flex-col justify-center gap-3 p-5 @lg:p-8">
-        <p className="text-xs font-medium tracking-wide text-brand">{CATEGORY_ZH}</p>
+        <Tag item={item} />
+        <p className="text-xs font-medium tracking-wide text-brand">{item.category ?? CATEGORY_ZH}</p>
         <p>
           <ItemTitle item={item} className="block font-[family-name:var(--font-zh-serif)] text-3xl font-bold leading-tight" />
         </p>
@@ -118,21 +148,22 @@ function FeaturedCard({ item }: { item: CatalogItem }) {
         {item.specs && <p className="text-sm text-ink-soft">{item.specs}</p>}
         <Price item={item} />
         <span className="mt-1 inline-flex min-h-12 items-center justify-center rounded-xl bg-brand px-5 font-semibold text-white group-hover:bg-brand-strong">
-          查看详情并询价
+          {card.inquiry ? "查看详情并询价" : "查看详情"}
         </span>
       </div>
     </a>
   );
 }
 
-function ItemCard({ item }: { item: CatalogItem }) {
+function ItemCard({ item, card }: { item: CatalogItem; card: CardOptions }) {
   return (
     <a
-      href={productPath(item.slug)}
+      href={card.href(item.slug)}
       className="flex h-full gap-4 overflow-hidden rounded-2xl border border-sand bg-paper p-3 hover:border-brand/50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
     >
       <Photo item={item} className="h-28 w-24 shrink-0 rounded-xl bg-sand/40 object-contain" />
       <div className="flex min-w-0 flex-col gap-1">
+        <Tag item={item} />
         <p>
           <ItemTitle item={item} className="block text-lg font-semibold leading-snug" />
         </p>

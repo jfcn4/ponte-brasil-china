@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { cache } from "react";
+import { ExploreLink } from "@/components/public/explore/ExploreLink";
 import { StoreCatalog } from "@/components/public/StoreCatalog";
+import { storePath } from "@/lib/paths";
 import { getPublicCatalog } from "@/modules/stores/catalog";
 
 // URLs assinadas das fotos expiram e a ordem muda no painel: sempre montada na hora.
@@ -29,8 +31,11 @@ export default async function PublicStorePage({ params }: PageProps<"/l/[slug]">
   const catalog = await load(slug);
   if (!catalog) notFound();
   return (
-    <div className="mx-auto w-full max-w-3xl px-4 py-6 sm:px-6 sm:py-10">
-      <StoreCatalog view={catalog} />
-    </div>
+    <>
+      <div className="mx-auto w-full max-w-3xl px-4 py-6 sm:px-6 sm:py-10">
+        <StoreCatalog view={catalog} />
+      </div>
+      <ExploreLink from={storePath(slug)} />
+    </>
   );
 }
