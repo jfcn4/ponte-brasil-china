@@ -25,22 +25,11 @@ export function detectScript(text: string): ScriptLang {
 export type ReplyLang = "zh-Hans" | "en";
 
 /**
- * Idioma da resposta ao comprador. Hanzi → chinês; escrita latina → inglês
- * (a vitrine é chinesa; o inglês é a alternativa prevista no escopo).
+ * Idioma de toda resposta ao comprador: chinês simplificado, qualquer que seja
+ * o idioma em que ele escreveu (inglês, pinyin…). Decisão de 18/11/2026; o
+ * inglês segue aceito na entrada e no contrato, mas não é usado na saída.
  */
-export function replyLangFor(text: string): ReplyLang {
-  // Qualquer hanzi indica chinês (ex.: pinyin misturado com 卡沙萨). Escolha
-  // provisória: a interpretação da IA confirma ou corrige (pinyin puro).
-  if (count(text, CJK) >= 1) return "zh-Hans";
-  return detectScript(text) === "latin" ? "en" : "zh-Hans";
-}
-
-/** Idioma da resposta a partir do idioma identificado pela IA; null mantém o atual. */
-export function replyLangFromDetected(language: "zh-Hans" | "en" | "pt-BR" | "other"): ReplyLang | null {
-  if (language === "zh-Hans") return "zh-Hans";
-  if (language === "en") return "en";
-  return null;
-}
+export const REPLY_LANG: ReplyLang = "zh-Hans";
 
 /** Idioma provisório da entrada até a interpretação confirmar. */
 export function provisionalBodyLang(text: string): "zh-Hans" | "en" | "other" {

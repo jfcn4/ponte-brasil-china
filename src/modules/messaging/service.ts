@@ -39,7 +39,7 @@ import {
   type DraftView,
   type ProducerMessageView,
 } from "./schema";
-import { provisionalBodyLang, replyLangFor, replyLangFromDetected, type ReplyLang } from "./text";
+import { REPLY_LANG, provisionalBodyLang, type ReplyLang } from "./text";
 
 export class MessagingError extends Error {
   constructor(
@@ -294,7 +294,7 @@ export async function startConversation(request: {
     p_token_hash: tokenHash,
     p_body: request.message,
     p_body_lang: provisionalBodyLang(request.message),
-    p_reply_lang: replyLangFor(request.message),
+    p_reply_lang: REPLY_LANG,
     p_buyer_name: request.name,
     p_buyer_company: request.company,
     p_client_key: request.clientKey,
@@ -327,7 +327,7 @@ export async function addBuyerMessage(
     p_token_hash: tokenHash,
     p_body: request.message,
     p_body_lang: provisionalBodyLang(request.message),
-    p_reply_lang: replyLangFor(request.message),
+    p_reply_lang: REPLY_LANG,
     p_client_key: request.clientKey,
   });
   if (error) {
@@ -503,47 +503,9 @@ export async function interpretMessage(
     .eq("store_id", storeId)
     .eq("interpretation_status", "interpreting");
   if (finishError) logEvent("interpretation.finish_failed", { messageId, code: finishError.code });
-  if (result.ok && !finishError) await applyDetectedLanguage(conversation.id, message.seq, result.output.language);
 
   logEvent("interpretation.finished", { conversationId: conversation.id, messageId, status: result.ok ? "ready" : "failed" });
   return result.ok ? "ready" : "failed";
-}
-
-/**
- * O idioma identificado pela IA na entrada mais recente do comprador define o
- * idioma da resposta (ex.: pinyin → chinês). Se mudar, a prévia de tradução
- * pronta em outro idioma é descartada: o produtor revisa de novo.
- */
-async function applyDetectedLanguage(conversationId: string, seq: number, language: InterpretOutput["language"]) {
-  const replyLang = replyLangFromDetected(language);
-  if (!replyLang) return;
-  const db = supabaseAdmin();
-  const { data: changed, error } = await db
-    .from("conversations")
-    .update({ reply_lang: replyLang })
-    .eq("id", conversationId)
-    .eq("last_buyer_seq", seq)
-    .neq("reply_lang", replyLang)
-    .select("id");
-  if (error) {
-    logEvent("conversation.reply_lang_failed", { conversationId, code: error.code });
-    return;
-  }
-  if (!changed?.length) return;
-  await db
-    .from("reply_drafts")
-    .update({
-      translation_status: "none",
-      translation_revision: null,
-      translation: null,
-      translation_lang: null,
-      translation_warnings: [],
-      translation_error: null,
-    })
-    .eq("conversation_id", conversationId)
-    .is("sent_message_id", null)
-    .neq("translation_status", "translating");
-  logEvent("conversation.reply_lang_changed", { conversationId, seq, replyLang });
 }
 
 // ---------------------------------------------------------------------------
@@ -637,7 +599,13 @@ function draftView(row: DraftRow | null): DraftView | null {
   let translation: DraftView["translation"] = { status: "none" };
   if (row.translation_status === "translating") translation = { status: "translating" };
   if (row.translation_status === "failed") translation = { status: "failed", error: row.translation_error };
-  if (row.translation_status === "ready" && row.translation_revision === row.revision && row.translation && row.translation_lang) {
+  // Prévia em outro idioma (anterior à regra "sempre chinês") não vale: será refeita.
+  if (
+    row.translation_status === "ready" &&
+    row.translation_revision === row.revision &&
+    row.translation &&
+    row.translation_lang === REPLY_LANG
+  ) {
     translation = {
       status: "ready",
       revision: row.translation_revision,
@@ -718,7 +686,7 @@ export async function getConversationDetail(storeId: string, conversationId: str
       currentVersion: current?.version ?? null,
     },
     buyer: { name: conversation.buyer_name, company: conversation.buyer_company },
-    replyLang: conversation.reply_lang,
+    replyLang: REPLY_LANG,
     messages,
     draft: draftView(draft),
     readSeq: conversation.producer_read_seq,
@@ -805,6 +773,14 @@ export async function translateReplyDraft(
   if (saved.translation.status === "ready") return { draft: saved, outcome: "ready" };
 
   const db = supabaseAdmin();
+  // Prévia pronta em outro idioma (anterior à regra "sempre chinês"): libera para traduzir de novo.
+  await db
+    .from("reply_drafts")
+    .update({ translation_status: "none", translation_revision: null, translation: null, translation_lang: null, translation_warnings: [] })
+    .eq("id", saved.id)
+    .eq("store_id", storeId)
+    .eq("translation_status", "ready")
+    .neq("translation_lang", REPLY_LANG);
   const { data: claimed, error: claimError } = await db.rpc("claim_reply_translation", {
     p_store_id: storeId,
     p_draft_id: saved.id,
@@ -833,7 +809,7 @@ export async function translateReplyDraft(
     ]);
     const input: TranslateInput = {
       text_pt: saved.body,
-      target_lang: conversation.reply_lang,
+      target_lang: REPLY_LANG,
       context: { buyer_message: (lastBuyer?.body as string | undefined) ?? null, product_name: snapshot.name.display },
     };
     result = await runWithContract(
@@ -867,7 +843,7 @@ export async function translateReplyDraft(
     p_draft_id: saved.id,
     p_revision: saved.revision,
     p_translation: result.ok ? result.output.translation : null,
-    p_translation_lang: result.ok ? conversation.reply_lang : null,
+    p_translation_lang: result.ok ? REPLY_LANG : null,
     p_warnings: result.ok ? result.output.warnings : [],
     p_error: result.ok ? null : result.code,
   });
@@ -891,17 +867,15 @@ export async function sendReply(
   request: { draftId: string; expectedRevision: number },
 ): Promise<{ messageId: string; seq: number; created: boolean }> {
   const started = Date.now();
-  // A tradução revisada precisa estar no idioma atual da conversa.
-  const [{ data: conversation }, { data: draft }] = await Promise.all([
-    supabaseAdmin().from("conversations").select("reply_lang").eq("id", conversationId).eq("store_id", storeId).maybeSingle(),
-    supabaseAdmin()
-      .from("reply_drafts")
-      .select("translation_lang, sent_message_id")
-      .eq("id", request.draftId)
-      .eq("conversation_id", conversationId)
-      .maybeSingle(),
-  ]);
-  if (conversation && draft && !draft.sent_message_id && draft.translation_lang && draft.translation_lang !== conversation.reply_lang) {
+  // A tradução revisada precisa estar em chinês (regra de todas as respostas).
+  const { data: draft } = await supabaseAdmin()
+    .from("reply_drafts")
+    .select("translation_lang, sent_message_id")
+    .eq("id", request.draftId)
+    .eq("conversation_id", conversationId)
+    .eq("store_id", storeId)
+    .maybeSingle();
+  if (draft && !draft.sent_message_id && draft.translation_lang && draft.translation_lang !== REPLY_LANG) {
     throw new MessagingError("translation_stale");
   }
   const { data, error } = await supabaseAdmin().rpc("send_reply", {

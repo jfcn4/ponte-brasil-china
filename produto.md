@@ -35,7 +35,7 @@ WeChat, prospecção automática, pagamentos, análise regulatória, cálculo de
 
 O QR da loja abre o catálogo do produtor, com região, história e primeiro produto publicado em destaque. O QR individual abre diretamente a vitrine. Fotografias, nome escolhido, categoria de destilado brasileiro de cana-de-açúcar, destaques fundamentados e ficha técnica dão contexto para a consulta. A vitrine prioriza o yuan e traz o original em reais como referência secundária.
 
-A mensagem é o único dado obrigatório do comprador. Nome e empresa são opcionais. “询价 · Solicitar cotação” inicia uma conversa privada vinculada ao produto e à versão vista pelo comprador. Seu acesso de retorno recupera o diálogo. Se escrever em inglês, a resposta pode ser traduzida para inglês, embora a vitrine permaneça em chinês. O comprador só recebe o texto após a confirmação do produtor.
+A mensagem é o único dado obrigatório do comprador. Nome e empresa são opcionais. “询价 · Solicitar cotação” inicia uma conversa privada vinculada ao produto e à versão vista pelo comprador. Seu acesso de retorno recupera o diálogo. O comprador pode escrever em chinês, pinyin ou inglês; a resposta do produtor é sempre enviada em chinês simplificado (decisão de 18/11/2026, que substitui a resposta opcional em inglês). O comprador só recebe o texto após a confirmação do produtor.
 
 ## Regras de negócio com exemplos
 

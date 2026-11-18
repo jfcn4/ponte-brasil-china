@@ -94,7 +94,7 @@ Exemplo: “500 garrafas para Xangai” identifica quantidade e entrega. Um volu
 
 ### 3. Traduzir resposta do produtor
 
-**Entrada:** texto final em português, idioma-alvo determinado pelo sistema a partir da conversa e histórico recente da mesma consulta. A prévia da tradução é vinculada à revisão exata do texto.
+**Entrada:** texto final em português, idioma-alvo fixo em chinês simplificado (decisão de 18/11/2026: toda resposta sai em chinês, mesmo para perguntas em inglês ou pinyin) e histórico recente da mesma consulta. A prévia da tradução é vinculada à revisão exata do texto.
 
 | Campo de saída | Tipo e validação |
 |---|---|

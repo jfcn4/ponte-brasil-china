@@ -297,68 +297,46 @@ describe("T08 · resposta revisada e envio único", () => {
     expect(retried.draft.translation.status === "ready" && retried.draft.translation.text).toContain("600");
   });
 
-  it("comprador em inglês recebe a resposta em inglês", async () => {
-    const started = await inquire(shop.slug, shop.version, "Hello, can you ship 500 bottles to Shanghai?");
-    const adapter = createTestMessagingAdapter();
-    await interpretMessage(shop.storeId, started.messageId, adapter);
-    const translated = await translateReplyDraft(shop.storeId, started.conversationId, null, "Sim, temos 500 garrafas.", adapter);
-    expect(translated.draft.translation).toMatchObject({ status: "ready", lang: "en" });
-    await sendReply(shop.storeId, started.conversationId, { draftId: translated.draft.id, expectedRevision: translated.draft.revision });
-    const buyer = await getBuyerConversation(started.token);
-    expect(buyer!.messages.at(-1)).toMatchObject({ author: "producer", lang: "en" });
-  });
 });
 
-describe("idioma da resposta", () => {
-  it("pinyin identificado como chinês leva a resposta para o chinês e descarta prévia em inglês", async () => {
-    const started = await inquire(shop.slug, shop.version, "nihao, wo zai beijing, wo yao cachaca");
-    let detail = await getConversationDetail(shop.storeId, started.conversationId);
-    expect(detail!.replyLang).toBe("en"); // escolha provisória pela escrita
+describe("idioma da resposta: sempre chinês", () => {
+  it("comprador em inglês ou pinyin recebe a resposta em chinês", async () => {
+    const adapter = createTestMessagingAdapter();
+    for (const question of ["Hello, can you ship 500 bottles to Shanghai?", "nihao, wo zai beijing, wo xiang mai wubai ping"]) {
+      const started = await inquire(shop.slug, shop.version, question);
+      await interpretMessage(shop.storeId, started.messageId, adapter);
+      const detail = await getConversationDetail(shop.storeId, started.conversationId);
+      expect(detail!.replyLang).toBe("zh-Hans");
+      const translated = await translateReplyDraft(shop.storeId, started.conversationId, null, "Sim, temos 500 garrafas.", adapter);
+      expect(translated.draft.translation).toMatchObject({ status: "ready", lang: "zh-Hans" });
+      await sendReply(shop.storeId, started.conversationId, { draftId: translated.draft.id, expectedRevision: translated.draft.revision });
+      const buyer = await getBuyerConversation(started.token);
+      expect(buyer!.messages.at(-1)).toMatchObject({ author: "producer", lang: "zh-Hans" });
+    }
+  });
 
-    // Produtor traduz antes da interpretação terminar: prévia em inglês.
-    const early = await translateReplyDraft(shop.storeId, started.conversationId, null, "Olá! Temos cachaça.", createTestMessagingAdapter());
-    expect(early.draft.translation).toMatchObject({ status: "ready", lang: "en" });
+  it("conversa antiga gravada em inglês volta a responder em chinês, refazendo a prévia", async () => {
+    const started = await inquire(shop.slug, shop.version, "Hello, do you have samples?");
+    // Estado anterior à regra: conversa e prévia pronta em inglês.
+    await supabaseAdmin().from("conversations").update({ reply_lang: "en" }).eq("id", started.conversationId);
+    const draft = await saveReplyDraft(shop.storeId, started.conversationId, null, "Sim, temos amostras.");
+    await supabaseAdmin()
+      .from("reply_drafts")
+      .update({ translation_status: "ready", translation_revision: draft.revision, translation: "Yes, we have samples.", translation_lang: "en" })
+      .eq("id", draft.id);
 
-    const pinyinAdapter: MessagingAdapter = {
-      model: "gemini-sim",
-      async interpretInquiry(): Promise<AdapterResult> {
-        return {
-          kind: "ok",
-          raw: {
-            language: "zh-Hans",
-            translation_pt: "Olá, estou em Pequim e quero cachaça.",
-            summary_pt: "Comprador em Pequim interessado em cachaça.",
-            intents: ["other"],
-            quantities: [],
-            available_facts: [],
-            missing: [],
-            next_step_pt: "Perguntar quantidade e destino.",
-            suggested_reply_pt: "Olá! Obrigado pelo interesse. Qual quantidade você procura?",
-            cultural_note_pt: null,
-          },
-        };
-      },
-      async translateReply(): Promise<AdapterResult> {
-        return { kind: "error", code: "provider_error", detail: "unused" };
-      },
-    };
-    expect(await interpretMessage(shop.storeId, started.messageId, pinyinAdapter)).toBe("ready");
-    detail = await getConversationDetail(shop.storeId, started.conversationId);
+    const detail = await getConversationDetail(shop.storeId, started.conversationId);
     expect(detail!.replyLang).toBe("zh-Hans");
     expect(detail!.draft!.translation).toEqual({ status: "none" });
-    expect(await code(sendReply(shop.storeId, started.conversationId, { draftId: early.draft.id, expectedRevision: early.draft.revision }))).toBe(
+    expect(await code(sendReply(shop.storeId, started.conversationId, { draftId: draft.id, expectedRevision: draft.revision }))).toBe(
       "translation_stale",
     );
 
-    const again = await translateReplyDraft(shop.storeId, started.conversationId, detail!.draft!.revision, "Olá! Temos cachaça.", createTestMessagingAdapter());
+    const again = await translateReplyDraft(shop.storeId, started.conversationId, draft.revision, "Sim, temos amostras.", createTestMessagingAdapter());
+    expect(again.outcome).toBe("ready");
     expect(again.draft.translation).toMatchObject({ status: "ready", lang: "zh-Hans" });
     await sendReply(shop.storeId, started.conversationId, { draftId: again.draft.id, expectedRevision: again.draft.revision });
     expect((await getBuyerConversation(started.token))!.messages.at(-1)).toMatchObject({ author: "producer", lang: "zh-Hans" });
-  });
-
-  it("hanzi misturado com pinyin já começa em chinês", async () => {
-    const started = await inquire(shop.slug, shop.version, "nihao, wozaibeijing. woyao卡沙萨");
-    expect((await getConversationDetail(shop.storeId, started.conversationId))!.replyLang).toBe("zh-Hans");
   });
 });
 

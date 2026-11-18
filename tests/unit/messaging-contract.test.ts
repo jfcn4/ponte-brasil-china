@@ -21,7 +21,7 @@ import {
   detectScript,
   meaningWarnings,
   parseChineseNumeral,
-  replyLangFor,
+  REPLY_LANG,
 } from "@/modules/messaging/text";
 
 const SHANGHAI = "您好！请问你们能供应500瓶吗？可以送到上海吗？";
@@ -52,10 +52,8 @@ describe("idioma pela escrita", () => {
     expect(detectScript(SHANGHAI)).toBe("zh-Hans");
     expect(detectScript("Can you ship 500 bottles to Shanghai?")).toBe("latin");
     expect(detectScript("500?")).toBe("other");
-    expect(replyLangFor(SHANGHAI)).toBe("zh-Hans");
-    expect(replyLangFor("Can you ship 500 bottles to Shanghai?")).toBe("en");
-    // Pinyin com hanzi (caso real da simulação) é chinês.
-    expect(replyLangFor("nihao, wozaibeijing. woyao卡沙萨")).toBe("zh-Hans");
+    // A resposta é sempre em chinês, qualquer que seja o idioma da pergunta.
+    expect(REPLY_LANG).toBe("zh-Hans");
   });
 });
 
