@@ -1,0 +1,24 @@
+# Configurações locais e segredos
+.env
+.env.*
+!.env.example
+
+# Dependências e arquivos gerados pelo Next.js e TypeScript
+node_modules/
+.next/
+out/
+next-env.d.ts
+*.tsbuildinfo
+
+# Configuração local da Vercel
+.vercel/
+
+# Testes e relatórios
+coverage/
+playwright-report/
+test-results/
+
+# Logs e arquivos do sistema
+*.log
+.DS_Store
+Thumbs.db

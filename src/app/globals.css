@@ -1,0 +1,67 @@
+@import "tailwindcss";
+
+/* Tokens das duas direções visuais (design.md). */
+@theme {
+  --color-night: #151416;        /* A · fundo do produtor */
+  --color-panel: #232124;        /* A · painéis */
+  --color-panel-2: #2c292d;
+  --color-line: #3a363b;
+  --color-mist: #b9b2b6;         /* texto secundário no escuro (7:1 sobre night) */
+  --color-snow: #f4f1ee;         /* texto principal no escuro */
+  --color-ivory: #faf8f4;        /* B · fundo público */
+  --color-paper: #ffffff;
+  --color-ink: #24201f;          /* B · texto público */
+  --color-ink-soft: #5e5654;
+  --color-sand: #e9e3dc;
+  --color-brand: #b82d35;        /* vermelho de ação, texto branco */
+  --color-brand-strong: #9c232b;
+  --color-coral: #ff8587;        /* acento legível no escuro */
+  --color-ok: #7fd1a3;
+  --color-warn: #f2c46d;
+
+  --font-sans: var(--font-inter), "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  --font-zh: var(--font-noto-sans-sc), "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+  --font-zh-serif: var(--font-noto-serif-sc), "Songti SC", "STSong", "Noto Serif CJK SC", serif;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-sans);
+  background: var(--color-night);
+  color: var(--color-snow);
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-coral);
+  outline-offset: 2px;
+}
+
+.theme-light :focus-visible {
+  outline-color: var(--color-brand);
+}
+
+[lang="zh-Hans"] {
+  font-family: var(--font-zh);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+dialog::backdrop {
+  background: rgb(10 9 10 / 0.7);
+}
