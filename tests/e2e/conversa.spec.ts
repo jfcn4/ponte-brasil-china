@@ -79,39 +79,41 @@ test("vitrine → 询价 → tradução e copiloto → resposta revisada → lin
     await expect(thread.getByText(/Tradução de teste.*500.*Xangai/)).toBeVisible({ timeout: 30_000 });
     await thread.getByText("Ver original").click();
     await expect(thread.getByText(QUESTION)).toBeVisible();
-    const copilot = page.getByRole("region", { name: "Copiloto" });
-    await expect(copilot.getByText("Capacidade de produção:")).toBeVisible();
-    await expect(copilot.getByText("Frete e prazo:")).toBeVisible();
-    await copilot.getByText("Ver análise completa").click();
+    const copilot = page.getByRole("complementary", { name: "Copiloto" });
+    const pending = copilot.getByRole("list", { name: "Pendências" });
+    await expect(pending.getByText("Capacidade de produção")).toBeVisible();
+    await expect(pending.getByText("Frete e prazo")).toBeVisible();
+    await copilot.getByText("Ver análise").click();
     await expect(copilot.getByText("Volume: 700 mL por garrafa")).toBeVisible();
     // Abrir a conversa marca a entrada exibida como lida
     await expect(nav.getByLabel(/com novidades/)).toHaveCount(0);
 
-    // 5. Sugestão só preenche o editor
-    await copilot.getByRole("button", { name: "Usar resposta sugerida" }).click();
-    const editor = page.getByLabel("Texto em português");
+    // 5. Sugestão só preenche o editor; a prévia da tradução aparece sozinha
+    const reply = page.getByRole("region", { name: "Sua resposta" });
+    const send = reply.getByRole("button", { name: "Confirmar envio" });
+    await expect(send).toBeDisabled();
+    await reply.getByRole("button", { name: "Usar resposta sugerida" }).click();
+    const editor = reply.getByLabel("Texto em português");
     await expect(editor).toHaveValue(/Obrigado pelo interesse/);
     await expect(editor).toBeFocused();
+    await expect(reply.getByText(/^【测试译文】/)).toBeVisible();
+    await expect(send).toBeEnabled();
     await buyer.reload();
     await expect(buyer.getByText("巴西生产者")).toHaveCount(0);
 
-    // 6. Edita, revisa a tradução; nova edição invalida a prévia
-    await editor.fill("Obrigado! Cada garrafa tem 700 mL. Vou confirmar a produção de 500 garrafas e o frete até Xangai.");
-    await page.getByRole("button", { name: "Revisar tradução" }).click();
-    const preview = page.getByText(/^【测试译文】/);
+    // 6. Editar invalida a prévia na hora; a nova tradução chega sozinha
+    await editor.fill("Obrigado! Cada garrafa tem 700 mL. Vou confirmar a produção de 600 garrafas e o frete até Xangai.");
+    await expect(send).toBeDisabled();
+    const preview = reply.getByText(/^【测试译文】/);
+    await expect(preview).toContainText("600");
     await expect(preview).toContainText("700");
-    await expect(preview).toContainText("500");
-    await editor.fill("Obrigado! Cada garrafa tem 700 mL. Vou confirmar a produção de 500 garrafas e o frete até Xangai ainda hoje.");
-    await expect(page.getByText(/Você alterou o texto depois da revisão/)).toBeVisible();
-    await expect(page.getByRole("button", { name: "Confirmar envio" })).toHaveCount(0);
-    await page.getByRole("button", { name: "Revisar tradução" }).click();
-    await expect(page.getByRole("heading", { name: /Prévia do que o comprador vai receber \(chinês\)/ })).toBeFocused();
+    await expect(send).toBeEnabled();
 
     // 7. Confirma o envio
-    await page.getByRole("button", { name: "Confirmar envio" }).click();
+    await send.click();
     await expect(page.getByText("Resposta enviada ao comprador em chinês.")).toBeVisible();
     await expect(editor).toHaveValue("");
-    await expect(thread.getByText(/Vou confirmar a produção de 500 garrafas e o frete até Xangai ainda hoje/)).toBeVisible();
+    await expect(thread.getByText(/Vou confirmar a produção de 600 garrafas e o frete até Xangai/)).toBeVisible();
 
     // 8. Comprador volta pelo link privado: uma única resposta, em chinês
     const back = await phone.newPage();
@@ -119,7 +121,7 @@ test("vitrine → 询价 → tradução e copiloto → resposta revisada → lin
     const replies = back.getByRole("listitem").filter({ hasText: "巴西生产者" });
     await expect(replies).toHaveCount(1);
     await expect(replies.first()).toContainText("【测试译文】");
-    await expect(replies.first()).toContainText("500");
+    await expect(replies.first()).toContainText("600");
     await expect(replies.first().locator('[lang="zh-Hans"]').first()).toBeVisible();
     await expect(back.getByText(/留言已送达/)).toHaveCount(0);
     // Análises do produtor nunca chegam ao comprador

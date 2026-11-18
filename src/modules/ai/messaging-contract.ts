@@ -8,7 +8,7 @@ import { checkNumbers, detectScript, isMostlyChinese, isMostlyLatin, meaningWarn
  * teor, preço, pedido mínimo) vêm da versão publicada que o comprador abriu e
  * são exibidos pela aplicação. Nenhuma saída tem poder de enviar mensagem.
  */
-export const INTERPRET_PROMPT_VERSION = "interpret-v1";
+export const INTERPRET_PROMPT_VERSION = "interpret-v2";
 export const INTERPRET_SCHEMA_VERSION = "interpret-output-v1";
 export const TRANSLATE_PROMPT_VERSION = "translate-v2";
 export const TRANSLATE_SCHEMA_VERSION = "translate-output-v1";
@@ -108,7 +108,7 @@ export function validateInterpretOutput(raw: unknown, input: InterpretInput): Co
 
   const script = detectScript(input.message);
   if (script === "zh-Hans" && output.language !== "zh-Hans") issues.push("language: a mensagem está em chinês");
-  if (script === "latin" && output.language === "zh-Hans") issues.push("language: a mensagem não está em chinês");
+  // Escrita latina pode ser chinês em pinyin; o inverso (hanzi classificado como outro idioma) é recusado.
 
   if (output.language !== "pt-BR") {
     const numbers = checkNumbers(

@@ -22,12 +22,16 @@ export default async function ConversationPage({ params }: PageProps<"/meu-espac
   if (!detail) notFound();
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,22rem)_1fr]">
-        <div className="hidden lg:block">
-          <h2 className="mb-3 text-lg font-semibold text-snow">Mensagens</h2>
-          <ConversationList initial={conversations} selectedId={conversationId} />
-        </div>
+    <div className="mx-auto w-full max-w-7xl px-4 py-5 sm:px-6">
+      <div className="grid gap-6 lg:grid-cols-[16rem_minmax(0,1fr)]">
+        <aside aria-labelledby="conversations-heading" className="hidden lg:block">
+          <div className="lg:sticky lg:top-4">
+            <h2 id="conversations-heading" className="mb-2 text-xs font-semibold uppercase tracking-wide text-mist">
+              Conversas
+            </h2>
+            <ConversationList initial={conversations} selectedId={conversationId} compact />
+          </div>
+        </aside>
         <ConversationView key={detail.id} initial={detail} />
       </div>
     </div>

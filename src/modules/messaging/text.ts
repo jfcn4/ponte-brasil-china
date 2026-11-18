@@ -29,7 +29,17 @@ export type ReplyLang = "zh-Hans" | "en";
  * (a vitrine é chinesa; o inglês é a alternativa prevista no escopo).
  */
 export function replyLangFor(text: string): ReplyLang {
+  // Qualquer hanzi indica chinês (ex.: pinyin misturado com 卡沙萨). Escolha
+  // provisória: a interpretação da IA confirma ou corrige (pinyin puro).
+  if (count(text, CJK) >= 1) return "zh-Hans";
   return detectScript(text) === "latin" ? "en" : "zh-Hans";
+}
+
+/** Idioma da resposta a partir do idioma identificado pela IA; null mantém o atual. */
+export function replyLangFromDetected(language: "zh-Hans" | "en" | "pt-BR" | "other"): ReplyLang | null {
+  if (language === "zh-Hans") return "zh-Hans";
+  if (language === "en") return "en";
+  return null;
 }
 
 /** Idioma provisório da entrada até a interpretação confirmar. */
@@ -135,8 +145,51 @@ const WORD_NUMBERS: Record<string, number> = {
   october: 10, november: 11, december: 12,
 };
 
-function wordNumbers(text: string): Set<string> {
+// Sílabas de numerais em pinyin, sem tons (yi ambíguo: tratado como 一).
+const PINYIN_NUMERALS: Record<string, string> = {
+  ling: "零", yi: "一", er: "二", liang: "两", san: "三", si: "四", wu: "五", liu: "六", qi: "七",
+  ba: "八", jiu: "九", shi: "十", bai: "百", qian: "千", wan: "万",
+};
+const PINYIN_SYLLABLES = Object.keys(PINYIN_NUMERALS).sort((a, b) => b.length - a.length);
+
+/** "wubai" → "五百"; null se a palavra não é feita só de sílabas numerais. */
+function pinyinWordToHanzi(word: string): string | null {
+  let rest = word;
+  let hanzi = "";
+  while (rest) {
+    const syllable = PINYIN_SYLLABLES.find((s) => rest.startsWith(s));
+    if (!syllable) return null;
+    hanzi += PINYIN_NUMERALS[syllable];
+    rest = rest.slice(syllable.length);
+  }
+  return hanzi || null;
+}
+
+/** Numerais em pinyin, inclusive separados ("wu bai", "liang qian"). Só ampliam o que é aceito. */
+export function pinyinNumbers(text: string): Set<string> {
   const found = new Set<string>();
+  const words = text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().match(/[a-z]+/g) ?? [];
+  let run = "";
+  const flush = () => {
+    const value = run ? parseChineseNumeral(run) : null;
+    if (value !== null) found.add(normalize(value));
+    run = "";
+  };
+  for (const word of words) {
+    const hanzi = pinyinWordToHanzi(word);
+    if (hanzi) {
+      run += hanzi;
+      // Cada palavra também vale sozinha (evita juntar números vizinhos por engano).
+      const alone = parseChineseNumeral(hanzi);
+      if (alone !== null) found.add(normalize(alone));
+    } else flush();
+  }
+  flush();
+  return found;
+}
+
+function wordNumbers(text: string): Set<string> {
+  const found = new Set<string>(pinyinNumbers(text));
   for (const word of text.toLowerCase().match(/[a-zà-ÿ]+/g) ?? []) {
     if (word in WORD_NUMBERS) found.add(normalize(WORD_NUMBERS[word]!));
   }

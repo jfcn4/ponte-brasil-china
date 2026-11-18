@@ -27,7 +27,7 @@ As cores e famílias acima são escolhas para implementação. O contraste entre
 | Laboratório e revisão | Foto, nome brasileiro e três propostas explicáveis. Escolher, manter original, editar em português, visualizar e publicar. | Ao selecionar, atualizar título e eventual selo na prévia. A revisão mostra a própria vitrine com explicações em português. Publicar exige confirmação. |
 | Meu espaço · Produtos | Miniatura de cada produto, nome, estado, “Editar”, “Visualizar”, link e QR quando publicado. “Novo produto” em destaque. | Arrastar para reordenar ou usar “Mover para cima/baixo”. Primeiro publicado em destaque no catálogo. |
 | Meu espaço · Minha loja | Nome, região, história, apresentação chinesa aprovada, ordem do catálogo, link e QR da loja. | Deixar explícito o destino do QR. O QR do produto aparece junto ao produto. |
-| Meu espaço · Mensagens | Lista de conversas com produto, última mensagem e estado. Badge com número de conversas com novidades. | Abrir marca como lidas as mensagens vistas. Mostrar “Aguardando resposta” à parte. Manter acesso pela navegação principal. |
+| Meu espaço · Mensagens | Lista de conversas com produto, última mensagem e estado. Badge com número de conversas com novidades. | No desktop, conversas abertas numa coluna estreita à esquerda, a conversa no centro e o copiloto compacto à direita; no celular, uma coisa por vez. Abrir marca como lidas as mensagens vistas. Mostrar “Aguardando resposta” à parte. Manter acesso pela navegação principal. |
 | Loja chinesa | Nome do produtor, origem, introdução curta, foto maior do destaque e demais produtos. | Cada item traz foto, nome chinês ou marca original escolhida, característica breve e acesso à vitrine individual. |
 | Vitrine do produto | Foto principal, galeria, nome escolhido, nome brasileiro, categoria e frase curta. Em seguida atributos rápidos, história breve, preço e cotação. | Omitir campos opcionais vazios. Mostrar até três destaques fundamentados. CTA vermelho “询价”. Disponibilizar retorno à loja. |
 | Conversa do comprador | Produto consultado, histórico, identificação dos participantes, caixa de texto e enviar. | Só a mensagem é obrigatória. Nome e empresa são opcionais. Exibir link privado de retorno e atualizar o histórico periodicamente. |
@@ -63,9 +63,9 @@ Usar a sequência foto → identidade → atributos → história → contato. A
 
 ## Conversa e copiloto
 
-No painel, abrir com a tradução em português. “Ver original” revela o texto do comprador. A sugestão tem uma ou duas frases e uma ação “Usar resposta sugerida”, que preenche o editor. Quem preferir pode escrever do zero. A análise recolhida responde a quatro perguntas: o que foi pedido, quais dados existem, o que falta e qual próximo passo faz sentido. Mostrar nota cultural somente quando específica à mensagem.
+No painel, abrir com a tradução em português. “Ver original” revela o texto do comprador. O copiloto é discreto: síntese de uma ou duas frases, pendências em etiquetas e a análise recolhida, que responde a quatro perguntas: o que foi pedido, quais dados existem, o que falta e qual próximo passo faz sentido. Mostrar nota cultural somente quando específica à mensagem. A sugestão de resposta fica junto do editor, com a ação “Usar” (“Usar resposta sugerida”), que só preenche o editor. Quem preferir pode escrever do zero.
 
-Usar “Revisar tradução” para abrir a prévia do texto e “Confirmar envio” como ato final. Editar o original devolve ao estado de tradução pendente. No lado do comprador, manter a conversa clara, com mensagens já enviadas no idioma correspondente, sem as análises privadas do produtor.
+A prévia da tradução aparece sozinha logo abaixo do editor quando o produtor para de digitar; “Confirmar envio” só fica ativo com a prévia do texto exato e é o ato final (também por Ctrl + Enter). Editar o original desativa o envio na hora e gera nova prévia. Em falha da IA, o texto fica salvo e “Tentar novamente” repete a tradução. No lado do comprador, manter a conversa clara, com mensagens já enviadas no idioma correspondente, sem as análises privadas do produtor.
 
 ## Estados e acessibilidade
 

@@ -12,17 +12,19 @@ export default async function MessagesPage() {
   const unread = conversations.filter((c) => c.hasUnread).length;
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6">
-      <h1 className="text-2xl font-semibold tracking-tight text-snow">Mensagens</h1>
-      <p className="mt-1 text-sm text-mist">
-        {conversations.length === 0
-          ? "Consultas de compradores sobre seus produtos publicados."
-          : `${conversations.length} ${conversations.length === 1 ? "conversa" : "conversas"} · ${unread} com novidades`}
-      </p>
-      <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,22rem)_1fr]">
-        <ConversationList initial={conversations} selectedId={null} />
+    <div className="mx-auto w-full max-w-7xl px-4 py-5 sm:px-6">
+      <div className="grid gap-6 lg:grid-cols-[16rem_minmax(0,1fr)]">
+        <div>
+          <h1 className="text-xl font-semibold tracking-tight text-snow">Mensagens</h1>
+          <p className="mb-3 mt-0.5 text-xs text-mist">
+            {conversations.length === 0
+              ? "Consultas de compradores sobre seus produtos publicados."
+              : `${conversations.length} ${conversations.length === 1 ? "conversa" : "conversas"} · ${unread} com novidades`}
+          </p>
+          <ConversationList initial={conversations} selectedId={null} compact={conversations.length > 0} />
+        </div>
         {conversations.length > 0 && (
-          <div className="hidden rounded-xl border border-dashed border-line p-8 text-center text-sm text-mist lg:block">
+          <div className="hidden items-center justify-center rounded-xl border border-dashed border-line p-8 text-center text-sm text-mist lg:flex">
             Escolha uma conversa para ler a tradução e responder.
           </div>
         )}

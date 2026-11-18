@@ -8,7 +8,7 @@ import { Uuid, messagingRoute } from "../../../handlers";
 export const maxDuration = 60;
 
 /**
- * “Revisar tradução”: grava o texto em português e traduz essa revisão para
+ * Prévia automática da tradução: grava o texto em português e traduz essa revisão para
  * o idioma do comprador. Não envia nada. Em falha, o texto continua salvo.
  */
 export async function POST(request: Request, ctx: RouteContext<"/api/conversations/[conversationId]/draft/translation">) {

@@ -54,6 +54,8 @@ describe("idioma pela escrita", () => {
     expect(detectScript("500?")).toBe("other");
     expect(replyLangFor(SHANGHAI)).toBe("zh-Hans");
     expect(replyLangFor("Can you ship 500 bottles to Shanghai?")).toBe("en");
+    // Pinyin com hanzi (caso real da simulação) é chinês.
+    expect(replyLangFor("nihao, wozaibeijing. woyao卡沙萨")).toBe("zh-Hans");
   });
 });
 
@@ -74,6 +76,10 @@ describe("números", () => {
     expect(checkNumbers({ text: SHANGHAI, style: "intl" }, { text: "Vocês fornecem 500 garrafas em Xangai?", style: "pt" })).toEqual({ ok: true });
     expect(checkNumbers({ text: "能供应五百瓶吗", style: "intl" }, { text: "Fornecem 500 garrafas?", style: "pt" })).toEqual({ ok: true });
     expect(checkNumbers({ text: "我们需要一些样品", style: "intl" }, { text: "Precisamos de algumas amostras", style: "pt" })).toEqual({ ok: true });
+    // Pinyin puro (caso real: "wubai ping" = 500 garrafas).
+    expect(checkNumbers({ text: "wo xiang mai wubai ping", style: "intl" }, { text: "Quero comprar 500 garrafas", style: "pt" })).toEqual({ ok: true });
+    expect(checkNumbers({ text: "wo yao liang qian wu bai ping", style: "intl" }, { text: "Quero 2.500 garrafas", style: "pt" })).toEqual({ ok: true });
+    expect(checkNumbers({ text: "wo xiang mai wubai ping", style: "intl" }, { text: "Quero comprar 5000 garrafas", style: "pt" })).toMatchObject({ ok: false });
     // Meses viram números em chinês, nos dois sentidos (caso real do Gemini: “1 月前”).
     expect(checkNumbers({ text: "Entregamos 500 garrafas até janeiro.", style: "pt" }, { text: "我们1月前交付500瓶。", style: "intl" })).toEqual({ ok: true });
     expect(checkNumbers({ text: "能在1月前送到上海吗？", style: "intl" }, { text: "Podem entregar em Xangai antes de janeiro?", style: "pt" })).toEqual({ ok: true });
@@ -111,6 +117,12 @@ describe("operação 2 · interpretar", () => {
   it("recusa idioma divergente da escrita", () => {
     const result = validateInterpretOutput({ ...goodInterpretation(), language: "en" }, input());
     expect(result.ok).toBe(false);
+  });
+
+  it("aceita chinês escrito em pinyin", () => {
+    const pinyin = input({ message: "nihao, wo zai beijing, wo yao mai cachaca" });
+    const raw = { ...goodInterpretation(), translation_pt: "Olá, estou em Pequim e quero comprar cachaça.", quantities: [] };
+    expect(validateInterpretOutput(raw, pinyin).ok).toBe(true);
   });
 
   it("recusa fato citado que não existe na versão consultada", () => {

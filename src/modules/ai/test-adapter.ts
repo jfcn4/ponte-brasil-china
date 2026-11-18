@@ -160,7 +160,8 @@ const ZH_KEYWORDS: Array<[RegExp, string]> = [
 export function validTestInterpretation(input: InterpretInput): InterpretOutput {
   const message = input.message;
   const script = detectScript(message);
-  const language = script === "zh-Hans" ? "zh-Hans" : script === "latin" ? "en" : "other";
+  // Hanzi em qualquer quantidade (ex.: pinyin com 卡沙萨) conta como chinês, como pede o prompt real.
+  const language = script === "zh-Hans" || /[一-鿿]/.test(message) ? "zh-Hans" : script === "latin" ? "en" : "other";
   // Numerais chineses isolados como 一 (em 一些, 一起) não contam como quantidade.
   const numbers = [...arabicNumbers(message, "intl"), ...[...chineseNumbers(message)].filter((n) => Number(n) >= 2)];
   const unique = [...new Set(numbers)];

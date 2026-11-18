@@ -39,7 +39,7 @@ import {
   type DraftView,
   type ProducerMessageView,
 } from "./schema";
-import { provisionalBodyLang, replyLangFor, type ReplyLang } from "./text";
+import { provisionalBodyLang, replyLangFor, replyLangFromDetected, type ReplyLang } from "./text";
 
 export class MessagingError extends Error {
   constructor(
@@ -77,7 +77,11 @@ function rpcError(message: string | undefined): MessagingError | null {
   return code ? new MessagingError(code) : null;
 }
 
+/** Saídas inválidas aceitas antes de desistir. */
 const MAX_ATTEMPTS = 2;
+/** Repetições extras quando o provedor está instável (5xx, rede). */
+const MAX_TRANSIENT_RETRIES = 2;
+const TRANSIENT_DELAY_MS = process.env.NODE_ENV === "test" ? 0 : 1_000;
 /** Sem resultado após este tempo, o produtor pode pedir a interpretação de novo. */
 const STUCK_AFTER_MS = 90_000;
 
@@ -231,23 +235,28 @@ async function logAiCall(row: {
 
 type AiErrorCode = "invalid_output" | "provider_error" | "timeout" | "not_configured";
 
-/** Até duas tentativas: saída inválida ou instabilidade repetem; cota, tempo esgotado e configuração devolvem ao usuário. */
+/** Até duas saídas inválidas e duas instabilidades do provedor; cota, tempo esgotado e configuração devolvem ao usuário. */
 async function runWithContract<T>(
   call: (attempt: number) => Promise<AdapterResult>,
   validate: (raw: unknown) => ContractResult<T>,
   log: (attempt: number, status: "ok" | AiErrorCode, durationMs: number, detail?: string) => Promise<void>,
 ): Promise<{ ok: true; output: T } | { ok: false; code: AiErrorCode }> {
   let code: AiErrorCode = "provider_error";
-  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
+  let invalid = 0;
+  let transientRetries = 0;
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS + MAX_TRANSIENT_RETRIES; attempt += 1) {
     const started = Date.now();
-    const result = await call(attempt);
+    // A tentativa seguinte a uma saída inválida pede resposta mais conservadora.
+    const result = await call(invalid + 1);
     const durationMs = Date.now() - started;
     if (result.kind === "error") {
       await log(attempt, result.code, durationMs, result.detail);
-      // Instabilidade passageira (5xx, rede) merece uma segunda tentativa; cota e configuração, não.
+      // Instabilidade passageira (5xx, rede) repete após uma pausa curta; cota, tempo esgotado e configuração, não.
       const transient = result.code === "provider_error" && /^(http_5\d\d|network:)/.test(result.detail);
-      if (transient && attempt < MAX_ATTEMPTS) {
+      if (transient && transientRetries < MAX_TRANSIENT_RETRIES) {
+        transientRetries += 1;
         code = result.code;
+        await new Promise((resolve) => setTimeout(resolve, TRANSIENT_DELAY_MS));
         continue;
       }
       return { ok: false, code: result.code };
@@ -258,7 +267,9 @@ async function runWithContract<T>(
       return { ok: true, output: checked.output };
     }
     code = "invalid_output";
+    invalid += 1;
     await log(attempt, "invalid_output", durationMs, checked.issues.join(" | "));
+    if (invalid >= MAX_ATTEMPTS) break;
   }
   return { ok: false, code };
 }
@@ -492,9 +503,47 @@ export async function interpretMessage(
     .eq("store_id", storeId)
     .eq("interpretation_status", "interpreting");
   if (finishError) logEvent("interpretation.finish_failed", { messageId, code: finishError.code });
+  if (result.ok && !finishError) await applyDetectedLanguage(conversation.id, message.seq, result.output.language);
 
   logEvent("interpretation.finished", { conversationId: conversation.id, messageId, status: result.ok ? "ready" : "failed" });
   return result.ok ? "ready" : "failed";
+}
+
+/**
+ * O idioma identificado pela IA na entrada mais recente do comprador define o
+ * idioma da resposta (ex.: pinyin → chinês). Se mudar, a prévia de tradução
+ * pronta em outro idioma é descartada: o produtor revisa de novo.
+ */
+async function applyDetectedLanguage(conversationId: string, seq: number, language: InterpretOutput["language"]) {
+  const replyLang = replyLangFromDetected(language);
+  if (!replyLang) return;
+  const db = supabaseAdmin();
+  const { data: changed, error } = await db
+    .from("conversations")
+    .update({ reply_lang: replyLang })
+    .eq("id", conversationId)
+    .eq("last_buyer_seq", seq)
+    .neq("reply_lang", replyLang)
+    .select("id");
+  if (error) {
+    logEvent("conversation.reply_lang_failed", { conversationId, code: error.code });
+    return;
+  }
+  if (!changed?.length) return;
+  await db
+    .from("reply_drafts")
+    .update({
+      translation_status: "none",
+      translation_revision: null,
+      translation: null,
+      translation_lang: null,
+      translation_warnings: [],
+      translation_error: null,
+    })
+    .eq("conversation_id", conversationId)
+    .is("sent_message_id", null)
+    .neq("translation_status", "translating");
+  logEvent("conversation.reply_lang_changed", { conversationId, seq, replyLang });
 }
 
 // ---------------------------------------------------------------------------
@@ -842,6 +891,19 @@ export async function sendReply(
   request: { draftId: string; expectedRevision: number },
 ): Promise<{ messageId: string; seq: number; created: boolean }> {
   const started = Date.now();
+  // A tradução revisada precisa estar no idioma atual da conversa.
+  const [{ data: conversation }, { data: draft }] = await Promise.all([
+    supabaseAdmin().from("conversations").select("reply_lang").eq("id", conversationId).eq("store_id", storeId).maybeSingle(),
+    supabaseAdmin()
+      .from("reply_drafts")
+      .select("translation_lang, sent_message_id")
+      .eq("id", request.draftId)
+      .eq("conversation_id", conversationId)
+      .maybeSingle(),
+  ]);
+  if (conversation && draft && !draft.sent_message_id && draft.translation_lang && draft.translation_lang !== conversation.reply_lang) {
+    throw new MessagingError("translation_stale");
+  }
   const { data, error } = await supabaseAdmin().rpc("send_reply", {
     p_store_id: storeId,
     p_conversation_id: conversationId,

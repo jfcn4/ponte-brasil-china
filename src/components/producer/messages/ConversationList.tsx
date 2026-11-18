@@ -38,7 +38,16 @@ export function ConversationBadges({ item }: { item: Pick<ConversationListItem, 
 }
 
 /** Lista de conversas da loja, atualizada periodicamente. */
-export function ConversationList({ initial, selectedId }: { initial: ConversationListItem[]; selectedId: string | null }) {
+export function ConversationList({
+  initial,
+  selectedId,
+  compact = false,
+}: {
+  initial: ConversationListItem[];
+  selectedId: string | null;
+  /** Coluna lateral estreita: prévia em uma linha. */
+  compact?: boolean;
+}) {
   const [items, setItems] = useState(initial);
 
   useEffect(() => {
@@ -93,7 +102,7 @@ export function ConversationList({ initial, selectedId }: { initial: Conversatio
                   {dateFormat.format(new Date(item.lastMessageAt))}
                 </time>
               </span>
-              <span lang={item.previewLang} className="mt-1.5 line-clamp-2 block text-sm text-snow/90">
+              <span lang={item.previewLang} className={`mt-1.5 block text-sm text-snow/90 ${compact ? "truncate" : "line-clamp-2"}`}>
                 {item.lastAuthor === "producer" ? "Você: " : ""}
                 {item.preview}
               </span>

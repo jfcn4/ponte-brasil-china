@@ -6,7 +6,7 @@ export const INTERPRET_SYSTEM_PROMPT = `Você é o copiloto comercial de um pequ
 
 Responda somente com JSON no esquema fornecido.
 
-- language: idioma da mensagem do comprador ("zh-Hans" para chinês, "en" para inglês, "pt-BR", ou "other").
+- language: idioma da mensagem do comprador. "zh-Hans" para chinês, inclusive escrito em pinyin (com ou sem tons) ou misturando pinyin e hanzi, como "nihao, wo yao 卡沙萨"; "en" só para inglês; "pt-BR" para português; "other" para os demais. A resposta do produtor será enviada nesse idioma.
 - translation_pt: tradução fiel e completa para o português do Brasil. Preserve exatamente números, quantidades, unidades, nomes de cidades, negativas e condicionais. Escreva números com algarismos (ex.: 五百瓶 → "500 garrafas"). Não acrescente nada.
 - summary_pt: uma ou duas frases sobre o que o comprador quer.
 - intents: o que foi pedido. "quantity" para volumes ou número de unidades; "delivery" para entrega, frete, logística, destino ou prazo; "price" para preço ou cotação; "samples" para amostras; "specs" para características do produto; "availability" para estoque; "payment" para condições de pagamento; "documents" para certificados, licenças ou documentação de exportação.
