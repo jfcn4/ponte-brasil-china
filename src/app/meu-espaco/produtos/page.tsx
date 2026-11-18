@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { listProducts } from "@/modules/products/repository";
-import { PRODUCT_STATUS_LABELS } from "@/modules/products/schema";
+import { StatusBadge } from "@/components/producer/StatusBadge";
+import { productPath } from "@/lib/public-url";
 import { findCurrentStoreId } from "@/modules/stores/session";
 
 export const metadata: Metadata = { title: "Produtos" };
@@ -77,21 +78,51 @@ export default async function ProductsPage() {
                   {product.name ?? <span className="italic text-mist">Sem nome</span>}
                 </p>
                 <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
-                  <span className="inline-flex items-center rounded-full border border-warn/40 bg-warn/10 px-2.5 py-0.5 text-xs font-medium text-warn">
-                    {PRODUCT_STATUS_LABELS[product.status]}
-                  </span>
+                  <StatusBadge status={product.status} />
+                  {product.publishedVersion !== null && (
+                    <span className="text-mist">versão {product.publishedVersion} no ar</span>
+                  )}
                   <span className="text-mist">
                     {product.imageCount} de 3 fotos · atualizado {dateFormat.format(new Date(product.updatedAt))}
                   </span>
                 </div>
               </div>
-              <Link
-                href={`/meu-espaco/produtos/${product.id}`}
-                className="inline-flex min-h-11 shrink-0 items-center rounded-lg border border-line px-4 text-sm font-medium text-snow hover:border-coral"
-                aria-label={`Editar ${product.name ?? "produto sem nome"}`}
-              >
-                Editar
-              </Link>
+              <div className="flex shrink-0 flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
+                <Link
+                  href={`/meu-espaco/produtos/${product.id}`}
+                  className="inline-flex min-h-11 items-center justify-center rounded-lg border border-line px-4 text-sm font-medium text-snow hover:border-coral"
+                  aria-label={`Editar ${product.name ?? "produto sem nome"}`}
+                >
+                  Editar
+                </Link>
+                <Link
+                  href={`/meu-espaco/produtos/${product.id}/apresentacao`}
+                  className="inline-flex min-h-11 items-center justify-center rounded-lg border border-line px-4 text-sm font-medium text-snow hover:border-coral"
+                  aria-label={`Apresentação em chinês de ${product.name ?? "produto sem nome"}`}
+                >
+                  Apresentação
+                </Link>
+                {product.publicSlug && (
+                  <>
+                    <a
+                      href={productPath(product.publicSlug)}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex min-h-11 items-center justify-center rounded-lg border border-line px-4 text-sm font-medium text-snow hover:border-coral"
+                      aria-label={`Visualizar a vitrine de ${product.name ?? "produto sem nome"} (nova aba)`}
+                    >
+                      Visualizar
+                    </a>
+                    <Link
+                      href={`/meu-espaco/produtos/${product.id}/apresentacao#compartilhar`}
+                      className="inline-flex min-h-11 items-center justify-center rounded-lg border border-line px-4 text-sm font-medium text-snow hover:border-coral"
+                      aria-label={`Link e QR de ${product.name ?? "produto sem nome"}`}
+                    >
+                      Link e QR
+                    </Link>
+                  </>
+                )}
+              </div>
             </li>
           ))}
         </ul>

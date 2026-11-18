@@ -126,8 +126,11 @@ export const ProductRow = z.object({
   id: z.uuid(),
   store_id: z.uuid(),
   category: z.literal("cachaca"),
-  status: z.literal("draft"),
+  status: z.enum(["draft", "published", "withdrawn"]),
   revision: z.number().int().positive(),
+  media_revision: z.number().int().positive(),
+  public_slug: z.string().nullable(),
+  published_presentation_id: z.uuid().nullable(),
   name: z.string().nullable(),
   brand: z.string().nullable(),
   short_description: z.string().nullable(),
@@ -171,10 +174,7 @@ export function rowToDraft(row: ProductRow): ProductDraft {
   };
 }
 
-/**
- * Nome, descrição e uma foto bastam para gerar a apresentação chinesa.
- * A geração em si chega na próxima entrega; a regra já orienta a interface.
- */
+/** Nome, descrição e uma foto bastam para gerar a apresentação chinesa. */
 export function missingForGeneration(input: {
   name: string | null;
   short_description: string | null;
@@ -187,5 +187,11 @@ export function missingForGeneration(input: {
   return missing;
 }
 
-/** Estados exibidos ao produtor. */
-export const PRODUCT_STATUS_LABELS = { draft: "Rascunho" } as const;
+/** Estados exibidos ao produtor. "pending" = publicado com alterações ainda privadas. */
+export const PRODUCT_STATUS_LABELS = {
+  draft: "Rascunho",
+  published: "Publicado",
+  pending: "Alterações pendentes",
+  withdrawn: "Retirado",
+} as const;
+export type DisplayStatus = keyof typeof PRODUCT_STATUS_LABELS;

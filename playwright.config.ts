@@ -18,9 +18,11 @@ export default defineConfig({
     { name: "desktop", use: { ...devices["Desktop Chrome"] }, testIgnore: /mobile/ },
     { name: "mobile", use: { ...devices["Pixel 7"] }, testMatch: /mobile/ },
   ],
-  // Roda contra a compilação de produção (execute `npm run build` antes).
+  // Roda contra a compilação de produção (execute `npm run build` antes), com o
+  // adaptador de IA de teste: respostas determinísticas e nenhuma cota gasta.
   webServer: {
     command: `npm run start -- -p ${PORT}`,
+    env: { AI_MODE: "test", APP_URL: `http://localhost:${PORT}` },
     url: `http://localhost:${PORT}`,
     reuseExistingServer: !process.env.CI,
     timeout: 60_000,

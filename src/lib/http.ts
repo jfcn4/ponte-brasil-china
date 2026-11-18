@@ -9,6 +9,11 @@ export type ApiErrorCode =
   | "unsupported_image"
   | "image_too_large"
   | "storage_failed"
+  | "missing_requirements"
+  | "generation_in_progress"
+  | "adaptation_stale"
+  | "adaptation_not_ready"
+  | "missing_producer"
   | "server_error";
 
 export function apiError(status: number, code: ApiErrorCode, message: string, details?: unknown) {

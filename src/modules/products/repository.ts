@@ -5,6 +5,7 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 import {
   ProductRow,
   StoreOrigin,
+  type DisplayStatus,
   type ProductImageView,
   type SaveDraftRequest,
 } from "./schema";
@@ -35,7 +36,9 @@ function mapRpcError(message: string | undefined): ProductError | null {
 export type ProductListItem = {
   id: string;
   name: string | null;
-  status: "draft";
+  status: DisplayStatus;
+  publicSlug: string | null;
+  publishedVersion: number | null;
   position: number;
   updatedAt: string;
   thumbnailUrl: string | null;
@@ -46,18 +49,25 @@ export async function listProducts(storeId: string): Promise<ProductListItem[]> 
   const db = supabaseAdmin();
   const { data, error } = await db
     .from("products")
-    .select("id, name, status, position, updated_at, product_images(storage_path, position)")
+    .select(
+      "id, name, status, revision, media_revision, public_slug, position, updated_at, product_images(storage_path, position), " +
+        "current:presentations!products_published_presentation_fkey(version, source_revision, source_media_revision)",
+    )
     .eq("store_id", storeId)
     .order("position", { ascending: true });
   if (error) throw new Error(`products_list_failed: ${error.code}`);
 
-  const rows = (data ?? []) as Array<{
+  const rows = (data ?? []) as unknown as Array<{
     id: string;
     name: string | null;
-    status: "draft";
+    status: "draft" | "published" | "withdrawn";
+    revision: number;
+    media_revision: number;
+    public_slug: string | null;
     position: number;
     updated_at: string;
     product_images: Array<{ storage_path: string; position: number }>;
+    current: { version: number; source_revision: number; source_media_revision: number } | null;
   }>;
 
   const primaryPaths = rows
@@ -67,10 +77,15 @@ export async function listProducts(storeId: string): Promise<ProductListItem[]> 
 
   return rows.map((row) => {
     const primary = row.product_images.find((img) => img.position === 0);
+    const pending =
+      row.current !== null &&
+      (row.current.source_revision !== row.revision || row.current.source_media_revision !== row.media_revision);
     return {
       id: row.id,
       name: row.name,
-      status: row.status,
+      status: row.current ? (pending ? "pending" : "published") : row.status === "withdrawn" ? "withdrawn" : "draft",
+      publicSlug: row.current ? row.public_slug : null,
+      publishedVersion: row.current?.version ?? null,
       position: row.position,
       updatedAt: row.updated_at,
       thumbnailUrl: primary ? (urls.get(primary.storage_path) ?? null) : null,
@@ -170,7 +185,7 @@ export function sniffImageType(bytes: Uint8Array): AcceptedImageType | null {
   return null;
 }
 
-async function signPaths(paths: string[]): Promise<Map<string, string>> {
+export async function signPaths(paths: string[]): Promise<Map<string, string>> {
   const result = new Map<string, string>();
   if (paths.length === 0) return result;
   const { data, error } = await supabaseAdmin()
@@ -284,13 +299,35 @@ export async function removeImage(storeId: string, productId: string, imageId: s
     if (mapped) throw mapped;
     throw new Error(`image_remove_failed: ${error.code}`);
   }
-  // Rascunho sem publicação: nenhuma versão aprovada referencia esta foto ainda.
-  if (typeof data === "string") {
+  // A chave é imutável: só sai do Storage se nenhuma versão publicada a referencia.
+  if (typeof data === "string" && !(await isReferencedByPresentation(data))) {
     const removal = await db.storage.from(serverEnv().SUPABASE_STORAGE_BUCKET).remove([data]);
     if (removal.error) logEvent("storage.remove_failed", { storeId, productId, imageId });
   }
   logEvent("product.image_removed", { storeId, productId, imageId });
   return listImages(storeId, productId);
+}
+
+async function isReferencedByPresentation(storagePath: string): Promise<boolean> {
+  const { count, error } = await supabaseAdmin()
+    .from("presentation_images")
+    .select("presentation_id", { count: "exact", head: true })
+    .eq("storage_path", storagePath);
+  // Na dúvida, preserva o arquivo.
+  if (error) return true;
+  return (count ?? 0) > 0;
+}
+
+/** Linhas das fotos com a chave no Storage (para congelar na publicação). */
+export async function listImageRows(storeId: string, productId: string) {
+  const { data, error } = await supabaseAdmin()
+    .from("product_images")
+    .select("id, position, storage_path, width, height")
+    .eq("store_id", storeId)
+    .eq("product_id", productId)
+    .order("position", { ascending: true });
+  if (error) throw new Error(`images_list_failed: ${error.code}`);
+  return (data ?? []) as Array<{ id: string; position: number; storage_path: string; width: number | null; height: number | null }>;
 }
 
 export async function setPrimaryImage(storeId: string, productId: string, imageId: string): Promise<ProductImageView[]> {

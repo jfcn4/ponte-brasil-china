@@ -2,7 +2,7 @@
 
 A Ponte Global ajuda o produtor brasileiro a apresentar sua cachaça em chinês e conduzir a primeira conversa com um comprador. O produtor cadastra o que sabe sobre o produto, compara três identidades chinesas, aprova uma vitrine e compartilha um QR. O comprador pode conhecer toda a loja ou consultar um produto específico. A decisão sobre o que publicar e o que responder continua com o produtor.
 
-**Estado do repositório:** primeira entrega da aplicação. Funcionam a página inicial, a sessão anônima do produtor, o cadastro em quatro seções com prévia, o rascunho com até três fotos no Supabase e “Meu espaço → Produtos”. Laboratório de nomes, publicação, QR e chat ficam para a próxima entrega.
+**Estado do repositório:** segunda entrega. Funcionam a página inicial, a sessão anônima do produtor, o cadastro em quatro seções com prévia, o rascunho com até três fotos, “Meu espaço → Produtos”, a geração das três identidades chinesas pelo Gemini (servidor), a revisão com prévia da vitrine, a publicação confirmada com link público estável (`/p/<código>`) e QR individual, e a republicação após edição. Loja com vários produtos, QR da loja, retirada e chat ficam para as próximas entregas; na vitrine, o botão “询价” aparece desativado com aviso em chinês até o chat existir.
 
 ## Por onde começar
 
@@ -42,13 +42,34 @@ O `DATABASE_URL` só é usado pelas migrações. A conexão direta do Supabase (
 | Comando | O que verifica |
 |---|---|
 | `npm run lint` e `npm run typecheck` | Análise estática e tipos (inclui os tipos de rota gerados pelo Next). |
-| `npm test` | Unidade: câmbio e arredondamento, leitura do preço, formulário, contratos Zod, token de sessão, assinatura de imagem. |
-| `npm run test:integration` | Contra o Supabase do `.env.local`: isolamento entre lojas, revisão obsoleta, limite de três fotos, ordem e bucket privado. Cria e remove as próprias lojas. |
-| `npm run build` e `npm run test:e2e` | Playwright na compilação de produção: cadastro com foto, fechar e reabrir, edição, janela anônima isolada, quarta foto recusada e celular. Na primeira vez: `npx playwright install chromium`. |
+| `npm test` | Unidade: câmbio e arredondamento, leitura do preço, formulário, contrato da IA (estratégia repetida, pinyin ausente, destaque sem fonte, idioma e números inventados), snapshot publicado, token de sessão, assinatura de imagem. |
+| `npm run test:integration` | Contra o Supabase do `.env.local`, com o adaptador de IA de teste: isolamento entre lojas, revisão obsoleta, limite de três fotos, geração com falha e repetição, geração simultânea, publicação dupla sem duplicar versão, preço ¥90.85 → ¥102.35 só após republicar, foto preservada na versão publicada. Cria e remove as próprias lojas. |
+| `npm run build` e `npm run test:e2e` | Playwright na compilação de produção (com `AI_MODE=test`): cadastro com foto, isolamento, quarta foto recusada, celular e o aceite da publicação (gerar, escolher, publicar, abrir o link em contexto de celular, editar preço e republicar no mesmo link). Na primeira vez: `npx playwright install chromium`. |
 
 ### Deploy na Vercel
 
-Importe o repositório como projeto Next.js e configure, em *Settings → Environment Variables*: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`, `SUPABASE_STORAGE_BUCKET` e `APP_URL` (endereço público do deploy). `DATABASE_URL` e as chaves Gemini não são necessárias nesta entrega; as migrações rodam a partir da máquina local. A Vercel usa Node 22 pelo campo `engines` do `package.json`.
+Importe o repositório como projeto Next.js e configure, em *Settings → Environment Variables* (Production e Preview):
+
+| Variável | Valor |
+|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`, `SUPABASE_STORAGE_BUCKET` | Os mesmos do `.env.local`. |
+| `GEMINI_API_KEY` | Chave do Google AI Studio. Fica só no servidor. |
+| `GEMINI_MODEL` | Identificador do modelo Flash (o `.env.local` usa `gemini-3.5-flash-lite`). |
+| `APP_URL` | Endereço público do deploy, sem barra final (ex.: `https://ponte-global.vercel.app`). É o endereço gravado nos links e QRs. Sem ele, a aplicação usa o domínio de produção da Vercel. |
+| `AI_MODE` | Não defina em produção (o padrão é `gemini`). `test` usa respostas fixas, identificadas na tela como teste. |
+
+`DATABASE_URL` não é necessária na Vercel: rode `npm run db:migrate` a partir da máquina local **antes** do deploy (esta entrega traz a migração `0003_presentations_publication.sql`). A rota de geração declara até 60 s de execução. A Vercel usa Node 22 pelo campo `engines` do `package.json`.
+
+### Como conferir a publicação na Vercel
+
+1. No celular ou no computador, abra o deploy → **Meu espaço → Produtos** e abra um rascunho com nome, descrição, foto, nome do produtor e preço **79,00**.
+2. Clique em **Gerar apresentação chinesa**. Em 5 a 30 s aparecem as opções fonética, semântica e equilibrada, com a recomendação justificada. Se aparecer erro, o rascunho continua intacto e **Tentar novamente** repete a geração.
+3. Escolha um nome. A prévia à direita (abaixo, no celular) mostra a foto real, o nome e **参考价格 ¥90.85 / BRL 79.00**. Clique em **Publicar vitrine** e depois em **Confirmar publicação**.
+4. Em **Link e QR do produto**, escaneie o QR com outro aparelho. A vitrine abre sem login, com a mesma foto, o nome aprovado e ¥90.85.
+5. Volte ao cadastro, mude o preço para **89,00** e espere “Rascunho salvo”. Recarregue a vitrine no outro aparelho: continua **¥90.85**. O painel mostra “Alterações pendentes”.
+6. Clique em **Revisar apresentação e republicar** → **Republicar vitrine** → **Confirmar publicação**. Recarregue o mesmo link: agora **¥102.35 / BRL 89.00**.
+
+Nos logs da função (Vercel → *Logs*), procure `ai.call` para ver modelo, tentativa, estado e duração de cada geração, sem conteúdo do produtor.
 
 ### Configuração prevista para o ambiente
 
@@ -57,7 +78,7 @@ Importe o repositório como projeto Next.js e configure, em *Settings → Enviro
 | Origem pública da aplicação | Montar links permanentes e QRs que abram no celular da banca. |
 | URL do projeto Supabase e acesso ao PostgreSQL de desenvolvimento | Conectar dados e aplicar migrações no ambiente correto. |
 | Credenciais do servidor e nome do bucket de fotos | Autorizar a operação privada e salvar imagens. Manter a chave privilegiada fora do cliente. |
-| Chave Gemini, identificador do modelo Flash e modo de IA | Alternar entre respostas determinísticas de teste e chamada real. Verificar cota e uma geração completa antes da apresentação. |
+| `GEMINI_API_KEY`, `GEMINI_MODEL` e `AI_MODE` | Alternar entre respostas determinísticas de teste e chamada real. Verificar cota e uma geração completa antes da apresentação. |
 
 ## Origem das decisões
 

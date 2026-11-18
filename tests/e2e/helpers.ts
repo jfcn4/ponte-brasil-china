@@ -16,7 +16,11 @@ export async function cleanupStoreOf(context: BrowserContext) {
   const { data: session } = await db.from("store_sessions").select("store_id").eq("token_hash", hash).maybeSingle();
   if (!session) return;
   const { data: images } = await db.from("product_images").select("storage_path").eq("store_id", session.store_id);
-  const paths = (images ?? []).map((i) => i.storage_path);
+  const { data: frozen } = await db
+    .from("presentation_images")
+    .select("storage_path, presentations!inner(store_id)")
+    .eq("presentations.store_id", session.store_id);
+  const paths = [...new Set([...(images ?? []), ...(frozen ?? [])].map((i) => i.storage_path as string))];
   if (paths.length) await db.storage.from(process.env.SUPABASE_STORAGE_BUCKET!).remove(paths);
   await db.from("stores").delete().eq("id", session.store_id);
 }
