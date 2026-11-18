@@ -1,23 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { listProducts } from "@/modules/products/repository";
-import { StatusBadge } from "@/components/producer/StatusBadge";
-import { productPath } from "@/lib/public-url";
+import { ProductOrderList } from "@/components/producer/ProductOrderList";
+import { getCatalogRevision } from "@/modules/stores/catalog";
 import { findCurrentStoreId } from "@/modules/stores/session";
 
 export const metadata: Metadata = { title: "Produtos" };
 
-const dateFormat = new Intl.DateTimeFormat("pt-BR", {
-  day: "2-digit",
-  month: "2-digit",
-  hour: "2-digit",
-  minute: "2-digit",
-  timeZone: "America/Sao_Paulo",
-});
-
 export default async function ProductsPage() {
   const storeId = await findCurrentStoreId();
-  const products = storeId ? await listProducts(storeId) : [];
+  const [products, catalogRevision] = storeId
+    ? await Promise.all([listProducts(storeId), getCatalogRevision(storeId)])
+    : [[], 1];
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6">
@@ -54,78 +48,7 @@ export default async function ProductsPage() {
           </Link>
         </div>
       ) : (
-        <ul className="mt-6 space-y-3" aria-label="Produtos da loja">
-          {products.map((product) => (
-            <li
-              key={product.id}
-              className="flex items-center gap-4 rounded-xl border border-line bg-panel p-3 sm:p-4"
-            >
-              <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-panel-2 sm:h-24 sm:w-24">
-                {product.thumbnailUrl ? (
-                  // URLs assinadas e temporárias do bucket privado: sem otimização do next/image.
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={product.thumbnailUrl}
-                    alt={`Foto principal de ${product.name ?? "produto sem nome"}`}
-                    className="h-full w-full object-contain"
-                  />
-                ) : (
-                  <span className="px-2 text-center text-xs text-mist">Sem foto</span>
-                )}
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="line-clamp-2 break-words font-semibold text-snow">
-                  {product.name ?? <span className="italic text-mist">Sem nome</span>}
-                </p>
-                <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
-                  <StatusBadge status={product.status} />
-                  {product.publishedVersion !== null && (
-                    <span className="text-mist">versão {product.publishedVersion} no ar</span>
-                  )}
-                  <span className="text-mist">
-                    {product.imageCount} de 3 fotos · atualizado {dateFormat.format(new Date(product.updatedAt))}
-                  </span>
-                </div>
-              </div>
-              <div className="flex shrink-0 flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
-                <Link
-                  href={`/meu-espaco/produtos/${product.id}`}
-                  className="inline-flex min-h-11 items-center justify-center rounded-lg border border-line px-4 text-sm font-medium text-snow hover:border-coral"
-                  aria-label={`Editar ${product.name ?? "produto sem nome"}`}
-                >
-                  Editar
-                </Link>
-                <Link
-                  href={`/meu-espaco/produtos/${product.id}/apresentacao`}
-                  className="inline-flex min-h-11 items-center justify-center rounded-lg border border-line px-4 text-sm font-medium text-snow hover:border-coral"
-                  aria-label={`Apresentação em chinês de ${product.name ?? "produto sem nome"}`}
-                >
-                  Apresentação
-                </Link>
-                {product.publicSlug && (
-                  <>
-                    <a
-                      href={productPath(product.publicSlug)}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex min-h-11 items-center justify-center rounded-lg border border-line px-4 text-sm font-medium text-snow hover:border-coral"
-                      aria-label={`Visualizar a vitrine de ${product.name ?? "produto sem nome"} (nova aba)`}
-                    >
-                      Visualizar
-                    </a>
-                    <Link
-                      href={`/meu-espaco/produtos/${product.id}/apresentacao#compartilhar`}
-                      className="inline-flex min-h-11 items-center justify-center rounded-lg border border-line px-4 text-sm font-medium text-snow hover:border-coral"
-                      aria-label={`Link e QR de ${product.name ?? "produto sem nome"}`}
-                    >
-                      Link e QR
-                    </Link>
-                  </>
-                )}
-              </div>
-            </li>
-          ))}
-        </ul>
+        <ProductOrderList initialProducts={products} initialRevision={catalogRevision} />
       )}
     </div>
   );

@@ -14,7 +14,7 @@ export default async function MessagesPage() {
   return (
     <div className="mx-auto w-full max-w-7xl px-4 py-5 sm:px-6">
       <div className="grid gap-6 lg:grid-cols-[16rem_minmax(0,1fr)]">
-        <div>
+        <div className="min-w-0">
           <h1 className="text-xl font-semibold tracking-tight text-snow">Mensagens</h1>
           <p className="mb-3 mt-0.5 text-xs text-mist">
             {conversations.length === 0

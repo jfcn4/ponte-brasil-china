@@ -1,7 +1,7 @@
 import "server-only";
 import { createHash } from "node:crypto";
 import { logEvent } from "@/lib/log";
-import { productPath, publicOrigin } from "@/lib/public-url";
+import { productPath, publicOrigin, storePath } from "@/lib/public-url";
 import { qrFor } from "@/lib/qr";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { identityAdapter } from "@/modules/ai";
@@ -16,6 +16,7 @@ import {
   type AdaptationInput,
 } from "@/modules/ai/identity-contract";
 import { TEST_MODEL } from "@/modules/ai/test-adapter";
+import { approveStoreIntro, getStoreIntroAndLink, publicStoreLink } from "@/modules/stores/catalog";
 import type { LabState } from "./lab-state";
 import {
   CHOICES,
@@ -274,6 +275,9 @@ export async function getLabState(storeId: string, productId: string): Promise<L
     };
   }
 
+  const { intro: storeIntro, link } = await getStoreIntroAndLink(storeId);
+  const storeLink = presentation ? link : null;
+
   return {
     product: {
       id: product.id,
@@ -308,6 +312,8 @@ export async function getLabState(storeId: string, productId: string): Promise<L
         : null,
     hasStaleReady: !usableRow && adaptations.some((a) => a.status === "ready"),
     published,
+    storeIntro: storeIntro ? { zh: storeIntro.zh, pt: storeIntro.pt, adaptationId: storeIntro.adaptation_id } : null,
+    storeUrl: storeLink ? `${await publicOrigin()}${storePath(storeLink.slug)}` : null,
   };
 }
 
@@ -327,6 +333,8 @@ export type PublishRequest = {
   choice: Choice;
   expectedRevision: number;
   expectedMediaRevision: number;
+  /** O produtor aprovou também a apresentação da loja gerada nesta adaptação. */
+  approveStoreIntro?: boolean;
 };
 
 /**
@@ -337,7 +345,7 @@ export async function publishProduct(
   storeId: string,
   productId: string,
   request: PublishRequest,
-): Promise<{ version: number; slug: string; created: boolean }> {
+): Promise<{ version: number; slug: string; created: boolean; storeIntroApproved: boolean }> {
   if (!(CHOICES as readonly string[]).includes(request.choice)) throw new PublicationError("adaptation_not_ready");
   const { store, draft } = await loadOwned(storeId, productId);
 
@@ -399,6 +407,15 @@ export async function publishProduct(
     | undefined;
   if (!row) throw new Error("publish_failed: no_row");
 
+  // A apresentação da loja é um objeto à parte: aprovada depois da publicação,
+  // de forma repetível (repetir a confirmação conclui o que faltou).
+  const output = IdentityOutput.parse(adaptation.output);
+  let storeIntroApproved = false;
+  if (request.approveStoreIntro && output.store_intro) {
+    await approveStoreIntro(storeId, request.adaptationId);
+    storeIntroApproved = true;
+  }
+
   logEvent("product.published", {
     storeId,
     productId,
@@ -408,28 +425,33 @@ export async function publishProduct(
     created: row.created,
     ms: Date.now() - started,
   });
-  return { version: row.version, slug: row.public_slug, created: row.created };
+  return { version: row.version, slug: row.public_slug, created: row.created, storeIntroApproved };
 }
 
 // ---------------------------------------------------------------------------
 // Leitura pública (sem sessão): só a versão apontada
 // ---------------------------------------------------------------------------
 
+export type PublicStoreLink = { slug: string; producer: string } | null;
+
 export type PublicProduct =
-  | { state: "published"; version: number; view: ShowcaseView; snapshot: PresentationSnapshot }
-  | { state: "unavailable" };
+  | { state: "published"; version: number; view: ShowcaseView; snapshot: PresentationSnapshot; store: PublicStoreLink }
+  | { state: "unavailable"; store: PublicStoreLink };
 
 export async function getPublicProduct(slug: string): Promise<PublicProduct | null> {
   if (!/^[a-z0-9]{10}$/.test(slug)) return null;
   const db = supabaseAdmin();
   const { data: product, error } = await db
     .from("products")
-    .select("id, published_presentation_id")
+    .select("id, published_presentation_id, store:stores(public_slug, public_profile)")
     .eq("public_slug", slug)
     .maybeSingle();
   if (error) throw new Error(`public_product_read_failed: ${error.code}`);
   if (!product) return null;
-  if (!product.published_presentation_id) return { state: "unavailable" };
+  const store = publicStoreLink(
+    (product as unknown as { store: { public_slug: string | null; public_profile: unknown } | null }).store,
+  );
+  if (!product.published_presentation_id) return { state: "unavailable", store };
 
   const { data: presentation, error: presentationError } = await db
     .from("presentations")
@@ -438,7 +460,7 @@ export async function getPublicProduct(slug: string): Promise<PublicProduct | nu
     .eq("product_id", product.id)
     .maybeSingle();
   if (presentationError) throw new Error(`public_presentation_read_failed: ${presentationError.code}`);
-  if (!presentation) return { state: "unavailable" };
+  if (!presentation) return { state: "unavailable", store };
 
   const snapshot = PresentationSnapshot.parse(presentation.snapshot);
   const frozen = ((presentation.presentation_images ?? []) as Array<{ position: number; storage_path: string }>).sort(
@@ -449,5 +471,5 @@ export async function getPublicProduct(slug: string): Promise<PublicProduct | nu
     snapshot,
     frozen.map((img) => ({ id: `${presentation.id}-${img.position}`, url: urls.get(img.storage_path) ?? null })),
   );
-  return { state: "published", version: presentation.version, view, snapshot };
+  return { state: "published", version: presentation.version, view, snapshot, store };
 }

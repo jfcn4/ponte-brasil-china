@@ -96,6 +96,9 @@ export function validTestOutput(input: AdaptationInput): IdentityOutput {
       aroma: a.aroma ? "香气清新" : null,
       flavor: a.flavor ? "口感顺滑" : null,
     },
+    store_intro: input.producer.name
+      ? { zh: "来自巴西产区的卡沙萨生产者，用心酿造每一瓶。", pt: "Produtor de cachaça de uma região do Brasil, cuidando de cada garrafa." }
+      : null,
   };
 }
 

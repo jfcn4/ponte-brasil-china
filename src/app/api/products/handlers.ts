@@ -4,6 +4,7 @@ import { apiError, isSameOrigin } from "@/lib/http";
 import { logEvent } from "@/lib/log";
 import { PublicationError } from "@/modules/products/publication";
 import { ProductError } from "@/modules/products/repository";
+import { StoreError } from "@/modules/stores/catalog";
 
 export const Uuid = z.uuid();
 
@@ -43,6 +44,20 @@ export async function mutation(request: Request, name: string, run: () => Promis
           return apiError(409, "adaptation_not_ready", "Estas opções não estão prontas para publicar. Gere novamente.");
         case "missing_producer":
           return apiError(422, "missing_producer", "Informe o nome do produtor ou engenho no cadastro antes de publicar.");
+      }
+    }
+    if (error instanceof StoreError) {
+      switch (error.code) {
+        case "not_found":
+          return apiError(404, "not_found", "Loja não encontrada neste navegador.");
+        case "revision_conflict":
+          return apiError(409, "revision_conflict", "A ordem foi alterada em outra aba ou janela. A lista foi atualizada.");
+        case "order_mismatch":
+          return apiError(409, "order_mismatch", "A lista de produtos mudou. Atualize a página e tente de novo.");
+        case "intro_missing":
+          return apiError(422, "intro_missing", "Estas opções não trazem apresentação da loja. Gere novamente para obtê-la.");
+        case "adaptation_not_ready":
+          return apiError(409, "adaptation_not_ready", "Estas opções não estão prontas. Gere novamente.");
       }
     }
     logEvent("api.error", { op: name, message: error instanceof Error ? error.message.slice(0, 120) : "unknown" });

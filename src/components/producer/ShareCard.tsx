@@ -2,20 +2,41 @@
 
 import { type Ref, useState } from "react";
 
-/** Link público e QR individual do produto, com alternativa copiável ao QR. */
+const KINDS = {
+  product: {
+    id: "compartilhar",
+    title: "Link e QR do produto",
+    description: "Este QR abre diretamente a vitrine deste produto. O endereço não muda quando você edita ou republica.",
+    qrLabel: "QR code da vitrine",
+    open: "Abrir vitrine",
+  },
+  store: {
+    id: "compartilhar-loja",
+    title: "Link e QR da loja",
+    description:
+      "Este QR abre o catálogo da loja em chinês, com todos os produtos publicados e o primeiro em destaque. O endereço não muda ao reordenar, editar ou republicar.",
+    qrLabel: "QR code do catálogo da loja",
+    open: "Abrir catálogo",
+  },
+} as const;
+
+/** Link público e QR (do produto ou da loja), com alternativa copiável ao QR. */
 export function ShareCard({
   url,
   qrSvg,
   qrPngDataUrl,
   fileName,
   headingRef,
+  kind = "product",
 }: {
   url: string;
   qrSvg: string;
   qrPngDataUrl: string;
   fileName: string;
   headingRef?: Ref<HTMLHeadingElement>;
+  kind?: keyof typeof KINDS;
 }) {
+  const text = KINDS[kind];
   const [copied, setCopied] = useState<"ok" | "fail" | null>(null);
 
   const copy = async () => {
@@ -28,29 +49,27 @@ export function ShareCard({
   };
 
   return (
-    <section id="compartilhar" aria-labelledby="compartilhar-titulo" className="mt-8 rounded-2xl border border-line bg-panel p-5 sm:p-6">
-      <h2 id="compartilhar-titulo" ref={headingRef} tabIndex={-1} className="text-lg font-semibold text-snow">
-        Link e QR do produto
+    <section id={text.id} aria-labelledby={`${text.id}-titulo`} className="mt-8 rounded-2xl border border-line bg-panel p-5 sm:p-6">
+      <h2 id={`${text.id}-titulo`} ref={headingRef} tabIndex={-1} className="text-lg font-semibold text-snow">
+        {text.title}
       </h2>
-      <p className="mt-1 text-sm text-mist">
-        Este QR abre diretamente a vitrine deste produto. O endereço não muda quando você edita ou republica.
-      </p>
+      <p className="mt-1 text-sm text-mist">{text.description}</p>
       <div className="mt-4 flex flex-col gap-5 sm:flex-row sm:items-start">
         <figure className="w-48 shrink-0">
           <div
             role="img"
-            aria-label={`QR code da vitrine: ${url}`}
+            aria-label={`${text.qrLabel}: ${url}`}
             className="overflow-hidden rounded-xl bg-white p-1 [&_svg]:h-auto [&_svg]:w-full"
             dangerouslySetInnerHTML={{ __html: qrSvg }}
           />
           <figcaption className="mt-2 text-xs text-mist">Aponte a câmera do celular para abrir.</figcaption>
         </figure>
         <div className="min-w-0 flex-1 space-y-3">
-          <label className="block text-sm font-medium text-snow" htmlFor="link-publico">
+          <label className="block text-sm font-medium text-snow" htmlFor={`${text.id}-link`}>
             Link público
           </label>
           <input
-            id="link-publico"
+            id={`${text.id}-link`}
             readOnly
             value={url}
             onFocus={(event) => event.currentTarget.select()}
@@ -70,7 +89,7 @@ export function ShareCard({
               rel="noreferrer"
               className="inline-flex min-h-11 items-center rounded-lg border border-line px-4 text-sm font-medium text-snow hover:border-coral"
             >
-              Abrir vitrine <span className="sr-only">(nova aba)</span>
+              {text.open} <span className="sr-only">(nova aba)</span>
             </a>
             <a
               href={qrPngDataUrl}

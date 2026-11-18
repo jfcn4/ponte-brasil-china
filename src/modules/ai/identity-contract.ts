@@ -10,10 +10,12 @@ import { PERSONALITY_LABELS, type CachacaAttributes, type ProductDraft, type Sto
  *
  * Saída: três nomes (fonética, semântica, equilibrada) com explicações em
  * português, recomendação justificada e textos chineses da vitrine, cada
- * destaque ligado a um campo de origem presente na entrada.
+ * destaque ligado a um campo de origem presente na entrada. Desde a v2,
+ * também uma apresentação curta da loja (store_intro), que o produtor aprova
+ * ao publicar. Saídas v1 (sem store_intro) continuam válidas.
  */
-export const IDENTITY_PROMPT_VERSION = "identity-v1";
-export const IDENTITY_SCHEMA_VERSION = "identity-output-v1";
+export const IDENTITY_PROMPT_VERSION = "identity-v2";
+export const IDENTITY_SCHEMA_VERSION = "identity-output-v2";
 
 export const STRATEGIES = ["fonetica", "semantica", "equilibrada"] as const;
 export type Strategy = (typeof STRATEGIES)[number];
@@ -144,6 +146,10 @@ export type HighlightSource = (typeof HIGHLIGHT_SOURCES)[number];
 
 const Bilingual = (zhMax: number, ptMax: number) => z.object({ zh: zhText(zhMax), pt: ptText(ptMax) }).strict();
 
+/** Apresentação chinesa da loja, com a versão em português para o produtor revisar. */
+export const StoreIntroText = Bilingual(160, 400);
+export type StoreIntroText = z.infer<typeof StoreIntroText>;
+
 export const IdentityOutput = z
   .object({
     options: z.array(NameOption).length(3),
@@ -161,6 +167,8 @@ export const IdentityOutput = z
     attributes_zh: z
       .object({ wood: zhText(40).nullable(), aroma: zhText(80).nullable(), flavor: zhText(80).nullable() })
       .strict(),
+    /** Apresentação da loja (produtor e origem). Ausente nas saídas v1. */
+    store_intro: StoreIntroText.nullable().optional(),
   })
   .strict();
 export type IdentityOutput = z.infer<typeof IdentityOutput>;
@@ -251,6 +259,7 @@ export function validateIdentityOutput(raw: unknown, input: AdaptationInput): Co
     output.attributes_zh.wood ?? "",
     output.attributes_zh.aroma ?? "",
     output.attributes_zh.flavor ?? "",
+    output.store_intro?.zh ?? "",
   ];
   const invented = [...new Set(zhTexts.flatMap(numbersIn))].filter((n) => !allowed.has(n));
   if (invented.length > 0) issues.push(`content: números fora do cadastro (${invented.slice(0, 3).join(", ")})`);
@@ -280,7 +289,10 @@ export function jsonSchemaFor(schema: z.ZodType): JsonSchema {
   return stripUnsupported(z.toJSONSchema(schema, { io: "input" })) as JsonSchema;
 }
 
-/** JSON Schema da saída da operação 1. */
+/**
+ * JSON Schema da saída da operação 1. Para o provedor, store_intro é
+ * obrigatório (pode ser null); a leitura local também aceita saídas v1.
+ */
 export function identityResponseSchema(): JsonSchema {
-  return jsonSchemaFor(IdentityOutput);
+  return jsonSchemaFor(IdentityOutput.extend({ store_intro: StoreIntroText.nullable() }));
 }

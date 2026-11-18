@@ -25,6 +25,8 @@ CONTEÚDO DA VITRINE (content), em chinês simplificado (zh) com versão fiel em
 - highlights: até 3 destaques; cada um cita em source_field o campo do cadastro que o fundamenta (por exemplo "attributes.wood" ou "story"). Nunca cite um campo vazio.
 - Não mencione a categoria; a aplicação já exibe "卡沙萨 · 巴西甘蔗蒸馏酒".
 
+APRESENTAÇÃO DA LOJA (store_intro): 1 a 2 frases em chinês simplificado (zh), com versão fiel em português (pt), apresentando o produtor ou engenho e sua origem, para o topo do catálogo da loja. Baseie-se só em "producer", "story" e "differentiator"; não cite o nome deste produto nem números. Use null se "producer.name" for null.
+
 ATRIBUTOS (attributes_zh): traduza para o chinês "wood", "aroma" e "flavor" quando existirem; use null quando o campo de origem for null.
 
 FIDELIDADE:

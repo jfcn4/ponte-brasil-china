@@ -123,6 +123,28 @@ describe("validação da saída (T03)", () => {
     if (!result.ok) expect(result.issues.join(" ")).toMatch(/90\.85|750/);
   });
 
+  it("apresentação da loja: aceita saída v1 sem ela, recusa número inventado ou texto fora do chinês", () => {
+    const legacy = structuredClone(validTestOutput(input)) as Record<string, unknown>;
+    delete legacy.store_intro;
+    expect(validateIdentityOutput(legacy, input).ok).toBe(true);
+
+    const invented = structuredClone(validTestOutput(input));
+    invented.store_intro = { zh: "创立于 1960 年的家族酒厂。", pt: "Engenho familiar fundado em 1960." };
+    const result = validateIdentityOutput(invented, input);
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.issues.join(" ")).toContain("1960");
+
+    const english = structuredClone(validTestOutput(input));
+    english.store_intro = { zh: "Family distillery from Brazil", pt: "Engenho familiar do Brasil" };
+    expect(validateIdentityOutput(english, input).ok).toBe(false);
+  });
+
+  it("o esquema enviado ao provedor exige store_intro (pode ser null)", () => {
+    const schema = identityResponseSchema() as { required?: string[]; properties?: Record<string, unknown> };
+    expect(schema.required).toContain("store_intro");
+    expect(schema.properties).toHaveProperty("store_intro");
+  });
+
   it("aceita números do cadastro com a mesma unidade", () => {
     const output = structuredClone(validTestOutput(input));
     output.content.description.zh = "700 毫升，40% 酒精度，木桶陈酿 12 个月，始于 1987 年。";

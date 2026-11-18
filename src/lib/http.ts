@@ -21,6 +21,8 @@ export type ApiErrorCode =
   | "translation_stale"
   | "translation_failed"
   | "translation_in_progress"
+  | "order_mismatch"
+  | "intro_missing"
   | "server_error";
 
 export function apiError(status: number, code: ApiErrorCode, message: string, details?: unknown) {

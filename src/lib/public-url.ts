@@ -31,6 +31,4 @@ export async function publicOrigin(): Promise<string> {
   return origin;
 }
 
-export function productPath(slug: string) {
-  return `/p/${slug}`;
-}
+export { productPath, storePath } from "./paths";
