@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { fetchJson } from "@/lib/client/fetch-json";
 import { productPath } from "@/lib/paths";
 import type { ProductListItem } from "@/modules/products/repository";
@@ -65,9 +65,12 @@ export function ProductOrderList({
   const rows = useRef(new Map<string, HTMLLIElement>());
   const focusAfter = useRef<string | null>(null);
   // Arraste com mouse/toque: item pego e posição de soltura (índice entre os demais).
-  const [drag, setDrag] = useState<{ id: string; dropIndex: number } | null>(
-    null,
-  );
+  const [drag, setDrag] = useState<{
+    id: string;
+    dropIndex: number;
+    startY: number;
+    offsetY: number;
+  } | null>(null);
   // Teclado: item pego e ordem provisória dos publicados (ainda não gravada).
   const [grab, setGrab] = useState<{
     id: string;
@@ -83,6 +86,37 @@ export function ProductOrderList({
     focusAfter.current = null;
     handles.current.get(id)?.focus();
   }, [products, grab]);
+
+  const listRef = useRef<HTMLOListElement | null>(null);
+  const tops = useRef(new Map<string, number>());
+  const orderKey = (
+    tab === "published"
+      ? (grab?.ids ?? products.filter(isLive).map((p) => p.id))
+      : products.filter((p) => !isLive(p)).map((p) => p.id)
+  ).join();
+  // Animação simples: ao mudar a ordem, cada item desliza do lugar antigo ao novo.
+  useLayoutEffect(() => {
+    const base = listRef.current?.getBoundingClientRect().top ?? 0;
+    const reduce = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    const next = new Map<string, number>();
+    rows.current.forEach((el, id) => {
+      const top = el.getBoundingClientRect().top - base;
+      next.set(id, top);
+      const before = tops.current.get(id);
+      if (!reduce && before !== undefined && Math.abs(before - top) > 1) {
+        el.animate(
+          [
+            { transform: `translateY(${before - top}px)` },
+            { transform: "none" },
+          ],
+          { duration: 180, easing: "ease-out" },
+        );
+      }
+    });
+    tops.current = next;
+  }, [orderKey, tab]);
 
   const featured = featuredOf(products);
   const published = products.filter(isLive);
@@ -180,6 +214,8 @@ export function ProductOrderList({
     setDrag({
       id: product.id,
       dropIndex: dropIndexAt(product.id, event.clientY),
+      startY: event.clientY,
+      offsetY: 0,
     });
     setAnnouncement("");
   };
@@ -187,8 +223,11 @@ export function ProductOrderList({
     event: React.PointerEvent<HTMLButtonElement>,
   ) => {
     if (!drag) return;
-    const dropIndex = dropIndexAt(drag.id, event.clientY);
-    if (dropIndex !== drag.dropIndex) setDrag({ ...drag, dropIndex });
+    setDrag({
+      ...drag,
+      dropIndex: dropIndexAt(drag.id, event.clientY),
+      offsetY: event.clientY - drag.startY,
+    });
   };
   const finishDrag = (
     event: React.PointerEvent<HTMLButtonElement>,
@@ -361,6 +400,7 @@ export function ProductOrderList({
           </div>
         ) : (
           <ol
+            ref={listRef}
             className="mt-2 space-y-3"
             aria-label={
               tab === "published"
@@ -385,13 +425,20 @@ export function ProductOrderList({
               return (
                 <li
                   key={product.id}
+                  style={
+                    dragging
+                      ? {
+                          transform: `translateY(${drag!.offsetY}px) scale(1.02)`,
+                        }
+                      : undefined
+                  }
                   ref={(el) => {
                     if (el) rows.current.set(product.id, el);
                     else rows.current.delete(product.id);
                   }}
                   className={`relative flex items-center gap-2 rounded-xl border bg-panel p-3 sm:gap-3 sm:p-4 ${
                     product.id === featured ? "border-coral/60" : "border-line"
-                  } ${dragging ? "opacity-50" : ""} ${grabbed ? "ring-2 ring-coral" : ""}`}
+                  } ${dragging ? "z-10 shadow-xl shadow-black/50" : "transition-shadow"} ${grabbed ? "ring-2 ring-coral" : ""}`}
                 >
                   {lineBefore && (
                     <span

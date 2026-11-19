@@ -113,6 +113,7 @@ test("alça: mouse, toque e teclado gravam a ordem e movem o destaque", async ({
     await page.mouse.move(hb.x + hb.width / 2, hb.y + hb.height / 2);
     await page.mouse.down();
     await page.mouse.move(hb.x + hb.width / 2, ha.y + 4, { steps: 8 });
+    await expect(items.nth(1)).toHaveAttribute("style", /translateY\(-/);
     await page.screenshot({ path: "test-results/ordem-arrasto.png" });
     await page.mouse.up();
     await expect(
