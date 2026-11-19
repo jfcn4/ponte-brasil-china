@@ -49,7 +49,7 @@ test("rascunho com foto sobrevive ao fechamento da aba e fica isolado de outra s
     await again.goto("/meu-espaco/produtos");
     const item = again.getByRole("listitem").filter({ hasText: name });
     await expect(item).toBeVisible();
-    await expect(item.getByText("Rascunho")).toBeVisible();
+    await expect(again.getByRole("tab", { name: /Rascunhos \(1\)/ })).toHaveAttribute("aria-selected", "true");
     await expect(item.getByRole("img", { name: `Foto principal de ${name}` })).toBeVisible();
 
     // 4. Edita o rascunho com a foto preservada

@@ -43,6 +43,8 @@ export type ProductListItem = {
   updatedAt: string;
   thumbnailUrl: string | null;
   imageCount: number;
+  priceBrlCents: number | null;
+  volumeMl: number | null;
 };
 
 export async function listProducts(storeId: string): Promise<ProductListItem[]> {
@@ -50,7 +52,7 @@ export async function listProducts(storeId: string): Promise<ProductListItem[]> 
   const { data, error } = await db
     .from("products")
     .select(
-      "id, name, status, revision, media_revision, public_slug, position, updated_at, product_images(storage_path, position), " +
+      "id, name, status, revision, media_revision, public_slug, position, updated_at, price_brl_cents, attributes, product_images(storage_path, position), " +
         "current:presentations!products_published_presentation_fkey(version, source_revision, source_media_revision)",
     )
     .eq("store_id", storeId)
@@ -66,6 +68,8 @@ export async function listProducts(storeId: string): Promise<ProductListItem[]> 
     public_slug: string | null;
     position: number;
     updated_at: string;
+    price_brl_cents: number | null;
+    attributes: { volume_ml?: number | null } | null;
     product_images: Array<{ storage_path: string; position: number }>;
     current: { version: number; source_revision: number; source_media_revision: number } | null;
   }>;
@@ -90,6 +94,8 @@ export async function listProducts(storeId: string): Promise<ProductListItem[]> 
       updatedAt: row.updated_at,
       thumbnailUrl: primary ? (urls.get(primary.storage_path) ?? null) : null,
       imageCount: row.product_images.length,
+      priceBrlCents: row.price_brl_cents,
+      volumeMl: row.attributes?.volume_ml ?? null,
     };
   });
 }

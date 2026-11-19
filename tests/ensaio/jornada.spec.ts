@@ -139,7 +139,9 @@ test("1 · duas cachaças publicadas e um rascunho", async () => {
   });
 
   await page.goto("/meu-espaco/produtos");
-  await expect(page.getByRole("listitem").filter({ hasText: NAME_3 }).getByText("Rascunho", { exact: true })).toBeVisible();
+  await page.getByRole("tab", { name: /Rascunhos/ }).click();
+  await expect(page.getByRole("listitem").filter({ hasText: NAME_3 })).toBeVisible();
+  await page.getByRole("tab", { name: /Publicados/ }).click();
   await shot(page, "painel-produtos");
   await page.goto("/meu-espaco/minha-loja");
   state.store = await page.getByLabel("Link público").inputValue();

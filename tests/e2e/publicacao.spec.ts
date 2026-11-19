@@ -32,7 +32,7 @@ test("rascunho → nome chinês → publicação → link público estável", as
     // 2. Abre o rascunho existente pelo painel
     await page.goto("/meu-espaco/produtos");
     const item = page.getByRole("listitem").filter({ hasText: name });
-    await expect(item.getByText("Rascunho")).toBeVisible();
+    await expect(page.getByRole("tab", { name: /Rascunhos \(1\)/ })).toHaveAttribute("aria-selected", "true");
     await item.getByRole("link", { name: `Editar ${name}` }).click();
     await expect(page.getByLabel("Nome da cachaça")).toHaveValue(name);
 
@@ -80,7 +80,8 @@ test("rascunho → nome chinês → publicação → link público estável", as
 
     // 7. Edição privada do preço: o mesmo link continua em ¥90.85
     await page.goto("/meu-espaco/produtos");
-    await expect(page.getByRole("listitem").filter({ hasText: name }).getByText("Publicado")).toBeVisible();
+    await expect(page.getByRole("tab", { name: /Publicados \(1\)/ })).toHaveAttribute("aria-selected", "true");
+    await expect(page.getByRole("listitem").filter({ hasText: name }).getByText("R$ 79,00")).toBeVisible();
     await page.getByRole("link", { name: `Editar ${name}` }).click();
     await page.getByLabel(/Preço de referência/).fill("89,00");
     await expect(page.getByText("参考价格 ¥102.35").first()).toBeVisible();
