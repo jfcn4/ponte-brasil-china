@@ -1,4 +1,5 @@
 import { Logo } from "@/components/brand/Logo";
+import { ExploreLink } from "@/components/public/ExploreLink";
 
 /** Moldura das páginas do comprador (direção B): fundo marfim, textos em chinês. */
 export function PublicFrame({ children, note }: { children: React.ReactNode; note?: string }) {
@@ -9,15 +10,15 @@ export function PublicFrame({ children, note }: { children: React.ReactNode; not
           <span lang="pt-BR">
             <Logo tone="light" />
           </span>
-          <span className="text-xs text-ink-soft">巴西精品直连</span>
+          <ExploreLink />
         </div>
       </header>
       <main className="flex-1">{children}</main>
-      <footer className="border-t border-sand">
-        <p className="mx-auto w-full max-w-3xl px-4 py-5 text-xs leading-relaxed text-ink-soft sm:px-6">
-          {note ?? "本页面信息由巴西生产者提供并确认。价格仅供参考，最终以报价为准。"}
-        </p>
-      </footer>
+      {note && (
+        <footer className="border-t border-sand">
+          <p className="mx-auto w-full max-w-3xl px-4 py-5 text-xs leading-relaxed text-ink-soft sm:px-6">{note}</p>
+        </footer>
+      )}
     </div>
   );
 }
