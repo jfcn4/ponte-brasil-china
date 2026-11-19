@@ -23,8 +23,8 @@ const STEPS = [
 
 export default function HomePage() {
   return (
-    <div className="flex min-h-dvh flex-col">
-      <header className="mx-auto flex w-full max-w-6xl items-center justify-between gap-2 px-4 py-5 sm:px-6">
+    <div className="flex min-h-dvh flex-col overflow-x-clip">
+      <header className="relative z-20 mx-auto flex w-full max-w-6xl items-center justify-between gap-2 px-4 py-5 sm:px-6">
         <Logo />
         <nav aria-label="Principal" className="flex items-center gap-0.5 text-sm sm:gap-3">
           <a href="#como-funciona" className="whitespace-nowrap rounded-md px-2 py-2 text-mist hover:text-snow sm:px-3">
@@ -40,28 +40,32 @@ export default function HomePage() {
       </header>
 
       <main className="flex-1">
-        <section className="mx-auto grid w-full max-w-6xl items-center gap-6 px-4 pb-10 pt-6 sm:px-6 md:grid-cols-[1.05fr_1fr] md:gap-10 md:pb-20 md:pt-14">
-          <div className="max-w-xl">
-            <p className="mb-4 text-sm font-medium tracking-wide text-coral">Cachaça artesanal · Brasil → China</p>
-            <h1 className="text-[2.15rem] font-semibold leading-[1.1] tracking-tight text-snow sm:text-5xl md:text-[3.4rem]">
-              Seu produto brasileiro. Seu próximo comprador, chinês.
-            </h1>
-            <p className="mt-5 text-lg leading-relaxed text-mist">
-              Crie sua vitrine em chinês e converse com compradores no seu idioma.
-            </p>
-            <div className="mt-8 flex flex-wrap items-center gap-4">
-              <Link
-                href="/meu-espaco/produtos/novo"
-                className="inline-flex min-h-12 items-center rounded-lg bg-brand px-6 text-base font-semibold text-white shadow-[0_0_30px_rgba(184,45,53,0.45)] transition-colors hover:bg-brand-strong"
-              >
-                Criar minha vitrine
-              </Link>
-              <span className="text-sm text-mist">Sem cadastro de conta. Seu navegador guarda o acesso.</span>
+        <section className="hero">
+          <div className="relative z-10 mx-auto w-full max-w-6xl px-4 pt-6 sm:px-6 lg:pb-28 lg:pt-16">
+            <div className="max-w-xl">
+              <p className="mb-4 text-sm font-medium tracking-wide text-coral">Cachaça artesanal · Brasil → China</p>
+              <h1 className="text-[2.15rem] font-semibold leading-[1.1] tracking-tight text-snow sm:text-5xl lg:text-[3.4rem]">
+                Seu produto brasileiro. Seu próximo comprador, chinês.
+              </h1>
+              <p className="mt-5 text-lg leading-relaxed text-mist">
+                Crie sua vitrine em chinês e converse com compradores no seu idioma.
+              </p>
+              <div className="mt-8 flex flex-wrap items-center gap-4">
+                <Link
+                  href="/meu-espaco/produtos/novo"
+                  className="inline-flex min-h-12 items-center rounded-lg bg-brand px-6 text-base font-semibold text-white shadow-[0_0_30px_rgba(184,45,53,0.45)] transition-colors hover:bg-brand-strong"
+                >
+                  Criar minha vitrine
+                </Link>
+                <span className="text-sm text-mist">Sem cadastro de conta. Seu navegador guarda o acesso.</span>
+              </div>
             </div>
           </div>
 
-          <div className="relative mx-auto aspect-square w-full max-w-[22rem] sm:max-w-md md:max-w-none">
-            <Globe />
+          <div className="hero-globe" aria-hidden="true">
+            <div className="hero-globe-canvas">
+              <Globe />
+            </div>
           </div>
         </section>
 

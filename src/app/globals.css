@@ -73,3 +73,62 @@ body {
 dialog::backdrop {
   background: rgb(10 9 10 / 0.7);
 }
+
+/*
+ * Abertura (direção A). O canvas do globo é maior que a esfera (raio = 33%
+ * do lado) para o halo se dissolver antes da borda. No celular o globo vem
+ * depois do título e do CTA; a partir de lg ocupa o canto inferior direito.
+ */
+.hero {
+  --globe: min(140vw, 44rem);
+  position: relative;
+  isolation: isolate;
+}
+
+.hero-globe {
+  position: relative;
+  /* Altura suficiente para o halo sumir antes da seção seguinte. */
+  height: calc(var(--globe) * 0.84);
+  margin-top: calc(var(--globe) * -0.02);
+  pointer-events: none;
+}
+
+.hero-globe-canvas {
+  position: absolute;
+  left: 50%;
+  top: calc(var(--globe) * -0.1);
+  width: var(--globe);
+  height: var(--globe);
+  transform: translateX(-50%);
+}
+
+@media (min-width: 64rem) {
+  .hero {
+    --globe: min(56vw, 60rem, calc(100svh + 4rem));
+    min-height: max(calc(100svh - 5.25rem), calc(var(--globe) * 0.8));
+  }
+
+  .hero-globe {
+    position: absolute;
+    inset: auto 0 0 auto;
+    width: var(--globe);
+    height: var(--globe);
+    margin: 0;
+    /* A esfera encosta no canto inferior direito; a sobra do canvas fica fora da tela. */
+    right: calc(2vw - var(--globe) * 0.17);
+    bottom: calc(var(--globe) * -0.06);
+  }
+
+  .hero-globe-canvas {
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    transform: none;
+  }
+}
+
+@media (min-width: 80rem) {
+  .hero {
+    --globe: min(60vw, 64rem, calc(100svh + 6rem));
+  }
+}
