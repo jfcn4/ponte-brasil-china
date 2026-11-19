@@ -24,7 +24,7 @@ const RADIUS_RATIO = 0.33;
 const HALO_EXTENT = 1.5;
 
 /** `visible`: na frente do globo ou, atrás dele, fora do disco (a esfera não cobre). */
-type Point = { x: number; y: number; z: number; front: boolean; visible: boolean };
+type Point = { x: number; y: number; z: number; front: boolean; visible: boolean; rim: number };
 
 /**
  * Globo holográfico vermelho com a rota Recife–Pequim. Canvas 2D, sem
@@ -84,6 +84,7 @@ export function Globe({ className = "" }: { className?: string }) {
           z: v[2],
           front: v[2] > 0,
           visible: v[2] > 0 || Math.hypot(v[0], v[1]) > 1,
+          rim: Math.hypot(v[0], v[1]),
         };
       };
       const disc = (r = radius) => {
@@ -255,29 +256,24 @@ export function Globe({ className = "" }: { className?: string }) {
       // Conexão: linha fina vermelha que contorna o globo. Só some onde a esfera a cobre:
       // ao passar para trás, continua visível fora do disco e desaparece na borda.
       const path = route.map(project);
-      // O trecho que já passou para trás do globo fica mais apagado: dá a leitura de profundidade.
+      // Uma cor só em todo o trajeto, na frente ou atrás do globo.
       const strokeRoute = (lineWidth: number, color: string) => {
         ctx.lineWidth = lineWidth;
         ctx.strokeStyle = color;
-        for (const behind of [true, false]) {
-          ctx.globalAlpha = behind ? 0.45 : 1;
-          ctx.beginPath();
-          let open = false;
-          for (let i = 1; i < path.length; i++) {
-            const a = path[i - 1]!;
-            const b = path[i]!;
-            // Segmento entra nesta passada se a esfera não o cobre e se está (ou não) atrás dela.
-            if (!a.visible || !b.visible || !(a.front && b.front) !== behind) {
-              open = false;
-              continue;
-            }
-            if (!open) ctx.moveTo(a.x, a.y);
-            ctx.lineTo(b.x, b.y);
-            open = true;
+        ctx.beginPath();
+        let open = false;
+        for (let i = 1; i < path.length; i++) {
+          const a = path[i - 1]!;
+          const b = path[i]!;
+          if (!a.visible || !b.visible) {
+            open = false;
+            continue;
           }
-          ctx.stroke();
+          if (!open) ctx.moveTo(a.x, a.y);
+          ctx.lineTo(b.x, b.y);
+          open = true;
         }
-        ctx.globalAlpha = 1;
+        ctx.stroke();
       };
       strokeRoute(7 * unit, "rgba(210, 10, 35, 0.12)");
       strokeRoute(3 * unit, "rgba(220, 20, 45, 0.28)");
@@ -310,7 +306,10 @@ export function Globe({ className = "" }: { className?: string }) {
       const trip = animate ? pulse.at(time, path[0]!.front) : { progress: 0.5, alpha: 1 };
       if (trip) {
         const head = path[Math.round(trip.progress * (path.length - 1))]!;
-        if (head.visible) glowDot(head, 3.2 * unit, 26 * unit, 0.85 * trip.alpha, trip.alpha);
+        // Atrás do globo, o brilho se apaga aos poucos ao se aproximar da borda, em vez de sumir de uma vez.
+        const edge = head.front ? 1 : Math.min(1, Math.max(0, (head.rim - 1) / 0.2));
+        const seen = trip.alpha * edge * edge * (3 - 2 * edge);
+        if (seen > 0) glowDot(head, 3.2 * unit, 26 * unit, 0.85 * seen, seen);
       }
 
       ctx.globalCompositeOperation = "source-over";
