@@ -36,7 +36,7 @@ export function FairCardView({ card, qrSvg }: { card: FairCard; qrSvg: string })
           )}
         </div>
         <p className="flex shrink-0 items-center gap-1.5 text-xs font-semibold text-ink-soft">
-          <LogoMark className="h-8 w-auto" />
+          <LogoMark tone="light" className="h-8 w-auto" />
           <LogoName tone="light" className="hidden h-7 w-auto sm:inline print:inline" />
         </p>
       </header>
