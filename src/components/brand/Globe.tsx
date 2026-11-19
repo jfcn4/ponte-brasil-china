@@ -6,6 +6,7 @@ import {
   RECIFE,
   apply,
   borders,
+  clipToFrontHemisphere,
   coastlines,
   graticule,
   landLattice,
@@ -22,7 +23,7 @@ const RADIUS_RATIO = 0.33;
 /** Até onde o halo vai, em raios. Precisa caber em 0,5 / RADIUS_RATIO. */
 const HALO_EXTENT = 1.5;
 
-type Point = { x: number; y: number; z: number; front: boolean; outside: boolean };
+type Point = { x: number; y: number; z: number; front: boolean };
 
 /**
  * Globo holográfico vermelho com a rota Recife–Pequim. Canvas 2D, sem
@@ -81,7 +82,6 @@ export function Globe({ className = "" }: { className?: string }) {
           y: cy - v[1] * radius,
           z: v[2],
           front: v[2] > 0,
-          outside: Math.hypot(v[0], v[1]) > 1,
         };
       };
       const disc = (r = radius) => {
@@ -138,25 +138,19 @@ export function Globe({ className = "" }: { className?: string }) {
       disc();
       ctx.clip();
 
-      // Continentes: vidro avermelhado. Pontos do lado de trás vão para a borda do disco.
+      // Continentes: vidro avermelhado, recortados no horizonte (nada atrás do globo pinta a frente).
+      const projectedRings = coasts.map((ring) => ring.points.map((p) => apply(m, p)));
       const landPath = new Path2D();
-      const coastPath = new Path2D();
-      for (const ring of coasts) {
-        const projected = ring.points.map((p) => apply(m, p));
-        if (projected.every((v) => v[2] <= 0)) continue;
-        projected.forEach((v, i) => {
-          let x = v[0];
-          let y = v[1];
-          if (v[2] <= 0) {
-            const d = Math.hypot(x, y) || 1;
-            x /= d;
-            y /= d;
-          }
+      for (const loop of clipToFrontHemisphere(projectedRings)) {
+        loop.forEach(([x, y], i) => {
           if (i === 0) landPath.moveTo(cx + x * radius, cy - y * radius);
           else landPath.lineTo(cx + x * radius, cy - y * radius);
         });
         landPath.closePath();
-
+      }
+      const coastPath = new Path2D();
+      coasts.forEach((ring, r) => {
+        const projected = projectedRings[r]!;
         let open = false;
         for (let i = 0; i < projected.length; i++) {
           const a = projected[i]!;
@@ -169,7 +163,7 @@ export function Globe({ className = "" }: { className?: string }) {
           coastPath.lineTo(cx + b[0] * radius, cy - b[1] * radius);
           open = true;
         }
-      }
+      });
       const land = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
       land.addColorStop(0, "rgb(44, 11, 17)");
       land.addColorStop(0.75, "rgb(52, 13, 19)");
@@ -256,29 +250,28 @@ export function Globe({ className = "" }: { className?: string }) {
       ctx.strokeStyle = "rgba(240, 45, 52, 0.75)";
       ctx.stroke();
 
-      // Conexão: linha fina vermelha. O trecho atrás da esfera aparece em transparência.
+      // Conexão: linha fina vermelha, só na face da frente. Some suavemente ao passar para trás do globo.
       const path = route.map(project);
-      const strokeRoute = (visibleOnly: boolean, lineWidth: number, color: string) => {
+      const fade = (p: Point) => Math.min(1, Math.max(0, p.z / 0.12));
+      const strokeRoute = (lineWidth: number, color: string) => {
         ctx.lineWidth = lineWidth;
         ctx.strokeStyle = color;
-        ctx.beginPath();
-        let open = false;
-        for (const p of path) {
-          const show = p.front || p.outside;
-          if (show !== visibleOnly) {
-            open = false;
-            continue;
-          }
-          if (open) ctx.lineTo(p.x, p.y);
-          else ctx.moveTo(p.x, p.y);
-          open = true;
+        for (let i = 1; i < path.length; i++) {
+          const a = path[i - 1]!;
+          const b = path[i]!;
+          const alpha = Math.min(fade(a), fade(b));
+          if (alpha <= 0) continue;
+          ctx.globalAlpha = alpha;
+          ctx.beginPath();
+          ctx.moveTo(a.x, a.y);
+          ctx.lineTo(b.x, b.y);
+          ctx.stroke();
         }
-        ctx.stroke();
+        ctx.globalAlpha = 1;
       };
-      strokeRoute(false, 1 * unit, "rgba(220, 25, 50, 0.35)");
-      strokeRoute(true, 7 * unit, "rgba(210, 10, 35, 0.12)");
-      strokeRoute(true, 3 * unit, "rgba(220, 20, 45, 0.28)");
-      strokeRoute(true, 1.3 * unit, "rgba(245, 40, 52, 0.95)");
+      strokeRoute(7 * unit, "rgba(210, 10, 35, 0.12)");
+      strokeRoute(3 * unit, "rgba(220, 20, 45, 0.28)");
+      strokeRoute(1.3 * unit, "rgba(245, 40, 52, 0.95)");
 
       const glowDot = (p: Point, core: number, glow: number, strength: number, coreAlpha: number) => {
         const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, glow);
@@ -295,17 +288,18 @@ export function Globe({ className = "" }: { className?: string }) {
         ctx.fill();
       };
 
-      // Pontas fixas em Recife e Pequim; atrás da esfera aparecem em transparência.
+      // Pontas fixas em Recife e Pequim: ficam ocultas enquanto estão atrás do globo.
       for (const p of [path[0]!, path[path.length - 1]!]) {
-        glowDot(p, 2.2 * unit, 12 * unit, p.front ? 0.7 : 0.18, p.front ? 1 : 0.3);
+        const alpha = fade(p);
+        if (alpha > 0) glowDot(p, 2.2 * unit, 12 * unit, 0.7 * alpha, alpha);
       }
 
       // Ponto de luz que viaja de Recife a Pequim de vez em quando (parado no meio do arco sem movimento).
       const trip = animate ? pulse.at(time, path[0]!.front) : { progress: 0.5, alpha: 1 };
       if (trip) {
         const head = path[Math.round(trip.progress * (path.length - 1))]!;
-        const seen = head.front || head.outside ? 1 : 0.3;
-        glowDot(head, 3.2 * unit, 26 * unit, 0.85 * trip.alpha * seen, trip.alpha * seen);
+        const seen = fade(head);
+        if (seen > 0) glowDot(head, 3.2 * unit, 26 * unit, 0.85 * trip.alpha * seen, trip.alpha * seen);
       }
 
       ctx.globalCompositeOperation = "source-over";

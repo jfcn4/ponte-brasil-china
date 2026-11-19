@@ -150,7 +150,7 @@ export function globeDots(count: number) {
 }
 
 /** Arco de grande círculo entre a e b, elevado sobre a superfície. As pontas ficam na superfície. */
-export function routeArc(a: Vec3, b: Vec3, steps: number, lift = 0.4): Vec3[] {
+export function routeArc(a: Vec3, b: Vec3, steps: number, lift = 0.25): Vec3[] {
   const omega = Math.acos(Math.min(1, Math.max(-1, dot(a, b))));
   const out: Vec3[] = [];
   for (let i = 0; i <= steps; i++) {
@@ -233,4 +233,96 @@ export function landLattice(step: number): Vec3[] {
     }
   }
   return points;
+}
+
+/** Ponto 2D na vista (x para a direita, y para cima), em raios do globo. */
+export type Point2 = [number, number];
+
+/**
+ * Recorta os anéis de terra (já na vista) pela face visível do globo.
+ * O trecho de um anel que passa para trás é substituído pelo arco do
+ * horizonte entre a saída e a próxima entrada, como em d3-geo. Os anéis
+ * externos do Natural Earth ficam no sentido horário na vista (y para cima),
+ * então o horizonte também é percorrido no sentido horário (ângulo
+ * decrescente). Evita que um continente atrás do globo pinte o oceano.
+ */
+export function clipToFrontHemisphere(rings: Vec3[][], arcStepDeg = 3): Point2[][] {
+  type Fragment = { points: Point2[]; entry: number; exit: number };
+  const loops: Point2[][] = [];
+  const fragments: Fragment[] = [];
+  const horizon = (a: Vec3, b: Vec3): Point2 => {
+    const t = a[2] / (a[2] - b[2]);
+    const x = a[0] + (b[0] - a[0]) * t;
+    const y = a[1] + (b[1] - a[1]) * t;
+    const d = Math.hypot(x, y) || 1;
+    return [x / d, y / d];
+  };
+
+  for (const ring of rings) {
+    const n = ring.length;
+    if (n < 3) continue;
+    const front = ring.map((p) => p[2] > 0);
+    if (front.every(Boolean)) {
+      loops.push(ring.map((p) => [p[0], p[1]]));
+      continue;
+    }
+    if (!front.some(Boolean)) continue;
+    // Começa numa entrada: ponto anterior atrás, atual na frente.
+    let start = 0;
+    while (!(front[start] && !front[(start - 1 + n) % n])) start++;
+    let current: Point2[] | null = null;
+    let entry = 0;
+    for (let k = 0; k < n; k++) {
+      const i = (start + k) % n;
+      const prev = ring[(i - 1 + n) % n]!;
+      const point = ring[i]!;
+      const next = ring[(i + 1) % n]!;
+      if (!front[i]) continue;
+      if (!current) {
+        const e = horizon(point, prev);
+        entry = Math.atan2(e[1], e[0]);
+        current = [e];
+      }
+      current.push([point[0], point[1]]);
+      if (!front[(i + 1) % n]) {
+        const x = horizon(point, next);
+        current.push(x);
+        fragments.push({ points: current, entry, exit: Math.atan2(x[1], x[0]) });
+        current = null;
+      }
+    }
+  }
+
+  // Liga cada saída à próxima entrada no sentido horário, pelo horizonte.
+  const TAU = Math.PI * 2;
+  const clockwise = (from: number, to: number) => (((from - to) % TAU) + TAU) % TAU;
+  const step = (arcStepDeg * Math.PI) / 180;
+  const used = new Set<Fragment>();
+  for (const first of fragments) {
+    if (used.has(first)) continue;
+    const loop: Point2[] = [];
+    let fragment = first;
+    for (let guard = 0; guard <= fragments.length; guard++) {
+      used.add(fragment);
+      loop.push(...fragment.points);
+      let next = first;
+      let best = Infinity;
+      for (const candidate of fragments) {
+        if (used.has(candidate) && candidate !== first) continue;
+        const distance = clockwise(fragment.exit, candidate.entry);
+        if (distance < best) {
+          best = distance;
+          next = candidate;
+        }
+      }
+      for (let a = step; a < best; a += step) {
+        const angle = fragment.exit - a;
+        loop.push([Math.cos(angle), Math.sin(angle)]);
+      }
+      if (next === first) break;
+      fragment = next;
+    }
+    loops.push(loop);
+  }
+  return loops;
 }

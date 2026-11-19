@@ -6,6 +6,8 @@ import {
   RECIFE,
   VIEW,
   apply,
+  clipToFrontHemisphere,
+  coastlines,
   createPulse,
   isLand,
   routeArc,
@@ -95,5 +97,55 @@ describe("globo da abertura", () => {
     const [bx] = apply(m, beijing);
     expect(rx).toBeLessThan(-0.5);
     expect(bx).toBeGreaterThan(0.5);
+  });
+
+  describe("recorte dos continentes no horizonte", () => {
+    const rings = coastlines();
+    const inside = (loops: Array<Array<[number, number]>>, [x, y]: [number, number]) => {
+      let count = 0;
+      for (const loop of loops) {
+        for (let i = 0, j = loop.length - 1; i < loop.length; j = i++) {
+          const [xi, yi] = loop[i]!;
+          const [xj, yj] = loop[j]!;
+          if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) count++;
+        }
+      }
+      return count % 2 === 1;
+    };
+    const loopsAt = (spin: number) => {
+      const m = viewMatrix(spin);
+      return { m, loops: clipToFrontHemisphere(rings.map((ring) => ring.points.map((p) => apply(m, p)))) };
+    };
+
+    it("mantém tudo dentro do disco visível em qualquer ponto da volta", () => {
+      for (let spin = 0; spin > -360; spin -= 15) {
+        for (const loop of loopsAt(spin).loops) {
+          for (const [x, y] of loop) expect(Math.hypot(x, y)).toBeLessThanOrEqual(1 + 1e-9);
+        }
+      }
+    });
+
+    it("não pinta o oceano com continentes que estão atrás do globo", () => {
+      // Pacífico de frente: o centro do oceano não pode cair dentro de nenhuma terra.
+      for (const spin of [-150, -170, -190, -210]) {
+        const { m, loops } = loopsAt(spin);
+        for (const [lat, lon] of [[0, -150], [10, -170], [-20, -130], [20, 170]] as const) {
+          const v = apply(m, toVec(lat, lon));
+          if (v[2] <= 0.2) continue;
+          expect(inside(loops, [v[0], v[1]])).toBe(false);
+        }
+      }
+    });
+
+    it("continua preenchendo os continentes visíveis", () => {
+      for (let spin = 0; spin > -360; spin -= 30) {
+        const { m, loops } = loopsAt(spin);
+        for (const [lat, lon] of [[5, 20], [-15, -55], [60, 90], [40, -100], [-25, 135]] as const) {
+          const v = apply(m, toVec(lat, lon));
+          if (v[2] <= 0.2) continue;
+          expect(inside(loops, [v[0], v[1]])).toBe(true);
+        }
+      }
+    });
   });
 });
