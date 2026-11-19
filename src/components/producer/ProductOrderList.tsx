@@ -8,6 +8,14 @@ import type { ProductListItem } from "@/modules/products/repository";
 import { featuredProductId, moveInOrder } from "@/modules/stores/catalog-view";
 import { StatusLabel } from "./StatusLabel";
 
+const dateFormat = new Intl.DateTimeFormat("pt-BR", {
+  day: "2-digit",
+  month: "2-digit",
+  hour: "2-digit",
+  minute: "2-digit",
+  timeZone: "America/Sao_Paulo",
+});
+
 type OrderResponse = { catalogRevision: number; products: ProductListItem[] };
 type Direction = "up" | "down";
 
@@ -137,15 +145,9 @@ export function ProductOrderList({
                 <p className="line-clamp-2 break-words font-semibold text-snow">
                   {product.name ?? <span className="italic text-mist">Sem nome</span>}
                 </p>
-                <div className="mt-0.5 flex flex-wrap items-center gap-x-2">
-                  <StatusLabel status={product.status} />
-                  {product.id === featured && (
-                    <>
-                      <span aria-hidden="true" className="text-mist">·</span>
-                      <span className="text-sm font-medium text-coral">Destaque da loja</span>
-                    </>
-                  )}
-                </div>
+                <StatusLabel status={product.status} className="mt-0.5" />
+                {product.id === featured && <p className="text-sm font-medium text-coral">Destaque da loja</p>}
+                <p className="mt-1 text-xs text-mist">Alterado em {dateFormat.format(new Date(product.updatedAt))}</p>
               </div>
             </div>
 
