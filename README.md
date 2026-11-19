@@ -119,6 +119,23 @@ Não há migração nem variável nova. Use a loja com duas cachaças publicadas
 
 Automático (T13, com `AI_MODE=test` na compilação de produção): `npx playwright test tests/e2e/cartao-feira.spec.ts`. O teste publica duas cachaças e um rascunho, confere o cartão, verifica que o QR é o mesmo de Minha loja e codifica exatamente o endereço da loja, gera o PDF com a mídia de impressão (uma página A4, sem painel), salvo em `test-results/cartao-feira/cartao-feira.pdf`, e no contexto Pixel 7 abre o endereço, entra na vitrine do segundo produto e envia uma cotação.
 
+### Como limpar produtos de teste entre apresentações (exclusão definitiva)
+
+Em **Meu espaço → Produtos**, o menu **⋯** de cada item tem **Excluir produto**. A confirmação mostra o nome e quantas conversas (e mensagens) serão apagadas, com o aviso “Isso vai apagar definitivamente o produto e todas as conversas sobre ele, incluindo as mensagens.” Só **Excluir definitivamente** apaga; **Cancelar** e Esc não mudam nada.
+
+Pré‑requisito: aplicar a migração `0006_delete_product.sql` no banco do deploy (`npm run db:migrate` com `DATABASE_URL` do projeto Supabase usado pela Vercel), antes de publicar o código.
+
+Para repetir o teste com dados de demonstração na Vercel, no navegador que gerencia a loja de demonstração:
+
+1. Crie (ou publique) dois produtos de demonstração, por exemplo **Demo Alfa** e **Demo Beta**, e deixe **Demo Alfa** em primeiro lugar (é o destaque).
+2. Em um celular (outro navegador), abra o QR de cada produto e envie uma pergunta pela vitrine. Guarde os dois **links privados** (`/conversa#t=…`) e o endereço de cada QR (`/p/…`).
+3. Anote o estado: Produtos (2 publicados), Mensagens (2 conversas), contador em **Mensagens**. Em **Demo Alfa**, abra **⋯ → Excluir produto**, confira nome e “1 conversa será apagada”, e clique **Cancelar**. Recarregue: nada mudou.
+4. Repita e clique **Excluir definitivamente**. A lista passa a ter só **Demo Beta**, agora **Destaque da loja**; o contador e **Mensagens** perdem a conversa apagada. Recarregue para confirmar.
+5. No celular: o QR e o link privado de **Demo Alfa** mostram “该产品已不可用” e “该对话已不可用”; o QR e o link privado de **Demo Beta** continuam abrindo, com a mensagem intacta; o catálogo da loja (`/l/…`) lista só **Demo Beta**.
+6. Se aparecer o aviso amarelo “fotos de produtos excluídos ainda não saíram do armazenamento”, o produto e as conversas já foram apagados; clique **Repetir limpeza**.
+
+Automático (com `AI_MODE=test` na compilação de produção): `npx playwright test tests/e2e/excluir-produto.spec.ts` e `npm run test:integration` (`tests/integration/delete-product.test.ts`) executam esse roteiro com duas cachaças e conversas, comparando o estado antes e depois.
+
 ### Ensaio automático com a IA real
 
 `tests/ensaio/jornada.spec.ts` percorre a jornada da banca com o Gemini real, em três navegadores isolados (produtor A no desktop, comprador num Pixel 7, produtor B): duas cachaças com foto geradas e publicadas e um rascunho; catálogo e QRs no outro navegador; reordenação e destaque; ¥90.85 → ¥102.35 só após republicar no mesmo link; consulta em chinês sobre 500 garrafas e Xangai, tradução, copiloto, sugestão, resposta revisada e confirmação em clique duplo, com uma única resposta em chinês no link privado; tentativas da sessão B de editar, gerar, publicar e ler conversa da loja A; isolamento entre links privados. Gasta cerca de 8 chamadas de IA e remove as lojas criadas ao final.

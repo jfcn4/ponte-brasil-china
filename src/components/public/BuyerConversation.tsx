@@ -138,8 +138,10 @@ export function BuyerConversation() {
   if (load.state === "invalid") {
     return (
       <div className="mx-auto max-w-xl px-4 py-20 text-center sm:px-6">
-        <h1 className="text-2xl font-semibold text-ink">未找到该对话</h1>
-        <p className="mt-3 text-ink-soft">请确认私密链接是否完整（链接以 “#t=” 开头的部分不可缺少）。</p>
+        <h1 className="text-2xl font-semibold text-ink">该对话已不可用</h1>
+        <p className="mt-3 text-ink-soft">
+          该对话可能已随产品一并被生产者删除，或私密链接不完整（链接中以 “#t=” 开头的部分不可缺少）。
+        </p>
       </div>
     );
   }

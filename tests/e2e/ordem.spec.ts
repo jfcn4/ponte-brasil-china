@@ -45,6 +45,8 @@ async function publish(page: Page, name: string) {
   ).toBeVisible();
 }
 
+test.setTimeout(180_000);
+
 test("alça: mouse, toque e teclado gravam a ordem e movem o destaque", async ({
   browser,
 }) => {

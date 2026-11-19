@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { fetchJson } from "@/lib/client/fetch-json";
 import {
@@ -58,6 +59,7 @@ function announceChange() {
  * apenas preenche o editor.
  */
 export function ConversationView({ initial }: { initial: ConversationDetail }) {
+  const router = useRouter();
   const [detail, setDetail] = useState(initial);
   const [body, setBody] = useState(initial.draft?.body ?? "");
   const [translating, setTranslating] = useState(false);
@@ -78,7 +80,9 @@ export function ConversationView({ initial }: { initial: ConversationDetail }) {
   const refresh = useCallback(async () => {
     const result = await fetchJson<{ conversation: ConversationDetail }>(`/api/conversations/${initial.id}`);
     if (result.ok) setDetail(result.data.conversation);
-  }, [initial.id]);
+    // Conversa excluída em outra aba (produto apagado): a página do servidor mostra a tela de indisponível.
+    else if (result.status === 404) router.refresh();
+  }, [initial.id, router]);
 
   // Atualização periódica (novas entradas, interpretação concluída).
   useEffect(() => {

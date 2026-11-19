@@ -14,7 +14,7 @@ const SIGNED_URL_TTL_SECONDS = 60 * 60;
 
 export class ProductError extends Error {
   constructor(
-    readonly code: "not_found" | "revision_conflict" | "image_limit_reached" | "storage_failed",
+    readonly code: "not_found" | "revision_conflict" | "image_limit_reached" | "storage_failed" | "conversations_changed",
     message?: string,
   ) {
     super(message ?? code);
@@ -26,6 +26,7 @@ function mapRpcError(message: string | undefined): ProductError | null {
   if (message.includes("revision_conflict")) return new ProductError("revision_conflict");
   if (message.includes("product_not_found") || message.includes("image_not_found")) return new ProductError("not_found");
   if (message.includes("image_limit_reached")) return new ProductError("image_limit_reached");
+  if (message.includes("conversations_changed")) return new ProductError("conversations_changed");
   return null;
 }
 
@@ -355,4 +356,126 @@ export async function setPrimaryImage(storeId: string, productId: string, imageI
   }
   logEvent("product.image_primary_set", { storeId, productId, imageId });
   return listImages(storeId, productId);
+}
+
+// ---------------------------------------------------------------------------
+// Exclusão definitiva
+// ---------------------------------------------------------------------------
+
+export type DeletionImpact = { name: string | null; conversationCount: number; messageCount: number };
+
+/** O que a exclusão apagaria agora. Nulo se o produto não é desta loja. */
+export async function getDeletionImpact(storeId: string, productId: string): Promise<DeletionImpact | null> {
+  const db = supabaseAdmin();
+  const { data: product, error } = await db
+    .from("products")
+    .select("name")
+    .eq("id", productId)
+    .eq("store_id", storeId)
+    .maybeSingle();
+  if (error) throw new Error(`product_read_failed: ${error.code}`);
+  if (!product) return null;
+  const { data, error: rpcError } = await db.rpc("product_deletion_impact", { p_store_id: storeId, p_product_id: productId });
+  if (rpcError) {
+    const mapped = mapRpcError(rpcError.message);
+    if (mapped?.code === "not_found") return null;
+    throw new Error(`deletion_impact_failed: ${rpcError.code}`);
+  }
+  const row = (Array.isArray(data) ? data[0] : data) as { conversation_count: number; message_count: number } | undefined;
+  return { name: product.name, conversationCount: row?.conversation_count ?? 0, messageCount: row?.message_count ?? 0 };
+}
+
+export type DeletionResult = { conversationCount: number; messageCount: number; pendingCleanup: number };
+
+/**
+ * Exclui o produto, suas versões, conversas e mensagens numa transação (RPC) e,
+ * depois, esvazia a fila de arquivos do Storage. Se o Storage falhar, o produto
+ * já foi excluído e a fila continua gravada: runStorageCleanup repete a limpeza.
+ */
+export async function deleteProduct(
+  storeId: string,
+  productId: string,
+  expectedConversations: number | null,
+): Promise<DeletionResult> {
+  const started = Date.now();
+  const { data, error } = await supabaseAdmin().rpc("delete_product", {
+    p_store_id: storeId,
+    p_product_id: productId,
+    p_expected_conversations: expectedConversations,
+  });
+  if (error) {
+    const mapped = mapRpcError(error.message);
+    logEvent("product.delete_failed", { storeId, productId, code: mapped?.code ?? error.code });
+    if (mapped) throw mapped;
+    throw new Error(`product_delete_failed: ${error.code}`);
+  }
+  const row = (Array.isArray(data) ? data[0] : data) as { conversation_count: number; message_count: number } | undefined;
+  if (!row) throw new Error("product_delete_failed: no_row");
+
+  const pendingCleanup = await runStorageCleanup(storeId);
+  logEvent("product.deleted", {
+    storeId,
+    productId,
+    conversations: row.conversation_count,
+    messages: row.message_count,
+    pendingCleanup,
+    ms: Date.now() - started,
+  });
+  return { conversationCount: row.conversation_count, messageCount: row.message_count, pendingCleanup };
+}
+
+const CLEANUP_BATCH = 50;
+
+/** Arquivos de produtos excluídos que ainda aguardam remoção do Storage. */
+export async function countPendingCleanup(storeId: string): Promise<number> {
+  const { count, error } = await supabaseAdmin()
+    .from("storage_cleanup")
+    .select("storage_path", { count: "exact", head: true })
+    .eq("store_id", storeId);
+  if (error) throw new Error(`cleanup_count_failed: ${error.code}`);
+  return count ?? 0;
+}
+
+/**
+ * Remove do Storage os arquivos da fila desta loja. Cada lote só sai da fila
+ * depois de removido; em falha, o lote fica com tentativa e código do erro, e
+ * a função pode ser chamada de novo. Devolve quantos arquivos continuam na fila.
+ */
+export async function runStorageCleanup(storeId: string): Promise<number> {
+  const db = supabaseAdmin();
+  const bucket = db.storage.from(serverEnv().SUPABASE_STORAGE_BUCKET);
+  for (;;) {
+    const { data, error } = await db
+      .from("storage_cleanup")
+      .select("storage_path, attempts")
+      .eq("store_id", storeId)
+      .order("created_at", { ascending: true })
+      .limit(CLEANUP_BATCH);
+    if (error) throw new Error(`cleanup_read_failed: ${error.code}`);
+    const batch = data ?? [];
+    if (batch.length === 0) return 0;
+    const paths = batch.map((row) => row.storage_path);
+
+    let failure: string | null = null;
+    try {
+      const removal = await bucket.remove(paths);
+      if (removal.error) failure = removal.error.name || "storage_error";
+    } catch {
+      failure = "storage_unreachable";
+    }
+    if (failure) {
+      logEvent("storage.cleanup_failed", { storeId, files: paths.length, code: failure });
+      await Promise.all(
+        batch.map((row) =>
+          db
+            .from("storage_cleanup")
+            .update({ attempts: row.attempts + 1, last_error: failure!.slice(0, 120) })
+            .eq("storage_path", row.storage_path),
+        ),
+      );
+      return countPendingCleanup(storeId);
+    }
+    const { error: clearError } = await db.from("storage_cleanup").delete().in("storage_path", paths);
+    if (clearError) throw new Error(`cleanup_clear_failed: ${clearError.code}`);
+  }
 }

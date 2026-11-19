@@ -24,6 +24,8 @@ export async function mutation(request: Request, name: string, run: () => Promis
           return apiError(409, "revision_conflict", "Este rascunho foi alterado em outra aba ou janela.");
         case "image_limit_reached":
           return apiError(409, "image_limit_reached", "Cada produto aceita até três fotos.");
+        case "conversations_changed":
+          return apiError(409, "conversations_changed", "O número de conversas deste produto mudou. Confira e confirme de novo.");
         case "storage_failed":
           return apiError(502, "storage_failed", "Não foi possível guardar a foto. Tente novamente.");
       }

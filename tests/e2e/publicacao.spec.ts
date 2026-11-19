@@ -116,5 +116,5 @@ test("rascunho → nome chinês → publicação → link público estável", as
 
 test("link público inexistente mostra aviso em chinês", async ({ page }) => {
   await page.goto("/p/zzzzzzzzzz");
-  await expect(page.getByRole("heading", { name: "未找到该产品" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "该产品已不可用" })).toBeVisible();
 });

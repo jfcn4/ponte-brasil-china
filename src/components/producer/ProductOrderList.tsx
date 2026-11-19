@@ -1,12 +1,18 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { fetchJson } from "@/lib/client/fetch-json";
 import { productPath } from "@/lib/paths";
 import type { ProductListItem } from "@/modules/products/repository";
 import { featuredProductId } from "@/modules/stores/catalog-view";
 import { formatBrl } from "@/modules/products/pricing";
+import {
+  DeleteProductDialog,
+  type DeletionOutcome,
+} from "./DeleteProductDialog";
+import { ProductActionsMenu } from "./ProductActionsMenu";
 
 const dateFormat = new Intl.DateTimeFormat("pt-BR", {
   day: "2-digit",
@@ -44,10 +50,13 @@ function featuredOf(products: ProductListItem[]) {
 export function ProductOrderList({
   initialProducts,
   initialRevision,
+  initialPendingCleanup = 0,
 }: {
   initialProducts: ProductListItem[];
   initialRevision: number;
+  initialPendingCleanup?: number;
 }) {
+  const router = useRouter();
   const [products, setProducts] = useState(initialProducts);
   const [revision, setRevision] = useState(initialRevision);
   const [saving, setSaving] = useState(false);
@@ -60,6 +69,10 @@ export function ProductOrderList({
     tone: "info" | "error";
     text: string;
   } | null>(null);
+  const [deleting, setDeleting] = useState<{ id: string; name: string } | null>(null);
+  const [pendingCleanup, setPendingCleanup] = useState(initialPendingCleanup);
+  const [cleaning, setCleaning] = useState(false);
+  const panel = useRef<HTMLDivElement | null>(null);
   const savingRef = useRef(false);
   const handles = useRef(new Map<string, HTMLButtonElement>());
   const rows = useRef(new Map<string, HTMLLIElement>());
@@ -192,6 +205,50 @@ export function ProductOrderList({
     }
     savingRef.current = false;
     setSaving(false);
+  };
+
+  /** Depois da exclusão: lista, destaque, contadores e páginas do servidor se realinham. */
+  const onDeleted = (outcome: DeletionOutcome, name: string) => {
+    const remaining = outcome.products;
+    const newFeatured = remaining.find((p) => p.id === featuredOf(remaining));
+    const { conversationCount, pendingCleanup: pending } = outcome.deleted;
+    setDeleting(null);
+    setProducts(remaining);
+    setRevision(outcome.catalogRevision);
+    setPendingCleanup(pending);
+    const text =
+      `Produto “${name}” excluído definitivamente` +
+      (conversationCount > 0
+        ? `, com ${conversationCount} ${conversationCount === 1 ? "conversa" : "conversas"}.`
+        : ".") +
+      (newFeatured ? ` Destaque da loja: ${newFeatured.name ?? "produto sem nome"}.` : "");
+    setStatus({ tone: "info", text });
+    setAnnouncement(text);
+    // O foco precisa ficar na lista (o item que o tinha saiu da tela).
+    requestAnimationFrame(() => panel.current?.focus());
+    // Contagem do cabeçalho, Mensagens e selo de conversas novas.
+    router.refresh();
+    window.dispatchEvent(new Event("pg:messages-changed"));
+  };
+
+  const retryCleanup = async () => {
+    setCleaning(true);
+    const result = await fetchJson<{ pendingCleanup: number }>(
+      "/api/stores/storage-cleanup",
+      { method: "POST" },
+      "Sem conexão.",
+    );
+    setCleaning(false);
+    if (result.ok) {
+      setPendingCleanup(result.data.pendingCleanup);
+      setStatus(
+        result.data.pendingCleanup === 0
+          ? { tone: "info", text: "Fotos dos produtos excluídos removidas do armazenamento." }
+          : { tone: "error", text: "O armazenamento ainda não aceitou a remoção das fotos. Tente de novo em instantes." },
+      );
+    } else {
+      setStatus({ tone: "error", text: `Não foi possível limpar as fotos. ${result.message}` });
+    }
   };
 
   // ---- Arraste (mouse e toque): só a alça captura o gesto ----
@@ -349,7 +406,35 @@ export function ProductOrderList({
           </button>
         ))}
       </div>
-      <div id="painel-produtos" role="tabpanel" aria-labelledby={`tab-${tab}`}>
+      <div
+        id="painel-produtos"
+        ref={panel}
+        tabIndex={-1}
+        role="tabpanel"
+        aria-labelledby={`tab-${tab}`}
+        className="outline-none"
+      >
+        {pendingCleanup > 0 && (
+          <div
+            role="alert"
+            className="mt-4 flex flex-wrap items-center gap-3 rounded-lg border border-warn/50 bg-warn/10 px-3 py-2 text-sm text-snow"
+          >
+            <span>
+              {pendingCleanup === 1
+                ? "1 foto de produto excluído ainda não saiu do armazenamento."
+                : `${pendingCleanup} fotos de produtos excluídos ainda não saíram do armazenamento.`}{" "}
+              Os produtos e as conversas já foram apagados.
+            </span>
+            <button
+              type="button"
+              onClick={() => void retryCleanup()}
+              disabled={cleaning}
+              className="min-h-11 rounded-lg border border-line px-4 font-medium hover:border-coral disabled:opacity-60"
+            >
+              {cleaning ? "Limpando…" : "Repetir limpeza"}
+            </button>
+          </div>
+        )}
         {tab === "published" && published.length > 0 && (
           <p className="mt-4 text-sm text-mist">
             A ordem abaixo é a do catálogo da loja; o primeiro produto fica em
@@ -539,6 +624,13 @@ export function ProductOrderList({
                           </Link>
                         </>
                       )}
+                      <ProductActionsMenu
+                        productLabel={label(product)}
+                        disabled={saving}
+                        onDelete={() =>
+                          setDeleting({ id: product.id, name: label(product) })
+                        }
+                      />
                     </div>
                   </div>
                   {tab === "published" && (
@@ -594,6 +686,11 @@ export function ProductOrderList({
           </ol>
         )}
       </div>
+      <DeleteProductDialog
+        target={deleting}
+        onClose={() => setDeleting(null)}
+        onDeleted={onDeleted}
+      />
     </>
   );
 }

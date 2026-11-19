@@ -60,6 +60,7 @@ Usar a sequência foto → identidade → atributos → história → contato. A
 | R$ 79,00 aprovado | **参考价格 ¥90.85** em destaque, “BRL 79.00” em corpo secundário. |
 | Aviso junto ao preço | “演示汇率：1 巴西雷亚尔 = 1.15 元人民币。最终价格以报价为准。” Explica a taxa de demonstração e que o preço final depende de cotação. |
 | Preço ausente | Mostrar apenas a ação comercial “询价” na área de preço e contato. |
+| Produto excluído | QR e vitrine: “该产品已不可用”. Link privado de conversa apagada: “该对话已不可用”. Em Produtos, o menu ⋯ abre a confirmação “Excluir produto” com nome, número de conversas, o aviso de exclusão definitiva e os botões Cancelar e Excluir definitivamente. |
 | Produto retirado | Informar indisponibilidade e oferecer retorno à loja. Preservar o endereço para eventual republicação. |
 
 ## Conversa e copiloto

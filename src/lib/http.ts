@@ -22,6 +22,7 @@ export type ApiErrorCode =
   | "translation_failed"
   | "translation_in_progress"
   | "order_mismatch"
+  | "conversations_changed"
   | "intro_missing"
   | "server_error";
 

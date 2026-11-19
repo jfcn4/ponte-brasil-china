@@ -145,7 +145,7 @@ test("vitrine → 询价 → tradução e copiloto → resposta revisada → lin
 
 test("link privado incompleto mostra aviso em chinês", async ({ page }) => {
   await page.goto("/conversa");
-  await expect(page.getByRole("heading", { name: "未找到该对话" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "该对话已不可用" })).toBeVisible();
   await page.goto("/conversa#t=abc");
-  await expect(page.getByRole("heading", { name: "未找到该对话" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "该对话已不可用" })).toBeVisible();
 });

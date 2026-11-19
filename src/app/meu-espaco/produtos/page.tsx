@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { listProducts } from "@/modules/products/repository";
+import { countPendingCleanup, listProducts } from "@/modules/products/repository";
 import { ProductOrderList } from "@/components/producer/ProductOrderList";
 import { getCatalogRevision } from "@/modules/stores/catalog";
 import { findCurrentStoreId } from "@/modules/stores/session";
@@ -9,9 +9,9 @@ export const metadata: Metadata = { title: "Produtos" };
 
 export default async function ProductsPage() {
   const storeId = await findCurrentStoreId();
-  const [products, catalogRevision] = storeId
-    ? await Promise.all([listProducts(storeId), getCatalogRevision(storeId)])
-    : [[], 1];
+  const [products, catalogRevision, pendingCleanup] = storeId
+    ? await Promise.all([listProducts(storeId), getCatalogRevision(storeId), countPendingCleanup(storeId)])
+    : [[], 1, 0];
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6">
@@ -34,7 +34,7 @@ export default async function ProductsPage() {
         )}
       </div>
 
-      {products.length === 0 ? (
+      {products.length === 0 && pendingCleanup === 0 ? (
         <div className="mt-8 rounded-xl border border-dashed border-line bg-panel/50 px-6 py-12 text-center">
           <p className="font-medium text-snow">Nenhum produto ainda</p>
           <p className="mx-auto mt-2 max-w-md text-sm text-mist">
@@ -48,7 +48,7 @@ export default async function ProductsPage() {
           </Link>
         </div>
       ) : (
-        <ProductOrderList initialProducts={products} initialRevision={catalogRevision} />
+        <ProductOrderList initialProducts={products} initialRevision={catalogRevision} initialPendingCleanup={pendingCleanup} />
       )}
     </div>
   );

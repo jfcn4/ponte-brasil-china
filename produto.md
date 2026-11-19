@@ -14,6 +14,7 @@ Consultorias, cooperativas e organizações que preparam produtores para feiras 
 |---|---|---|
 | MVP | Acesso anônimo do produtor, cadastro e edição de cachaças, fotos, personalidade e diferencial. | A mesma sessão volta ao painel e gerencia vários produtos de sua loja. |
 | MVP | Laboratório por produto, três nomes chineses, prévia, revisão, publicação e retirada. | A escolha do produtor e os dados da versão aprovada aparecem na vitrine. |
+| Apoio | Exclusão definitiva de produto em Produtos, para limpar dados de teste entre apresentações. | Apaga produto, versões, conversas e mensagens após confirmação; as outras cachaças e conversas ficam intactas. |
 | MVP | “Meu espaço” com Produtos, Mensagens e Minha loja. Loja editorial em chinês, ordem e destaque, vitrine por produto, dois tipos de QR e link. | A loja só lista produtos publicados. Os links continuam válidos após edição e reordenação. |
 | MVP | Preço de referência opcional em CNY e consulta de cotação. Chat com copiloto e contador interno de conversas novas. | O comprador faz uma consulta e recebe a tradução efetivamente aprovada. |
 | Extra após o fluxo central | “Explorar mais marcas brasileiras” nas páginas chinesas, com lojas e produtos fictícios navegáveis, identificados como demonstração. | A navegação termina em fichas de exemplo sem gerar contatos reais. |
