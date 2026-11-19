@@ -33,6 +33,22 @@ describe("globo da abertura", () => {
     route.at(-1)!.forEach((value, i) => expect(value).toBeCloseTo(beijing[i]!, 12));
   });
 
+  it("mantém o arco perto do globo: sobe no máximo cerca de um quarto do raio", () => {
+    for (const point of route) expect(Math.hypot(...point)).toBeLessThanOrEqual(1.27);
+  });
+
+  it("curva a rota para fora do próprio plano, para ela não virar uma linha reta de perfil", () => {
+    const normal = [
+      recife[1] * beijing[2] - recife[2] * beijing[1],
+      recife[2] * beijing[0] - recife[0] * beijing[2],
+      recife[0] * beijing[1] - recife[1] * beijing[0],
+    ];
+    const length = Math.hypot(...normal);
+    const offset = (p: readonly number[]) => Math.abs(p[0]! * normal[0]! + p[1]! * normal[1]! + p[2]! * normal[2]!) / length;
+    expect(offset(route[0]!)).toBeCloseTo(0, 9);
+    expect(offset(route[60]!)).toBeGreaterThan(0.1);
+  });
+
   it("dá uma volta completa e contínua de oeste para leste a cada período", () => {
     expect(spinAt(0)).toBeCloseTo(0, 9);
     expect(spinAt(VIEW.period / 4)).toBeCloseTo(-90, 9);

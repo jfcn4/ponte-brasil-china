@@ -150,15 +150,27 @@ export function globeDots(count: number) {
 }
 
 /** Arco de grande círculo entre a e b, elevado sobre a superfície. As pontas ficam na superfície. */
-export function routeArc(a: Vec3, b: Vec3, steps: number, lift = 0.25): Vec3[] {
+export function routeArc(a: Vec3, b: Vec3, steps: number, lift = 0.25, bow = 0.16): Vec3[] {
   const omega = Math.acos(Math.min(1, Math.max(-1, dot(a, b))));
+  // Normal do plano da rota, apontando para o norte: o arco se curva um pouco para o lado,
+  // como uma rota de voo, e nunca vira uma linha reta quando o plano fica de perfil.
+  let n: Vec3 = [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+  const nl = Math.hypot(...n) || 1;
+  n = [n[0] / nl, n[1] / nl, n[2] / nl];
+  if (n[1] < 0) n = [-n[0], -n[1], -n[2]];
   const out: Vec3[] = [];
   for (let i = 0; i <= steps; i++) {
     const t = i / steps;
     const s0 = Math.sin((1 - t) * omega) / Math.sin(omega);
     const s1 = Math.sin(t * omega) / Math.sin(omega);
-    const h = 1 + lift * Math.sin(Math.PI * t);
-    out.push([(a[0] * s0 + b[0] * s1) * h, (a[1] * s0 + b[1] * s1) * h, (a[2] * s0 + b[2] * s1) * h]);
+    const bump = Math.sin(Math.PI * t);
+    const h = 1 + lift * bump;
+    const side = bow * bump;
+    out.push([
+      (a[0] * s0 + b[0] * s1) * h + n[0] * side,
+      (a[1] * s0 + b[1] * s1) * h + n[1] * side,
+      (a[2] * s0 + b[2] * s1) * h + n[2] * side,
+    ]);
   }
   return out;
 }

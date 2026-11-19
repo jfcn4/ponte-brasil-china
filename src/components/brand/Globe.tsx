@@ -23,7 +23,8 @@ const RADIUS_RATIO = 0.33;
 /** Até onde o halo vai, em raios. Precisa caber em 0,5 / RADIUS_RATIO. */
 const HALO_EXTENT = 1.5;
 
-type Point = { x: number; y: number; z: number; front: boolean };
+/** `visible`: na frente do globo ou, atrás dele, fora do disco (a esfera não cobre). */
+type Point = { x: number; y: number; z: number; front: boolean; visible: boolean };
 
 /**
  * Globo holográfico vermelho com a rota Recife–Pequim. Canvas 2D, sem
@@ -50,7 +51,7 @@ export function Globe({ className = "" }: { className?: string }) {
     const grid = graticule(5, 2.5);
     const recife = toVec(RECIFE.lat, RECIFE.lon);
     const beijing = toVec(BEIJING.lat, BEIJING.lon);
-    const route = routeArc(recife, beijing, 160);
+    const route = routeArc(recife, beijing, 480);
     const pulse = createPulse();
 
     let width = 0;
@@ -82,6 +83,7 @@ export function Globe({ className = "" }: { className?: string }) {
           y: cy - v[1] * radius,
           z: v[2],
           front: v[2] > 0,
+          visible: v[2] > 0 || Math.hypot(v[0], v[1]) > 1,
         };
       };
       const disc = (r = radius) => {
@@ -250,21 +252,29 @@ export function Globe({ className = "" }: { className?: string }) {
       ctx.strokeStyle = "rgba(240, 45, 52, 0.75)";
       ctx.stroke();
 
-      // Conexão: linha fina vermelha, só na face da frente. Some suavemente ao passar para trás do globo.
+      // Conexão: linha fina vermelha que contorna o globo. Só some onde a esfera a cobre:
+      // ao passar para trás, continua visível fora do disco e desaparece na borda.
       const path = route.map(project);
-      const fade = (p: Point) => Math.min(1, Math.max(0, p.z / 0.12));
+      // O trecho que já passou para trás do globo fica mais apagado: dá a leitura de profundidade.
       const strokeRoute = (lineWidth: number, color: string) => {
         ctx.lineWidth = lineWidth;
         ctx.strokeStyle = color;
-        for (let i = 1; i < path.length; i++) {
-          const a = path[i - 1]!;
-          const b = path[i]!;
-          const alpha = Math.min(fade(a), fade(b));
-          if (alpha <= 0) continue;
-          ctx.globalAlpha = alpha;
+        for (const behind of [true, false]) {
+          ctx.globalAlpha = behind ? 0.45 : 1;
           ctx.beginPath();
-          ctx.moveTo(a.x, a.y);
-          ctx.lineTo(b.x, b.y);
+          let open = false;
+          for (let i = 1; i < path.length; i++) {
+            const a = path[i - 1]!;
+            const b = path[i]!;
+            // Segmento entra nesta passada se a esfera não o cobre e se está (ou não) atrás dela.
+            if (!a.visible || !b.visible || !(a.front && b.front) !== behind) {
+              open = false;
+              continue;
+            }
+            if (!open) ctx.moveTo(a.x, a.y);
+            ctx.lineTo(b.x, b.y);
+            open = true;
+          }
           ctx.stroke();
         }
         ctx.globalAlpha = 1;
@@ -272,6 +282,8 @@ export function Globe({ className = "" }: { className?: string }) {
       strokeRoute(7 * unit, "rgba(210, 10, 35, 0.12)");
       strokeRoute(3 * unit, "rgba(220, 20, 45, 0.28)");
       strokeRoute(1.3 * unit, "rgba(245, 40, 52, 0.95)");
+      /** Pontos na superfície somem suavemente ao cruzar o horizonte. */
+      const fade = (p: Point) => Math.min(1, Math.max(0, p.z / 0.06));
 
       const glowDot = (p: Point, core: number, glow: number, strength: number, coreAlpha: number) => {
         const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, glow);
@@ -298,8 +310,7 @@ export function Globe({ className = "" }: { className?: string }) {
       const trip = animate ? pulse.at(time, path[0]!.front) : { progress: 0.5, alpha: 1 };
       if (trip) {
         const head = path[Math.round(trip.progress * (path.length - 1))]!;
-        const seen = fade(head);
-        if (seen > 0) glowDot(head, 3.2 * unit, 26 * unit, 0.85 * trip.alpha * seen, trip.alpha * seen);
+        if (head.visible) glowDot(head, 3.2 * unit, 26 * unit, 0.85 * trip.alpha, trip.alpha);
       }
 
       ctx.globalCompositeOperation = "source-over";
