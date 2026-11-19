@@ -121,7 +121,7 @@ function Photo({ item, className, priority = false }: { item: CatalogItem; class
 
 function Tag({ item }: { item: CatalogItem }) {
   return item.tag ? (
-    <span className="inline-flex w-fit rounded-full border border-brand/40 bg-brand/5 px-2.5 py-0.5 text-xs font-medium text-brand">
+    <span className="w-fit text-xs font-medium text-brand">
       {item.tag}
     </span>
   ) : null;

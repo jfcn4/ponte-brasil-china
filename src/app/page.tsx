@@ -65,7 +65,6 @@ export default function HomePage() {
                 >
                   Criar minha vitrine
                 </Link>
-                <span className="text-sm text-mist">Sem cadastro de conta. Seu navegador guarda o acesso.</span>
               </div>
             </div>
           </div>

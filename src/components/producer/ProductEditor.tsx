@@ -25,7 +25,7 @@ import { buildDraftPreview } from "@/modules/products/showcase";
 import { Section, SelectField, TextArea, TextField, UnitField } from "./fields";
 import { type PendingUpload, PhotoManager } from "./PhotoManager";
 import { ImagePrepError, prepareImage } from "./prepareImage";
-import { StatusBadge } from "./StatusBadge";
+import { StatusLabel } from "./StatusLabel";
 
 export type EditorInitial = {
   productId: string | null;
@@ -355,8 +355,9 @@ export function ProductEditor({ initial }: { initial: EditorInitial }) {
             <h1 className="mt-1 text-2xl font-semibold tracking-tight text-snow">
               {productId ? "Editar cachaça" : "Nova cachaça"}
             </h1>
+            <StatusLabel status={status} className="mt-0.5" />
             <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-mist">
-              Categoria: cachaça artesanal <StatusBadge status={status} />
+              Categoria: cachaça artesanal
               {initial.publicPath && (
                 <a href={initial.publicPath} target="_blank" rel="noreferrer" className="text-coral underline underline-offset-2">
                   Ver vitrine no ar <span className="sr-only">(nova aba)</span>

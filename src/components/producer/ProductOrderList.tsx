@@ -6,7 +6,7 @@ import { fetchJson } from "@/lib/client/fetch-json";
 import { productPath } from "@/lib/paths";
 import type { ProductListItem } from "@/modules/products/repository";
 import { featuredProductId, moveInOrder } from "@/modules/stores/catalog-view";
-import { StatusBadge } from "./StatusBadge";
+import { StatusLabel } from "./StatusLabel";
 
 const dateFormat = new Intl.DateTimeFormat("pt-BR", {
   day: "2-digit",
@@ -146,13 +146,9 @@ export function ProductOrderList({
                 <p className="line-clamp-2 break-words font-semibold text-snow">
                   {product.name ?? <span className="italic text-mist">Sem nome</span>}
                 </p>
-                <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
-                  <StatusBadge status={product.status} />
-                  {product.id === featured && (
-                    <span className="inline-flex items-center rounded-full border border-coral/60 bg-coral/10 px-2.5 py-0.5 text-xs font-medium text-coral">
-                      Destaque da loja
-                    </span>
-                  )}
+                <StatusLabel status={product.status} className="mt-0.5" />
+                <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+                  {product.id === featured && <span className="font-medium text-coral">Destaque da loja</span>}
                   {product.publishedVersion !== null && <span className="text-mist">versão {product.publishedVersion} no ar</span>}
                   <span className="text-mist">
                     {product.imageCount} de 3 fotos · atualizado {dateFormat.format(new Date(product.updatedAt))}

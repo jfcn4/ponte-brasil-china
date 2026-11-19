@@ -20,7 +20,7 @@ function Label({ id, label, optional, privacy }: { id: string } & Pick<Common, "
       {label}
       {optional && <span className="font-normal text-mist">(opcional)</span>}
       {privacy && (
-        <span className="rounded-full border border-line px-2 py-0.5 text-[0.7rem] font-medium uppercase tracking-wide text-mist">
+        <span className="text-[0.7rem] font-medium uppercase tracking-wide text-mist">
           Privado · só você vê
         </span>
       )}
@@ -236,7 +236,7 @@ export function Section({
             {title}
           </h2>
         </div>
-        <span className="rounded-full bg-panel-2 px-2.5 py-1 text-xs text-mist">{visibility}</span>
+        <span className="text-xs text-mist">{visibility}</span>
       </div>
       <p className="mt-2 text-sm text-mist">{description}</p>
       <div className="mt-5 grid gap-5 [&>*]:min-w-0">{children}</div>

@@ -18,7 +18,7 @@ import { formatBrl, formatCny } from "@/modules/products/pricing";
 import { PRODUCT_STATUS_LABELS } from "@/modules/products/schema";
 import { buildDraftPreview } from "@/modules/products/showcase";
 import { ShareCard } from "./ShareCard";
-import { StatusBadge } from "./StatusBadge";
+import { StatusLabel } from "./StatusLabel";
 
 const SOURCE_LABELS: Record<HighlightSource, string> = {
   short_description: "Descrição curta",
@@ -257,9 +257,9 @@ export function PresentationLab({ initial, autoGenerate }: { initial: LabState; 
             Editar cadastro em português
           </Link>
         </nav>
-        <div className="mt-2 flex flex-wrap items-center gap-3">
+        <div className="mt-2">
           <h1 className="text-2xl font-semibold tracking-tight text-snow">Apresentação em chinês</h1>
-          <StatusBadge status={lab.product.status} />
+          <StatusLabel status={lab.product.status} className="mt-0.5" />
         </div>
         <p className="mt-1 text-sm text-mist">
           {lab.product.name ?? "Produto sem nome"} · compare os nomes, confira a prévia e publique quando estiver pronto.
@@ -651,7 +651,7 @@ function NameOptions({
                     {CHOICE_LABELS[strategy]}
                   </span>
                   {strategy === recommended && (
-                    <span className="rounded-full bg-coral/15 px-2 py-0.5 text-xs font-medium text-coral">Recomendada</span>
+                    <span className="text-xs font-medium text-coral">Recomendada</span>
                   )}
                 </span>
                 <span

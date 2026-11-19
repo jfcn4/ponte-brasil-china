@@ -31,12 +31,6 @@ export default async function SpaceLayout({ children }: { children: React.ReactN
         </div>
       </header>
       <main className="flex-1">{children}</main>
-      <footer className="border-t border-line/70 print:hidden">
-        <p className="mx-auto w-full max-w-6xl px-4 py-5 text-xs leading-relaxed text-mist sm:px-6">
-          Seu acesso a esta loja fica guardado neste navegador, sem conta. Limpar os dados do navegador ou usar uma janela
-          anônima abre um espaço separado.
-        </p>
-      </footer>
     </div>
   );
 }

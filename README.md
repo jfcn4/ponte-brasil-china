@@ -148,7 +148,7 @@ Antes: deploy na Vercel com a migração aplicada, `GEMINI_API_KEY` válida, uma
 
 | Tempo | Tela | O que mostrar |
 |---|---|---|
-| 0:00–0:30 | Início (`/`) | A proposta em uma frase e **Criar minha vitrine**. Sem conta: o navegador guarda o acesso. |
+| 0:00–0:30 | Início (`/`) | A proposta em uma frase e **Criar minha vitrine**. |
 | 0:30–1:30 | Cadastro → Apresentação em chinês | Cachaça **inédita**: nome, descrição curta, uma foto real, produtor, 700 mL e R$ 79,00. **Gerar apresentação chinesa**: as três estratégias, a recomendação equilibrada com justificativa e os textos com o sentido em português. Destacar que preço, volume e teor vêm do cadastro, não da IA. |
 | 1:30–2:00 | Publicar → Link e QR do produto | **Publicar vitrine** → **Confirmar publicação**. A prévia mostra **¥90.85 / BRL 79.00** e a taxa demonstrativa. |
 | 2:00–2:40 | Minha loja → Cartão para feira → celular | Mostrar o cartão bilíngue (ou o PDF já impresso), escanear o QR com o celular: catálogo em chinês com o selo de demonstração (loja da banca) ou a loja recém-criada. Tocar no produto: foto, nome, ficha e o botão **询价 · Solicitar cotação** fixo no rodapé. |

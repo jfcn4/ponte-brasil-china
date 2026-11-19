@@ -13,7 +13,7 @@ import {
   type ProducerMessageView,
 } from "@/modules/messaging/schema";
 import { formatBrl, formatCny } from "@/modules/products/pricing";
-import { ConversationBadges } from "./ConversationList";
+import { ConversationStatus } from "./ConversationList";
 
 const POLL_MS = 8_000;
 /** Espera antes de repetir sozinho uma análise que falhou por instabilidade da IA. */
@@ -264,7 +264,7 @@ export function ConversationView({ initial }: { initial: ConversationDetail }) {
           </p>
           {versionNote && <p className="mt-1 text-xs text-warn">{versionNote}</p>}
         </div>
-        <ConversationBadges item={detail} />
+        <ConversationStatus item={detail} />
       </header>
 
       <div className="mt-4 xl:grid xl:grid-cols-[minmax(0,1fr)_15rem] xl:gap-6">
@@ -481,7 +481,7 @@ function MessageItem({
     <li id={`pmsg-${message.id}`} className="mr-auto max-w-[85%] scroll-mt-4 rounded-2xl rounded-bl-sm border border-line bg-panel px-4 py-3">
       <p className="flex flex-wrap items-center gap-2 text-xs text-mist">
         <span>Comprador · {timeFormat.format(new Date(message.createdAt))}</span>
-        {unread && <span className="rounded-full bg-coral/15 px-2 font-semibold text-coral">Nova</span>}
+        {unread && <span className="font-semibold text-coral">Nova</span>}
       </p>
       {message.translationPt ? (
         <>
@@ -568,7 +568,7 @@ function Copilot({
               <p className="text-xs text-warn">{answered ? "Pontos da última consulta (já respondida):" : "Confirme antes de responder:"}</p>
               <ul className="mt-1 flex flex-wrap gap-1" aria-label="Pendências">
                 {analysis.pending.map((p) => (
-                  <li key={p.topic} title={p.note} className="rounded-full border border-warn/40 bg-warn/10 px-2 py-0.5 text-xs text-warn">
+                  <li key={p.topic} title={p.note} className="text-xs text-warn">
                     {p.label}
                   </li>
                 ))}

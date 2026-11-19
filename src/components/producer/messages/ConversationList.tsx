@@ -15,23 +15,19 @@ const dateFormat = new Intl.DateTimeFormat("pt-BR", {
   timeZone: "America/Sao_Paulo",
 });
 
-/** Estado da conversa por texto: “Nova” (não lida) é distinto de “Aguardando resposta”. */
-export function ConversationBadges({ item }: { item: Pick<ConversationListItem, "hasUnread" | "awaitingReply"> }) {
+/**
+ * Estado da conversa em texto simples: “Nova” (não lida) é distinto de “Aguardando resposta”.
+ * Pendente ganha peso tipográfico; “Respondida” é informação secundária.
+ */
+export function ConversationStatus({ item }: { item: Pick<ConversationListItem, "hasUnread" | "awaitingReply"> }) {
   return (
-    <span className="flex flex-wrap gap-1.5">
-      {item.hasUnread && (
-        <span className="inline-flex items-center rounded-full border border-coral/60 bg-coral/15 px-2 py-0.5 text-xs font-semibold text-coral">
-          Nova
-        </span>
-      )}
+    <span className="flex flex-wrap items-center gap-x-2 text-sm">
+      {item.hasUnread && <span className="font-semibold text-coral">Nova</span>}
+      {item.hasUnread && <span aria-hidden="true" className="text-mist">·</span>}
       {item.awaitingReply ? (
-        <span className="inline-flex items-center rounded-full border border-warn/40 bg-warn/10 px-2 py-0.5 text-xs font-medium text-warn">
-          Aguardando resposta
-        </span>
+        <span className="font-semibold text-warn">Aguardando resposta</span>
       ) : (
-        <span className="inline-flex items-center rounded-full border border-ok/40 bg-ok/10 px-2 py-0.5 text-xs font-medium text-ok">
-          Respondida
-        </span>
+        <span className="text-xs text-mist">Respondida</span>
       )}
     </span>
   );
@@ -42,11 +38,14 @@ export function ConversationList({
   initial,
   selectedId,
   compact = false,
+  hideWhenEmpty = false,
 }: {
   initial: ConversationListItem[];
   selectedId: string | null;
   /** Coluna lateral estreita: prévia em uma linha. */
   compact?: boolean;
+  /** Sem conversas, não mostra o quadro vazio (a página oferece o próprio). */
+  hideWhenEmpty?: boolean;
 }) {
   const [items, setItems] = useState(initial);
 
@@ -65,6 +64,7 @@ export function ConversationList({
   }, []);
 
   if (items.length === 0) {
+    if (hideWhenEmpty) return null;
     return (
       <div className="rounded-xl border border-dashed border-line bg-panel/50 p-8 text-center">
         <p className="font-medium text-snow">Nenhuma conversa ainda</p>
@@ -107,7 +107,7 @@ export function ConversationList({
                 {item.preview}
               </span>
               <span className="mt-2 block">
-                <ConversationBadges item={item} />
+                <ConversationStatus item={item} />
               </span>
             </Link>
           </li>
