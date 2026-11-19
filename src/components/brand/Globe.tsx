@@ -10,7 +10,8 @@ import {
   graticule,
   landLattice,
   routeArc,
-  swingAt,
+  createPulse,
+  spinAt,
   toVec,
   viewMatrix,
   type Vec3,
@@ -27,7 +28,7 @@ type Point = { x: number; y: number; z: number; front: boolean; outside: boolean
  * Globo holográfico vermelho com a rota Recife–Pequim. Canvas 2D, sem
  * dependências: oceano quase negro com grade de 5°, continentes de vidro
  * avermelhado com malha de pontos, fronteiras finas, costa luminosa e borda
- * dupla acesa. Gira devagar em vaivém em torno do eixo inclinado; com
+ * dupla acesa. Dá voltas completas e lentas em torno do eixo inclinado; com
  * movimento reduzido fica parado no melhor ângulo da rota. Decorativo:
  * pausa fora da tela e nunca bloqueia o CTA.
  */
@@ -49,6 +50,7 @@ export function Globe({ className = "" }: { className?: string }) {
     const recife = toVec(RECIFE.lat, RECIFE.lon);
     const beijing = toVec(BEIJING.lat, BEIJING.lon);
     const route = routeArc(recife, beijing, 160);
+    const pulse = createPulse();
 
     let width = 0;
     let height = 0;
@@ -71,7 +73,7 @@ export function Globe({ className = "" }: { className?: string }) {
       const cx = width / 2;
       const cy = height / 2;
       const unit = Math.max(0.8, radius / 300);
-      const m = viewMatrix(animate ? swingAt(time) : 0);
+      const m = viewMatrix(animate ? spinAt(time) : 0);
       const project = (p: Vec3): Point => {
         const v = apply(m, p);
         return {
@@ -278,7 +280,7 @@ export function Globe({ className = "" }: { className?: string }) {
       strokeRoute(true, 3 * unit, "rgba(220, 20, 45, 0.28)");
       strokeRoute(true, 1.3 * unit, "rgba(245, 40, 52, 0.95)");
 
-      const glowDot = (p: Point, core: number, glow: number, strength: number) => {
+      const glowDot = (p: Point, core: number, glow: number, strength: number, coreAlpha: number) => {
         const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, glow);
         g.addColorStop(0, `rgba(255, 40, 60, ${strength})`);
         g.addColorStop(0.3, `rgba(230, 15, 40, ${strength * 0.35})`);
@@ -289,19 +291,22 @@ export function Globe({ className = "" }: { className?: string }) {
         ctx.fill();
         ctx.beginPath();
         ctx.arc(p.x, p.y, core, 0, Math.PI * 2);
-        ctx.fillStyle = "rgba(255, 240, 238, 1)";
+        ctx.fillStyle = `rgba(255, 240, 238, ${coreAlpha})`;
         ctx.fill();
       };
 
-      // Pontas fixas em Recife e Pequim.
+      // Pontas fixas em Recife e Pequim; atrás da esfera aparecem em transparência.
       for (const p of [path[0]!, path[path.length - 1]!]) {
-        if (p.front) glowDot(p, 2.2 * unit, 12 * unit, 0.7);
+        glowDot(p, 2.2 * unit, 12 * unit, p.front ? 0.7 : 0.18, p.front ? 1 : 0.3);
       }
 
-      // Ponto de luz que percorre a conexão de Recife a Pequim (fica no meio do arco sem movimento).
-      const t = animate ? (time % 5200) / 5200 : 0.5;
-      const head = path[Math.round(t * (path.length - 1))]!;
-      if (head.front || head.outside) glowDot(head, 3.2 * unit, 26 * unit, 0.85);
+      // Ponto de luz que viaja de Recife a Pequim de vez em quando (parado no meio do arco sem movimento).
+      const trip = animate ? pulse.at(time, path[0]!.front) : { progress: 0.5, alpha: 1 };
+      if (trip) {
+        const head = path[Math.round(trip.progress * (path.length - 1))]!;
+        const seen = head.front || head.outside ? 1 : 0.3;
+        glowDot(head, 3.2 * unit, 26 * unit, 0.85 * trip.alpha * seen, trip.alpha * seen);
+      }
 
       ctx.globalCompositeOperation = "source-over";
     };

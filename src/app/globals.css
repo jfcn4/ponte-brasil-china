@@ -88,8 +88,9 @@ dialog::backdrop {
 .hero-globe {
   position: relative;
   /* Altura suficiente para o halo sumir antes da seção seguinte. */
+  /* Espaço acima para o arco, que sobe além da esfera quando passa por trás. */
   height: calc(var(--globe) * 0.84);
-  margin-top: calc(var(--globe) * -0.02);
+  margin-top: calc(var(--globe) * 0.09);
   pointer-events: none;
 }
 
@@ -102,10 +103,28 @@ dialog::backdrop {
   transform: translateX(-50%);
 }
 
+/* Destaques: ao lado do globo só quando há altura; senão, logo abaixo da abertura. */
+.hero-highlights-side {
+  display: none;
+}
+
+@media (min-width: 64rem) and (min-height: 50rem) {
+  .hero-highlights-side {
+    display: grid;
+  }
+
+  .hero-highlights-below {
+    display: none;
+  }
+}
+
 @media (min-width: 64rem) {
   .hero {
     --globe: min(56vw, 60rem, calc(100svh + 4rem));
     min-height: max(calc(100svh - 5.25rem), calc(var(--globe) * 0.8));
+    /* Texto centrado na altura da abertura, ao lado do globo. */
+    display: flex;
+    align-items: center;
   }
 
   .hero-globe {

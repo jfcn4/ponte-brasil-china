@@ -15,17 +15,16 @@ export const BEIJING = { lat: 39.9, lon: 116.4 };
 /**
  * Enquadramento da rota. O centro da vista fica ao sul do plano do grande
  * círculo Recife–Pequim, para o arco aparecer como uma ponte sobre o globo.
- * O giro oscila em torno do eixo polar do próprio globo (que aparece
- * inclinado pela vista e pelo `roll`) e mantém as duas pontas na face visível.
+ * O globo dá voltas completas em torno do próprio eixo polar (que aparece
+ * inclinado pela vista e pelo `roll`), de oeste para leste como a Terra.
+ * Em `spin = 0` (movimento reduzido) as duas pontas ficam na face visível.
  */
 export const VIEW = {
   lat: 24,
   lon: 24,
   roll: -8,
-  /** Amplitude do vaivém em longitude, em graus. */
-  swing: 6,
-  /** Duração de um ciclo completo de ida e volta, em ms. */
-  period: 24_000,
+  /** Duração de uma volta completa, em ms. */
+  period: 72_000,
 } as const;
 
 export function toVec(lat: number, lon: number): Vec3 {
@@ -38,17 +37,51 @@ export function dot(a: Vec3, b: Vec3) {
   return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
 }
 
-/** Deslocamento de longitude no instante `time`: senoide, com inversões suaves. */
-export function swingAt(time: number) {
-  return VIEW.swing * Math.sin((2 * Math.PI * time) / VIEW.period);
+/** Giro em graus no instante `time`: volta completa e contínua, de oeste para leste. */
+export function spinAt(time: number) {
+  return -((time % VIEW.period) / VIEW.period) * 360;
+}
+
+/** Viagem do ponto de luz pela conexão, em ms. */
+export const PULSE_TRIP = 7_000;
+/** Intervalo entre viagens, em ms: sorteado nessa faixa para não parecer um loop. */
+export const PULSE_GAP: readonly [number, number] = [6_000, 15_000];
+const PULSE_FIRST = 2_500;
+
+/**
+ * Agenda o ponto de luz que viaja de Recife a Pequim de vez em quando.
+ * `at` devolve o progresso suavizado (0–1) e a opacidade, ou `null` entre
+ * viagens. Uma viagem só começa com Recife na face visível.
+ */
+export function createPulse(random: () => number = Math.random) {
+  let start: number | null = null;
+  let next: number | null = null;
+  return {
+    at(time: number, canStart: boolean): { progress: number; alpha: number } | null {
+      next ??= time + PULSE_FIRST;
+      if (start === null) {
+        if (time < next || !canStart) return null;
+        start = time;
+      }
+      const t = (time - start) / PULSE_TRIP;
+      if (t >= 1) {
+        start = null;
+        next = time + PULSE_GAP[0] + random() * (PULSE_GAP[1] - PULSE_GAP[0]);
+        return null;
+      }
+      const progress = (1 - Math.cos(Math.PI * t)) / 2;
+      const alpha = Math.min(1, t / 0.12, (1 - t) / 0.12);
+      return { progress, alpha };
+    },
+  };
 }
 
 /**
- * Matriz mundo → vista para um deslocamento `swing` (graus) em torno do eixo
- * polar. Na vista, x aponta para a direita, y para cima e z para o observador.
+ * Matriz mundo → vista para um giro `spin` (graus) em torno do eixo polar.
+ * Na vista, x aponta para a direita, y para cima e z para o observador.
  */
-export function viewMatrix(swing: number): Mat3 {
-  const lon = (VIEW.lon + swing) * DEG;
+export function viewMatrix(spin: number): Mat3 {
+  const lon = (VIEW.lon + spin) * DEG;
   const lat = VIEW.lat * DEG;
   const roll = VIEW.roll * DEG;
   const cl = Math.cos(lon);
@@ -117,7 +150,7 @@ export function globeDots(count: number) {
 }
 
 /** Arco de grande círculo entre a e b, elevado sobre a superfície. As pontas ficam na superfície. */
-export function routeArc(a: Vec3, b: Vec3, steps: number, lift = 0.5): Vec3[] {
+export function routeArc(a: Vec3, b: Vec3, steps: number, lift = 0.4): Vec3[] {
   const omega = Math.acos(Math.min(1, Math.max(-1, dot(a, b))));
   const out: Vec3[] = [];
   for (let i = 0; i <= steps; i++) {

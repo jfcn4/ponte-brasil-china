@@ -1,12 +1,15 @@
 import { describe, expect, it } from "vitest";
 import {
   BEIJING,
+  PULSE_GAP,
+  PULSE_TRIP,
   RECIFE,
   VIEW,
   apply,
+  createPulse,
   isLand,
   routeArc,
-  swingAt,
+  spinAt,
   toVec,
   viewMatrix,
 } from "@/components/brand/globe-geometry";
@@ -14,9 +17,6 @@ import {
 const recife = toVec(RECIFE.lat, RECIFE.lon);
 const beijing = toVec(BEIJING.lat, BEIJING.lon);
 const route = routeArc(recife, beijing, 120);
-
-/** Instantes de um ciclo completo de ida e volta, incluindo as duas inversões. */
-const cycle = Array.from({ length: 241 }, (_, i) => (i / 240) * VIEW.period);
 
 describe("globo da abertura", () => {
   it("usa a máscara de terra: Recife e Pequim em terra, meio do Atlântico no oceano", () => {
@@ -31,25 +31,62 @@ describe("globo da abertura", () => {
     route.at(-1)!.forEach((value, i) => expect(value).toBeCloseTo(beijing[i]!, 12));
   });
 
-  it("oscila em vaivém suave, sem passar da amplitude", () => {
-    const swings = cycle.map(swingAt);
-    expect(Math.max(...swings)).toBeCloseTo(VIEW.swing, 6);
-    expect(Math.min(...swings)).toBeCloseTo(-VIEW.swing, 6);
-    expect(swingAt(0)).toBe(0);
-    expect(swingAt(VIEW.period)).toBeCloseTo(0, 9);
+  it("dá uma volta completa e contínua de oeste para leste a cada período", () => {
+    expect(spinAt(0)).toBeCloseTo(0, 9);
+    expect(spinAt(VIEW.period / 4)).toBeCloseTo(-90, 9);
+    expect(spinAt(VIEW.period / 2)).toBeCloseTo(-180, 9);
+    // Ao completar a volta, a vista é a mesma do início.
+    const start = viewMatrix(spinAt(0));
+    const turn = viewMatrix(spinAt(VIEW.period - 1e-6));
+    start.forEach((value, i) => expect(turn[i]).toBeCloseTo(value, 6));
   });
 
-  it("mantém Recife, Pequim e todo o arco visíveis durante um ciclo inteiro", () => {
-    for (const time of cycle) {
-      const m = viewMatrix(swingAt(time));
-      // z > 0 é a face voltada para quem olha; a margem evita a borda do disco.
-      expect(apply(m, recife)[2]).toBeGreaterThan(0.15);
-      expect(apply(m, beijing)[2]).toBeGreaterThan(0.15);
-      for (const point of route) {
-        const [x, y, z] = apply(m, point);
-        expect(z > 0 || Math.hypot(x, y) > 1).toBe(true);
+  it("no ângulo estático (movimento reduzido) mostra Recife, Pequim e todo o arco", () => {
+    const m = viewMatrix(0);
+    expect(apply(m, recife)[2]).toBeGreaterThan(0.15);
+    expect(apply(m, beijing)[2]).toBeGreaterThan(0.15);
+    for (const point of route) {
+      const [x, y, z] = apply(m, point);
+      expect(z > 0 || Math.hypot(x, y) > 1).toBe(true);
+    }
+  });
+
+  it("faz o ponto de luz viajar de vez em quando, devagar e com intervalos variados", () => {
+    const draws = [0.1, 0.9];
+    const pulse = createPulse(() => draws.shift() ?? 0.5);
+    const trips: Array<{ start: number; end: number }> = [];
+    let current: { start: number; end: number } | null = null;
+    let previous = -1;
+    for (let time = 0; time <= 60_000; time += 50) {
+      const state = pulse.at(time, true);
+      if (state) {
+        expect(state.progress).toBeGreaterThanOrEqual(previous);
+        expect(state.alpha).toBeGreaterThanOrEqual(0);
+        expect(state.alpha).toBeLessThanOrEqual(1);
+        previous = state.progress;
+        current ??= { start: time, end: time };
+        current.end = time;
+      } else if (current) {
+        trips.push(current);
+        current = null;
+        previous = -1;
       }
     }
+    expect(trips.length).toBeGreaterThanOrEqual(3);
+    for (const trip of trips) expect(trip.end - trip.start).toBeGreaterThanOrEqual(PULSE_TRIP - 100);
+    const gaps = trips.slice(1).map((trip, i) => trip.start - trips[i]!.end);
+    for (const gap of gaps) {
+      expect(gap).toBeGreaterThanOrEqual(PULSE_GAP[0]);
+      expect(gap).toBeLessThanOrEqual(PULSE_GAP[1] + 100);
+    }
+    expect(gaps[0]).not.toBe(gaps[1]);
+  });
+
+  it("só inicia a viagem com Recife na face visível", () => {
+    const pulse = createPulse(() => 0);
+    expect(pulse.at(0, true)).toBeNull();
+    expect(pulse.at(5_000, false)).toBeNull();
+    expect(pulse.at(6_000, true)).not.toBeNull();
   });
 
   it("no ângulo estático (movimento reduzido) Recife fica à esquerda e Pequim à direita", () => {
