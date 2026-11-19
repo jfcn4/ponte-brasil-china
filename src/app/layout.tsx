@@ -17,7 +17,7 @@ const notoSerifSc = Noto_Serif_SC({
 });
 
 export const metadata: Metadata = {
-  title: { default: "Ponte Global", template: "%s · Ponte Global" },
+  title: { default: "BAQIAO 巴桥", template: "%s · BAQIAO" },
   description: "Crie sua vitrine em chinês e converse com compradores no seu idioma.",
 };
 

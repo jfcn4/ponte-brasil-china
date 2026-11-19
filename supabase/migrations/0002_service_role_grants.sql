@@ -1,4 +1,4 @@
--- Ponte Global · 0002 · Privilégios explícitos do servidor.
+-- BAQIAO · 0002 · Privilégios explícitos do servidor.
 --
 -- Projetos Supabase recentes não concedem DML padrão ao service_role nas novas
 -- tabelas. O servidor da aplicação (chave secreta) é o único cliente destas

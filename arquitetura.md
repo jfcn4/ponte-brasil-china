@@ -1,4 +1,4 @@
-# Arquitetura · Ponte Global
+# Arquitetura · BAQIAO
 
 ## Organização e infraestrutura
 

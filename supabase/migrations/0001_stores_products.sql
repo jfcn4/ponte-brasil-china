@@ -1,4 +1,4 @@
--- Ponte Global · 0001 · Lojas, sessões anônimas, produtos (rascunho) e fotos.
+-- BAQIAO · 0001 · Lojas, sessões anônimas, produtos (rascunho) e fotos.
 --
 -- Todo acesso passa pelo servidor da aplicação com a chave secreta. RLS fica
 -- ativo sem políticas: as chaves publicáveis (anon/authenticated) não leem nem

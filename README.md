@@ -1,6 +1,6 @@
-# Ponte Global
+# BAQIAO
 
-A Ponte Global ajuda o produtor brasileiro a apresentar sua cachaça em chinês e conduzir a primeira conversa com um comprador. O produtor cadastra o que sabe sobre o produto, compara três identidades chinesas, aprova uma vitrine e compartilha um QR. O comprador pode conhecer toda a loja ou consultar um produto específico. A decisão sobre o que publicar e o que responder continua com o produtor.
+A BAQIAO ajuda o produtor brasileiro a apresentar sua cachaça em chinês e conduzir a primeira conversa com um comprador. O produtor cadastra o que sabe sobre o produto, compara três identidades chinesas, aprova uma vitrine e compartilha um QR. O comprador pode conhecer toda a loja ou consultar um produto específico. A decisão sobre o que publicar e o que responder continua com o produtor.
 
 **Estado do repositório:** quarta entrega. Funcionam a página inicial, a sessão anônima do produtor, o cadastro em quatro seções com prévia, o rascunho com até três fotos, “Meu espaço → Produtos”, a geração das três identidades chinesas pelo Gemini (servidor), a revisão com prévia da vitrine, a publicação confirmada com link público estável (`/p/<código>`) e QR individual, a republicação após edição e **a conversa comercial de um produto**: “询价 · Solicitar cotação” na vitrine, sem conta, com link privado de retorno (`/conversa#t=<segredo>`); “Meu espaço → Mensagens” com contador de conversas novas, tradução em português, original, copiloto com pendências e resposta sugerida; resposta em português com revisão da tradução e confirmação de envio única. **Loja com vários produtos:** catálogo público em chinês (`/l/<código>`) com um único QR, só com os produtos publicados, na ordem salva no painel e com o primeiro publicado em destaque; “Meu espaço → Minha loja” com produtor, região, apresentação chinesa aprovada, prévia do catálogo, link copiável e QR da loja; “Mover para cima/baixo” em Produtos (teclado e celular). O endereço da loja e os QRs individuais não mudam ao reordenar, editar ou republicar. A retirada pelo painel fica para a próxima rodada. **Extras:** diretório de marcas fictícias (`/zh/explorar`) e **Modo Feira**: em “Minha loja”, **Criar cartão para feira** gera um cartão bilíngue imprimível com o QR da loja.
 
@@ -8,7 +8,7 @@ A Ponte Global ajuda o produtor brasileiro a apresentar sua cachaça em chinês 
 
 | Se você precisa de… | Abra |
 |---|---|
-| Escopo para apresentar à equipe ou à banca | [Escopo consolidado em PDF](Escopo_Ponte_Global_2.0.pdf) |
+| Escopo para apresentar à equipe ou à banca | [Escopo consolidado em PDF](Escopo_BAQIAO_2.0.pdf) |
 | Público, jornadas, prioridades, entregas e critérios de aceite | [produto.md](produto.md) |
 | Arquitetura, entidades, publicação e contratos de IA | [arquitetura.md](arquitetura.md) |
 | Telas, linguagem, componentes e estados de interface | [design.md](design.md) |
@@ -161,7 +161,7 @@ npm run build && GEMINI_MODEL=modelo-inexistente GEMINI_FALLBACK_MODEL=reserva-i
 
 ## Roteiro de cinco minutos para a banca
 
-Antes: deploy na Vercel com a migração aplicada, `GEMINI_API_KEY` válida, uma loja de demonstração criada **no próprio deploy e no navegador que será usado na apresentação** (a gestão fica no cookie daquele navegador), com o produtor identificado como demonstração (ex.: “Alambique Ipê · Demonstração Ponte Global”) e o código listado em `DEMO_STORE_SLUGS`, o cartão do Modo Feira impresso ou aberto em PDF, e uma foto real de garrafa no computador. Use dois aparelhos: o computador (produtor) e um celular (comprador).
+Antes: deploy na Vercel com a migração aplicada, `GEMINI_API_KEY` válida, uma loja de demonstração criada **no próprio deploy e no navegador que será usado na apresentação** (a gestão fica no cookie daquele navegador), com o produtor identificado como demonstração (ex.: “Alambique Ipê · Demonstração BAQIAO”) e o código listado em `DEMO_STORE_SLUGS`, o cartão do Modo Feira impresso ou aberto em PDF, e uma foto real de garrafa no computador. Use dois aparelhos: o computador (produtor) e um celular (comprador).
 
 | Tempo | Tela | O que mostrar |
 |---|---|---|

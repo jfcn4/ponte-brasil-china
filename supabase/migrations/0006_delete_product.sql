@@ -1,4 +1,4 @@
--- Ponte Global · 0006 · Exclusão definitiva de produto (limpeza de dados de teste).
+-- BAQIAO · 0006 · Exclusão definitiva de produto (limpeza de dados de teste).
 --
 -- delete_product       → uma transação: confere que o produto é da loja, apaga as
 --                        conversas vinculadas (e, em cascata, mensagens e rascunhos de

@@ -1,27 +1,30 @@
+import Image from "next/image";
 import Link from "next/link";
 
-/** Marca: um arco ligando dois pontos, como a rota Brasil–China do globo. */
-export function LogoMark({ className = "h-7 w-7" }: { className?: string }) {
+/** Marca BAQIAO: casa-pagode com globo e órbita (Brasil · 巴 + ponte · 桥). */
+export function LogoMark({ className = "h-8 w-auto" }: { className?: string }) {
+  return <Image src="/brand/baqiao-marca.png" alt="" width={306} height={267} aria-hidden="true" className={className} />;
+}
+
+/** Nome em caracteres latinos e chineses (BAQIAO 巴桥). */
+export function LogoName({ tone = "dark", className = "h-8 w-auto" }: { tone?: "dark" | "light"; className?: string }) {
   return (
-    <svg viewBox="0 0 32 32" className={className} aria-hidden="true" focusable="false">
-      <circle cx="16" cy="16" r="14.5" fill="none" stroke="currentColor" strokeOpacity="0.35" strokeWidth="1.5" />
-      <path d="M6 21 C 10 7, 22 7, 26 13" fill="none" stroke="#ff8587" strokeWidth="2.2" strokeLinecap="round" />
-      <circle cx="6" cy="21" r="2.6" fill="#b82d35" />
-      <circle cx="26" cy="13" r="2.6" fill="#ff8587" />
-    </svg>
+    <Image
+      src={tone === "dark" ? "/brand/baqiao-nome-clara.png" : "/brand/baqiao-nome-escura.png"}
+      alt="BAQIAO 巴桥"
+      width={315}
+      height={126}
+      className={className}
+    />
   );
 }
 
+/** `tone="dark"`: fundo escuro (nome claro). `tone="light"`: fundo claro (nome escuro). */
 export function Logo({ href = "/", tone = "dark" }: { href?: string; tone?: "dark" | "light" }) {
   return (
-    <Link
-      href={href}
-      className={`inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-md font-semibold tracking-tight ${
-        tone === "dark" ? "text-snow" : "text-ink"
-      }`}
-    >
-      <LogoMark />
-      <span className="text-base sm:text-[1.05rem]">Ponte Global</span>
+    <Link href={href} className="inline-flex shrink-0 items-center gap-2.5 whitespace-nowrap rounded-md">
+      <LogoMark className="h-11 w-auto" />
+      <LogoName tone={tone} className="h-10 w-auto" />
     </Link>
   );
 }

@@ -1,4 +1,4 @@
--- Ponte Global · 0005 · Loja pública: endereço estável, perfil aprovado e ordem do catálogo.
+-- BAQIAO · 0005 · Loja pública: endereço estável, perfil aprovado e ordem do catálogo.
 --
 -- stores.public_slug     → endereço do catálogo (/l/<código>), atribuído na primeira
 --                          publicação de um produto e nunca trocado.

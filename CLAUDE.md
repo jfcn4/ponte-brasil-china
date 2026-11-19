@@ -1,4 +1,4 @@
-# Instruções permanentes · Ponte Global
+# Instruções permanentes · BAQIAO
 
 ## Antes de alterar o projeto
 

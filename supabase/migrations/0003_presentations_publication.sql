@@ -1,4 +1,4 @@
--- Ponte Global · 0003 · Adaptação chinesa (IA), versões publicadas e link público.
+-- BAQIAO · 0003 · Adaptação chinesa (IA), versões publicadas e link público.
 --
 -- Três estruturas distintas (CLAUDE.md, regra 3):
 --   products      → fonte em português, editável (rascunho).

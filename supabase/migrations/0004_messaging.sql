@@ -1,4 +1,4 @@
--- Ponte Global · 0004 · Conversas comerciais (consulta do comprador e resposta revisada).
+-- BAQIAO · 0004 · Conversas comerciais (consulta do comprador e resposta revisada).
 --
 -- conversations → loja, produto e versão publicada que o comprador abriu, mais
 --                 o hash do segredo do link privado (o segredo nunca é gravado).

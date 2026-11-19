@@ -1,4 +1,4 @@
-import { LogoMark } from "@/components/brand/Logo";
+import { LogoMark, LogoName } from "@/components/brand/Logo";
 import { FAIR_CARD_COPY, type FairCard } from "@/modules/stores/fair-card";
 
 /**
@@ -36,8 +36,8 @@ export function FairCardView({ card, qrSvg }: { card: FairCard; qrSvg: string })
           )}
         </div>
         <p className="flex shrink-0 items-center gap-1.5 text-xs font-semibold text-ink-soft">
-          <LogoMark className="h-6 w-6 text-ink" />
-          <span className="hidden sm:inline print:inline">Ponte Global</span>
+          <LogoMark className="h-8 w-auto" />
+          <LogoName tone="light" className="hidden h-7 w-auto sm:inline print:inline" />
         </p>
       </header>
 

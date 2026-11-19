@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { PublicFrame } from "@/components/public/PublicFrame";
 
 export const metadata: Metadata = {
-  title: { absolute: "询价对话 · Ponte Global" },
+  title: { absolute: "询价对话 · BAQIAO 巴桥" },
   robots: { index: false, follow: false },
   // O segredo fica no fragmento (#t=…), que o navegador não envia; por garantia, sem Referer.
   referrer: "no-referrer",

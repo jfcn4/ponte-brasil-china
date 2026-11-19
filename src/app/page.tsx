@@ -106,7 +106,7 @@ export default function HomePage() {
 
       <footer className="border-t border-line/70">
         <div className={`flex flex-wrap items-center justify-between gap-2 py-6 text-xs text-mist ${FRAME}`}>
-          <span>Ponte Global · demonstração para o desafio CITi</span>
+          <span>BAQIAO 巴桥 · demonstração para o desafio CITi</span>
           <span>Câmbio demonstrativo: BRL 1 = CNY 1,15</span>
         </div>
       </footer>
