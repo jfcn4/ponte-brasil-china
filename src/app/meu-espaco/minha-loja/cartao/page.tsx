@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { FairCardView } from "@/components/producer/fair/FairCardView";
 import { PrintCardButton } from "@/components/producer/fair/PrintCardButton";
+import { LocalLinkWarning } from "@/components/producer/LocalLinkWarning";
 import { getStoreOverview } from "@/modules/stores/catalog";
 import { buildFairCard } from "@/modules/stores/fair-card";
 import { findCurrentStoreId } from "@/modules/stores/session";
@@ -62,6 +63,8 @@ export default async function FairCardPage() {
           loja, com todos os produtos publicados; o endereço não muda ao reordenar, editar ou republicar.
         </p>
       </div>
+
+      <LocalLinkWarning url={live.url} className="mt-4" />
 
       <section aria-labelledby="previa-cartao" className="mt-6 print:mt-0">
         <h2 id="previa-cartao" className="sr-only">

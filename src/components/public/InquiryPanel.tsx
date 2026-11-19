@@ -31,7 +31,28 @@ export function InquiryPanel({ slug, version }: { slug: string; version: number 
   const [error, setError] = useState<{ code: string | null; text: string } | null>(null);
   const [previous, setPrevious] = useState<string | null>(null);
   const messageRef = useRef<HTMLTextAreaElement>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
+  /** O bloco de cotação ainda está abaixo da tela: mostra o atalho fixo no rodapé. */
+  const [below, setBelow] = useState(false);
   const formId = useId();
+
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root || typeof IntersectionObserver === "undefined") return;
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry) setBelow(!entry.isIntersecting && entry.boundingClientRect.top > 0);
+    });
+    observer.observe(root);
+    return () => observer.disconnect();
+  }, []);
+
+  /** Atalho do rodapé: leva ao bloco de cotação e abre o formulário. */
+  const jumpToInquiry = () => {
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    rootRef.current?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "center" });
+    if (open) messageRef.current?.focus({ preventScroll: true });
+    else setOpen(true);
+  };
 
   useEffect(() => {
     const known = safeStorage.get<Record<string, string>>("local", KNOWN_CONVERSATIONS_KEY);
@@ -49,7 +70,8 @@ export function InquiryPanel({ slug, version }: { slug: string; version: number 
   }, [slug]);
 
   useEffect(() => {
-    if (open) messageRef.current?.focus();
+    if (open) messageRef.current?.focus({ preventScroll: true });
+    if (open) rootRef.current?.scrollIntoView({ block: "nearest" });
   }, [open]);
 
   const submit = async (event: React.FormEvent) => {
@@ -103,7 +125,24 @@ export function InquiryPanel({ slug, version }: { slug: string; version: number 
     setError({ code: result.code, text: result.message });
   };
 
-  if (!open) {
+  return (
+    <div ref={rootRef} className="scroll-mt-24">
+      {open ? form() : closed()}
+      {below && (
+        <div className="fixed inset-x-0 bottom-0 z-30 border-t border-sand bg-ivory/95 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur print:hidden">
+          <button
+            type="button"
+            onClick={jumpToInquiry}
+            className="mx-auto flex min-h-12 w-full max-w-3xl items-center justify-center gap-2 rounded-xl bg-brand text-lg font-semibold text-white shadow-lg hover:bg-brand-strong"
+          >
+            <InquiryLabel />
+          </button>
+        </div>
+      )}
+    </div>
+  );
+
+  function closed() {
     return (
       <div className="space-y-3">
         <button
@@ -127,103 +166,105 @@ export function InquiryPanel({ slug, version }: { slug: string; version: number 
     );
   }
 
-  return (
-    <form id={formId} onSubmit={submit} noValidate className="space-y-4" aria-labelledby={`${formId}-title`}>
-      <div>
-        <h3 id={`${formId}-title`} className="text-lg font-semibold text-ink">
-          询价 <span lang="pt-BR" className="text-sm font-medium text-ink-soft">· Solicitar cotação</span>
-        </h3>
-        <p className="mt-1 text-sm leading-relaxed text-ink-soft">
-          无需注册。发送后您会获得一个私密链接，用于随时返回本对话。生产者确认回复后，回复才会显示。
-        </p>
-      </div>
-
-      <div>
-        <label htmlFor={`${formId}-message`} className="block text-sm font-medium text-ink">
-          留言 <span className="text-brand">（必填）</span>
-        </label>
-        <textarea
-          id={`${formId}-message`}
-          ref={messageRef}
-          value={message}
-          onChange={(e) => {
-            setMessage(e.target.value);
-            if (error?.code === "empty") setError(null);
-          }}
-          maxLength={LIMITS.body}
-          rows={4}
-          required
-          aria-invalid={error?.code === "empty" || undefined}
-          aria-describedby={error ? `${formId}-error` : `${formId}-hint`}
-          placeholder="例如：请问可以供应多少瓶？能否送到上海？"
-          className="mt-1 block w-full rounded-xl border border-sand bg-white px-3 py-2.5 text-base leading-relaxed text-ink placeholder:text-ink-soft/70"
-        />
-        <p id={`${formId}-hint`} className="mt-1 text-xs text-ink-soft">
-          可使用中文或英文（English is welcome）。
-        </p>
-      </div>
-
-      <div className="grid gap-3 sm:grid-cols-2">
+  function form() {
+    return (
+      <form id={formId} onSubmit={submit} noValidate className="space-y-4" aria-labelledby={`${formId}-title`}>
         <div>
-          <label htmlFor={`${formId}-name`} className="block text-sm font-medium text-ink">
-            姓名（选填）
-          </label>
-          <input
-            id={`${formId}-name`}
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            maxLength={LIMITS.buyerName}
-            autoComplete="name"
-            className="mt-1 block w-full rounded-xl border border-sand bg-white px-3 py-2.5 text-base text-ink"
-          />
+          <h3 id={`${formId}-title`} className="text-lg font-semibold text-ink">
+            询价 <span lang="pt-BR" className="text-sm font-medium text-ink-soft">· Solicitar cotação</span>
+          </h3>
+          <p className="mt-1 text-sm leading-relaxed text-ink-soft">
+            无需注册。发送后您会获得一个私密链接，用于随时返回本对话。生产者确认回复后，回复才会显示。
+          </p>
         </div>
+
         <div>
-          <label htmlFor={`${formId}-company`} className="block text-sm font-medium text-ink">
-            公司（选填）
+          <label htmlFor={`${formId}-message`} className="block text-sm font-medium text-ink">
+            留言 <span className="text-brand">（必填）</span>
           </label>
-          <input
-            id={`${formId}-company`}
-            value={company}
-            onChange={(e) => setCompany(e.target.value)}
-            maxLength={LIMITS.buyerCompany}
-            autoComplete="organization"
-            className="mt-1 block w-full rounded-xl border border-sand bg-white px-3 py-2.5 text-base text-ink"
+          <textarea
+            id={`${formId}-message`}
+            ref={messageRef}
+            value={message}
+            onChange={(e) => {
+              setMessage(e.target.value);
+              if (error?.code === "empty") setError(null);
+            }}
+            maxLength={LIMITS.body}
+            rows={4}
+            required
+            aria-invalid={error?.code === "empty" || undefined}
+            aria-describedby={error ? `${formId}-error` : `${formId}-hint`}
+            placeholder="例如：请问可以供应多少瓶？能否送到上海？"
+            className="mt-1 block w-full rounded-xl border border-sand bg-white px-3 py-2.5 text-base leading-relaxed text-ink placeholder:text-ink-soft/70"
           />
+          <p id={`${formId}-hint`} className="mt-1 text-xs text-ink-soft">
+            可使用中文或英文（English is welcome）。
+          </p>
         </div>
-      </div>
 
-      {error && (
-        <div id={`${formId}-error`} role="alert" className="rounded-xl border border-brand/30 bg-brand/5 px-3 py-2.5 text-sm text-ink">
-          <p>{error.text}</p>
-          {error.code === "version_changed" && (
-            <button
-              type="button"
-              onClick={() => window.location.reload()}
-              className="mt-2 inline-flex min-h-10 items-center rounded-lg border border-brand px-3 font-medium text-brand"
-            >
-              查看最新产品信息
-            </button>
-          )}
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div>
+            <label htmlFor={`${formId}-name`} className="block text-sm font-medium text-ink">
+              姓名（选填）
+            </label>
+            <input
+              id={`${formId}-name`}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              maxLength={LIMITS.buyerName}
+              autoComplete="name"
+              className="mt-1 block w-full rounded-xl border border-sand bg-white px-3 py-2.5 text-base text-ink"
+            />
+          </div>
+          <div>
+            <label htmlFor={`${formId}-company`} className="block text-sm font-medium text-ink">
+              公司（选填）
+            </label>
+            <input
+              id={`${formId}-company`}
+              value={company}
+              onChange={(e) => setCompany(e.target.value)}
+              maxLength={LIMITS.buyerCompany}
+              autoComplete="organization"
+              className="mt-1 block w-full rounded-xl border border-sand bg-white px-3 py-2.5 text-base text-ink"
+            />
+          </div>
         </div>
-      )}
 
-      <div className="flex flex-col gap-2 sm:flex-row-reverse">
-        <button
-          type="submit"
-          disabled={sending}
-          className="flex min-h-12 flex-1 items-center justify-center rounded-xl bg-brand text-lg font-semibold text-white hover:bg-brand-strong disabled:cursor-wait disabled:opacity-80"
-        >
-          {sending ? "正在发送…" : "发送询价"}
-        </button>
-        <button
-          type="button"
-          onClick={() => setOpen(false)}
-          disabled={sending}
-          className="flex min-h-12 items-center justify-center rounded-xl border border-sand px-5 font-medium text-ink-soft"
-        >
-          收起
-        </button>
-      </div>
-    </form>
-  );
+        {error && (
+          <div id={`${formId}-error`} role="alert" className="rounded-xl border border-brand/30 bg-brand/5 px-3 py-2.5 text-sm text-ink">
+            <p>{error.text}</p>
+            {error.code === "version_changed" && (
+              <button
+                type="button"
+                onClick={() => window.location.reload()}
+                className="mt-2 inline-flex min-h-10 items-center rounded-lg border border-brand px-3 font-medium text-brand"
+              >
+                查看最新产品信息
+              </button>
+            )}
+          </div>
+        )}
+
+        <div className="flex flex-col gap-2 sm:flex-row-reverse">
+          <button
+            type="submit"
+            disabled={sending}
+            className="flex min-h-12 flex-1 items-center justify-center rounded-xl bg-brand text-lg font-semibold text-white hover:bg-brand-strong disabled:cursor-wait disabled:opacity-80"
+          >
+            {sending ? "正在发送…" : "发送询价"}
+          </button>
+          <button
+            type="button"
+            onClick={() => setOpen(false)}
+            disabled={sending}
+            className="flex min-h-12 items-center justify-center rounded-xl border border-sand px-5 font-medium text-ink-soft"
+          >
+            收起
+          </button>
+        </div>
+      </form>
+    );
+  }
 }

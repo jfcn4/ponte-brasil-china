@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { tidyZh } from "./zh-text";
 import { checkNumbers, detectScript, isMostlyChinese, isMostlyLatin, meaningWarnings, type ReplyLang } from "@/modules/messaging/text";
 
 /**
@@ -181,7 +182,7 @@ export type TranslateInput = {
 export const TranslateOutput = z
   .object({
     target_lang: z.enum(["zh-Hans", "en"]),
-    translation: z.string().trim().min(1).max(6000),
+    translation: z.string().trim().min(1).max(6000).transform(tidyZh),
     warnings_pt: z.array(z.string().trim().min(2).max(240)).max(4),
   })
   .strict();

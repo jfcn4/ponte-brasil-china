@@ -172,7 +172,7 @@ test("2 · QR da loja e do produto em outro navegador; reordenar muda o destaque
   await buyer.getByRole("link").filter({ hasText: NAME_1 }).first().click();
   await expect(buyer).toHaveURL(new RegExp(`${new URL(state.link1).pathname}$`));
   await expect(buyer.getByRole("link", { name: /返回店铺/ })).toBeVisible();
-  await buyer.getByRole("button", { name: /询价.*Solicitar cotação/ }).click();
+  await buyer.getByRole("button", { name: /询价.*Solicitar cotação/ }).first().click();
   await expect(buyer.getByLabel(/^留言/)).toBeVisible();
   await shot(buyer, "ficha-1-consulta");
 
@@ -219,7 +219,7 @@ test("3 · preço ¥90.85 → ¥102.35 só após republicar, no mesmo link", asy
 test("4 · consulta em chinês, tradução, copiloto e resposta revisada", async () => {
   test.setTimeout(6 * 60_000);
   await buyer.goto(new URL(state.link1).pathname);
-  await buyer.getByRole("button", { name: /询价.*Solicitar cotação/ }).click();
+  await buyer.getByRole("button", { name: /询价.*Solicitar cotação/ }).first().click();
   await buyer.getByLabel(/^留言/).fill(QUESTION);
   await buyer.getByLabel("公司（选填）").fill("上海酒业进口（演示）");
   await buyer.getByRole("button", { name: "发送询价" }).click();
@@ -252,7 +252,7 @@ test("4 · consulta em chinês, tradução, copiloto e resposta revisada", async
   const reply = page.getByRole("region", { name: "Sua resposta" });
   const send = reply.getByRole("button", { name: "Confirmar envio" });
   await reply.getByRole("button", { name: "Usar resposta sugerida" }).click();
-  const editor = reply.getByLabel("Texto em português");
+  const editor = reply.getByLabel("Sua resposta em português");
   await expect(editor).not.toHaveValue("");
   await buyer.reload();
   await expect(buyer.getByText("巴西生产者")).toHaveCount(0);
@@ -312,7 +312,7 @@ test("5a · outra sessão não edita a loja A nem lê conversas alheias", async 
   // Outro comprador: o link privado só abre a própria conversa
   const otherBuyer = await other.newPage();
   await otherBuyer.goto(new URL(state.link2).pathname);
-  await otherBuyer.getByRole("button", { name: /询价.*Solicitar cotação/ }).click();
+  await otherBuyer.getByRole("button", { name: /询价.*Solicitar cotação/ }).first().click();
   await otherBuyer.getByLabel(/^留言/).fill("Do you ship 120 bottles to Shenzhen?");
   await otherBuyer.getByRole("button", { name: "发送询价" }).click();
   await expect(otherBuyer).toHaveURL(/\/conversa#t=/);
@@ -357,9 +357,9 @@ test("5b · falha real da IA preserva rascunho e mensagem e permite tentar de no
 
   // Tradução da resposta falha; o texto fica no editor
   const reply = page.getByRole("region", { name: "Sua resposta" });
-  await reply.getByLabel("Texto em português").fill("Temos caixa de presente. O envio leva cerca de 15 dias.");
+  await reply.getByLabel("Sua resposta em português").fill("Temos caixa de presente. O envio leva cerca de 15 dias.");
   await expect(reply.getByRole("button", { name: "Tentar novamente" })).toBeVisible({ timeout: AI_TIMEOUT });
-  await expect(reply.getByLabel("Texto em português")).toHaveValue(/caixa de presente/);
+  await expect(reply.getByLabel("Sua resposta em português")).toHaveValue(/caixa de presente/);
   await shot(page, "falha-traducao");
 
   // De volta à instância saudável: repetir interpretação e tradução

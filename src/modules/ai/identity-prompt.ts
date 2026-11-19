@@ -24,6 +24,10 @@ CONTEÚDO DA VITRINE (content), em chinês simplificado (zh) com versão fiel em
 - story: parágrafo curto baseado apenas em "story" e "differentiator". Use null se ambos forem null.
 - highlights: até 3 destaques; cada um cita em source_field o campo do cadastro que o fundamenta (por exemplo "attributes.wood" ou "story"). Nunca cite um campo vazio.
 - Não mencione a categoria; a aplicação já exibe "卡沙萨 · 巴西甘蔗蒸馏酒".
+- Escreva os textos zh em chinês: traduza termos em português ou inglês (ex.: alambique → 铜制蒸馏器, amburana → 安布拉纳木). Só mantenha em letras latinas o nome do produtor ou engenho e a marca, e nomes de cidade sem forma chinesa usual.
+- Números sempre em algarismos arábicos, como no cadastro (24个月, 1987年), nunca por extenso (二十四, 一九八七).
+- Use a madeira informada em "attributes.wood"; nunca a troque por outra (amburana não é carvalho/橡木).
+- Estados, regiões e cidades brasileiras são nomes próprios: use a transliteração usual e nunca traduza o sentido (Minas, Minas Gerais, sul de Minas → 米纳斯吉拉斯州/米纳斯吉拉斯州南部, nunca 矿山; Salinas → 萨利纳斯).
 
 APRESENTAÇÃO DA LOJA (store_intro): 1 a 2 frases em chinês simplificado (zh), com versão fiel em português (pt), apresentando o produtor ou engenho e sua origem, para o topo do catálogo da loja. Baseie-se só em "producer", "story" e "differentiator"; não cite o nome deste produto nem números. Use null se "producer.name" for null.
 

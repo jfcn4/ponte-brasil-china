@@ -3,6 +3,7 @@ import { productPath } from "@/lib/paths";
 import { formatCny } from "@/modules/products/pricing";
 import { CATEGORY_ZH } from "@/modules/products/showcase";
 import type { CatalogItem, StoreCatalogView } from "@/modules/stores/catalog-view";
+import { PublicPhoto } from "./PublicPhoto";
 
 type CardOptions = { href: (slug: string) => string; inquiry: boolean };
 
@@ -110,11 +111,9 @@ function Price({ item }: { item: CatalogItem }) {
   );
 }
 
-function Photo({ item, className }: { item: CatalogItem; className: string }) {
+function Photo({ item, className, priority = false }: { item: CatalogItem; className: string; priority?: boolean }) {
   return item.image ? (
-    // URLs assinadas e temporárias do bucket privado: sem otimização do next/image.
-    // eslint-disable-next-line @next/next/no-img-element
-    <img src={item.image.url} alt={item.image.alt} className={className} />
+    <PublicPhoto src={item.image.url} alt={item.image.alt} priority={priority} className={className} />
   ) : (
     <div className={`flex items-center justify-center text-sm text-ink-soft ${className}`}>暂无图片</div>
   );
@@ -135,8 +134,10 @@ function FeaturedCard({ item, card }: { item: CatalogItem; card: CardOptions }) 
       className="group block overflow-hidden rounded-3xl border border-sand bg-paper focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand @lg:grid @lg:grid-cols-2"
     >
       <div className="relative bg-sand/40">
-        <span className="absolute left-3 top-3 z-10 rounded-full bg-brand px-3 py-1 text-xs font-semibold text-white">精选推荐</span>
-        <Photo item={item} className="aspect-square w-full object-contain" />
+        <span aria-hidden="true" className="absolute left-3 top-3 z-10 rounded-full bg-brand px-3 py-1 text-xs font-semibold text-white">
+          精选推荐
+        </span>
+        <Photo item={item} priority className="aspect-square max-h-[55svh] w-full object-contain @lg:max-h-none" />
       </div>
       <div className="flex flex-col justify-center gap-3 p-5 @lg:p-8">
         <Tag item={item} />

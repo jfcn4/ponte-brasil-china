@@ -98,7 +98,7 @@ test("loja real → explorar → marca fictícia → ficha → diretório → co
     await buyer.getByRole("link", { name: /查看详情并询价/ }).click();
     await expect(buyer).toHaveURL(/\/p\/[a-z0-9]{10}$/);
     await expect(buyer.getByRole("link", { name: "探索更多巴西品牌" })).toBeVisible();
-    await buyer.getByRole("button", { name: /询价.*Solicitar cotação/ }).click();
+    await buyer.getByRole("button", { name: /询价.*Solicitar cotação/ }).first().click();
     await buyer.getByLabel(/^留言/).fill("您好，请问可以供应200瓶吗？");
     await buyer.getByRole("button", { name: "发送询价" }).click();
     await expect(buyer).toHaveURL(/\/conversa#t=[A-Za-z0-9_-]{43}$/);

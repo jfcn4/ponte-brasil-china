@@ -58,6 +58,7 @@ Importe o repositório como projeto Next.js e configure, em *Settings → Enviro
 | `GEMINI_FALLBACK_MODEL` | Opcional. Modelos reserva separados por vírgula; vazio usa `gemini-3.1-flash-lite,gemini-3.5-flash,gemini-3-flash-preview`. Quando o principal responde 503 (sobrecarga, frequente em horário de pico), 429 ou demora mais de 10–14 s, o servidor chama o próximo modelo e fica com a primeira resposta válida, sempre dentro dos 60 s da função. `off` desliga. |
 | `APP_URL` | Opcional. Endereço público do deploy, sem barra final (neste projeto, `https://ponte-brasil-china.vercel.app`). É o endereço gravado nos links e QRs. **Não copie o valor do `.env.local`** (`localhost` não abre no celular; na Vercel ele é ignorado). Sem `APP_URL`, a aplicação usa o domínio de produção da Vercel, o que basta aqui. |
 | `AI_MODE` | Não defina em produção (o padrão é `gemini`). `test` usa respostas fixas, identificadas na tela como teste. |
+| `DEMO_STORE_SLUGS` | Opcional. Códigos das lojas de demonstração da banca (o trecho depois de `/l/`), separados por vírgula. O catálogo, as vitrines e a prévia de **Minha loja** dessas lojas mostram o selo **演示店铺 · Loja de demonstração**; consultas e respostas funcionam normalmente. Exige novo deploy para valer. |
 
 `DATABASE_URL` não é necessária na Vercel: a migração roda a partir da máquina local. Aplique-a no banco usado pela Vercel **antes de publicar o código novo** (push na `main`); as migrações só acrescentam estruturas, então a versão que está no ar continua funcionando. Esta entrega traz `0005_store_catalog.sql`: endereço estável e perfil aprovado da loja, apresentação chinesa da loja, revisão da ordem do catálogo (`reorder_products`) e a abertura da loja dentro de `publish_presentation` (mesma assinatura). Lojas que já tinham produto publicado recebem o endereço na própria migração. Se o banco já estiver atualizado, `npm run db:migrate` apenas informa isso. As rotas de geração, consulta, interpretação e tradução declaram até 60 s de execução; a interpretação da pergunta roda depois da resposta ao comprador (`after()`), e o painel atualiza sozinho a cada 8 s. A Vercel usa Node 22 pelo campo `engines` do `package.json`.
 
@@ -74,11 +75,11 @@ Importe o repositório como projeto Next.js e configure, em *Settings → Enviro
 
 Use um produto publicado com volume **700 mL** e preço **79,00** (passos acima). O comprador não precisa de conta; o produtor usa o navegador onde publicou.
 
-1. **Celular (comprador):** escaneie o QR do produto em *Link e QR do produto*. Na vitrine, toque em **询价 · Solicitar cotação**, escreva uma pergunta nova, por exemplo `你好，我是上海一家酒类进口公司的采购。我们想先订500瓶，请问能在明年一月前送到上海吗？如果可以，请报一下价格。`, e toque em **发送询价**. Abre a página **询价对话** com o **私密链接**: copie-o ou salve-o (o segredo fica depois de `#t=`).
+1. **Celular (comprador):** escaneie o QR do produto em *Link e QR do produto*. Na vitrine, toque em **询价 · Solicitar cotação** (fica fixo no rodapé enquanto a ficha é lida e leva ao formulário já aberto), escreva uma pergunta nova, por exemplo `你好，我是上海一家酒类进口公司的采购。我们想先订500瓶，请问能在明年一月前送到上海吗？如果可以，请报一下价格。`, e toque em **发送询价**. Abre a página **询价对话** com o **私密链接**: copie-o ou salve-o (o segredo fica depois de `#t=`).
 2. **Computador (produtor):** abra **Meu espaço**. A aba **Mensagens** mostra o número de conversas com novidades. A conversa aparece como **Nova** e **Aguardando resposta**. Em 5 a 30 s surge a tradução em português; **Ver original** mostra o chinês.
-3. Confira o **Copiloto** (à direita no desktop): resumo, etiquetas **Capacidade de produção** e **Frete e prazo**, e **Ver análise** com os dados da ficha da versão consultada. No chip **Sugestão** acima do editor, **Usar** só preenche o texto; recarregue o celular e confirme que nada chegou.
-4. Ajuste o texto em português (ex.: “Obrigado! Cada garrafa tem 700 mL. Vou confirmar a produção de 500 garrafas até janeiro e o frete até Xangai. O preço não inclui impostos de importação.”). Ao parar de digitar, a prévia em chinês aparece sozinha abaixo do editor. Confira números, unidades e a negativa. Editar de novo desativa o envio até a nova prévia chegar.
-5. Clique em **Confirmar envio**. Se a IA falhar em qualquer etapa, o texto continua no editor e **Tentar novamente** repete sem duplicar.
+3. Confira o **Copiloto** (à direita no desktop): resumo, etiquetas **Capacidade de produção** e **Frete e prazo**, e **Ver análise** com os dados da ficha da versão consultada. No quadro **Sugestão do copiloto** acima do editor, **Usar resposta sugerida** só copia o texto para o editor (o quadro diz isso); recarregue o celular e confirme que nada chegou.
+4. **① Sua resposta em português:** ajuste o texto (ex.: “Obrigado! Cada garrafa tem 700 mL. Vou confirmar a produção de 500 garrafas até janeiro e o frete até Xangai. O preço não inclui impostos de importação.”). **② Revisar tradução:** ao parar de digitar, a prévia em chinês aparece sozinha (o botão **Revisar tradução** gera na hora). Confira números, unidades e a negativa. Editar de novo desativa o envio até a nova prévia chegar.
+5. **③ Confirmar envio:** só fica ativo com a prévia do texto atual e envia exatamente essa tradução, uma vez. Se a IA falhar em qualquer etapa, o texto continua no editor e **Tentar novamente** repete sem duplicar.
 6. **Celular:** abra o link privado salvo (ou volte à vitrine e toque em **继续之前的对话**). Deve aparecer **uma única** resposta, em chinês, sem nenhuma análise do produtor. A resposta sai em chinês mesmo quando o comprador escreve em inglês ou pinyin.
 
 ### Como conferir a loja com vários produtos na Vercel
@@ -140,6 +141,32 @@ npm run build && GEMINI_MODEL=modelo-inexistente GEMINI_FALLBACK_MODEL=reserva-i
 | URL do projeto Supabase e acesso ao PostgreSQL de desenvolvimento | Conectar dados e aplicar migrações no ambiente correto. |
 | Credenciais do servidor e nome do bucket de fotos | Autorizar a operação privada e salvar imagens. Manter a chave privilegiada fora do cliente. |
 | `GEMINI_API_KEY`, `GEMINI_MODEL` e `AI_MODE` | Alternar entre respostas determinísticas de teste e chamada real. Verificar cota e uma geração completa antes da apresentação. |
+
+## Roteiro de cinco minutos para a banca
+
+Antes: deploy na Vercel com a migração aplicada, `GEMINI_API_KEY` válida, uma loja de demonstração criada **no próprio deploy e no navegador que será usado na apresentação** (a gestão fica no cookie daquele navegador), com o produtor identificado como demonstração (ex.: “Alambique Ipê · Demonstração Ponte Global”) e o código listado em `DEMO_STORE_SLUGS`, o cartão do Modo Feira impresso ou aberto em PDF, e uma foto real de garrafa no computador. Use dois aparelhos: o computador (produtor) e um celular (comprador).
+
+| Tempo | Tela | O que mostrar |
+|---|---|---|
+| 0:00–0:30 | Início (`/`) | A proposta em uma frase e **Criar minha vitrine**. Sem conta: o navegador guarda o acesso. |
+| 0:30–1:30 | Cadastro → Apresentação em chinês | Cachaça **inédita**: nome, descrição curta, uma foto real, produtor, 700 mL e R$ 79,00. **Gerar apresentação chinesa**: as três estratégias, a recomendação equilibrada com justificativa e os textos com o sentido em português. Destacar que preço, volume e teor vêm do cadastro, não da IA. |
+| 1:30–2:00 | Publicar → Link e QR do produto | **Publicar vitrine** → **Confirmar publicação**. A prévia mostra **¥90.85 / BRL 79.00** e a taxa demonstrativa. |
+| 2:00–2:40 | Minha loja → Cartão para feira → celular | Mostrar o cartão bilíngue (ou o PDF já impresso), escanear o QR com o celular: catálogo em chinês com o selo de demonstração (loja da banca) ou a loja recém-criada. Tocar no produto: foto, nome, ficha e o botão **询价 · Solicitar cotação** fixo no rodapé. |
+| 2:40–3:20 | Vitrine → 询价对话 (celular) | Enviar uma pergunta nova, por exemplo `你好，我们是上海的进口商。如果订500瓶，明年三月前能送到上海吗？请报价。`. Mostrar o **私密链接** e o aviso de que a resposta aparece após a confirmação do produtor. |
+| 3:20–4:30 | Meu espaço → Mensagens (computador) | O aviso “Um comprador mandou mensagem nova” e o contador em **Mensagens**. Abrir a conversa: tradução em português, **Ver original**, copiloto com **Capacidade de produção** e **Frete e prazo**. **Usar resposta sugerida** (só preenche o editor), ajustar em português com quantidade, unidade e uma negativa (“o frete não está incluído”). **② Revisar tradução**: conferir os números no chinês. **③ Confirmar envio**. |
+| 4:30–5:00 | 询价对话 (celular) | Recarregar o link privado: uma única resposta, em chinês, com o original em português recolhido. Fechar com o que é extra (cartão, diretório **探索更多巴西品牌**) e o que é roadmap. |
+
+Se a IA demorar ou falhar ao vivo, mostrar que o texto continua salvo e usar **Tentar novamente**; a conversa já respondida na loja de demonstração serve de apoio.
+
+### O que ainda conferir manualmente na Vercel
+
+1. **Configuração:** `GEMINI_API_KEY`, `GEMINI_MODEL` e as chaves do Supabase em *Production*; `AI_MODE` ausente; `APP_URL` vazio ou com o domínio público (nunca `localhost`). Em **Link e QR**, nenhum aviso amarelo de `localhost`.
+2. **Selo de demonstração:** definir `DEMO_STORE_SLUGS` com o código da loja da banca, fazer novo deploy e conferir **演示店铺 · Loja de demonstração** no catálogo e na vitrine, e a nota em **Minha loja**. Lojas novas não recebem o selo.
+3. **Cota e latência do Gemini** no horário da apresentação: uma geração completa e uma tradução, conferindo `ai.call` nos logs (modelo, tentativa, duração).
+4. **QR em celular real** (câmera nativa, 4G e Wi‑Fi): catálogo, vitrine, fotos carregando e botão de cotação visível na primeira tela.
+5. **Leitura humana do chinês** da vitrine e da resposta: nomes de lugar (Minas Gerais → 米纳斯吉拉斯州, nunca 矿山), madeira, números e negativas. O Gemini Flash‑Lite varia entre gerações; se algo sair errado, **Gerar novas opções** antes de publicar.
+6. **Impressão do cartão** em A4 numa página e leitura do QR impresso.
+7. **Dois navegadores**: o produtor não vê a loja de outra sessão, e o link privado do comprador abre só a própria conversa.
 
 ## Origem das decisões
 

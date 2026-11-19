@@ -79,12 +79,18 @@ export function BuyerConversation() {
     };
   }, [refresh]);
 
-  // Rola até a mensagem nova quando o histórico cresce.
+  // Rola até a mensagem nova quando o histórico cresce. Ao voltar pelo link
+  // privado com resposta do produtor, abre direto na resposta mais recente.
   const count = load.state === "ready" ? load.view.messages.length : 0;
+  const lastReplyId =
+    load.state === "ready" ? ([...load.view.messages].reverse().find((m) => m.author !== "buyer")?.id ?? null) : null;
   useEffect(() => {
     if (count > lastCount.current && lastCount.current > 0) threadEnd.current?.scrollIntoView({ block: "nearest" });
+    else if (lastCount.current === 0 && count > 0 && lastReplyId) {
+      document.getElementById(`msg-${lastReplyId}`)?.scrollIntoView({ block: "start" });
+    }
     lastCount.current = count;
-  }, [count]);
+  }, [count, lastReplyId]);
 
   const copy = async () => {
     try {
@@ -243,7 +249,7 @@ export function BuyerConversation() {
                 </p>
               </li>
             ) : (
-              <li key={m.id} className="mr-auto max-w-[85%] rounded-2xl rounded-bl-sm border border-sand bg-paper px-4 py-3">
+              <li key={m.id} id={`msg-${m.id}`} className="mr-auto max-w-[85%] scroll-mt-4 rounded-2xl rounded-bl-sm border border-sand bg-paper px-4 py-3">
                 <p className="text-xs text-ink-soft">
                   巴西生产者 · <span lang="pt-BR">{p.producerName}</span> · {timeFormat.format(new Date(m.createdAt))}
                 </p>

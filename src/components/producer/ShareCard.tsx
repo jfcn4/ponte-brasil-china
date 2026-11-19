@@ -1,6 +1,7 @@
 "use client";
 
 import { type Ref, useState } from "react";
+import { LocalLinkWarning } from "./LocalLinkWarning";
 
 const KINDS = {
   product: {
@@ -54,6 +55,7 @@ export function ShareCard({
         {text.title}
       </h2>
       <p className="mt-1 text-sm text-mist">{text.description}</p>
+      <LocalLinkWarning url={url} className="mt-3" />
       <div className="mt-4 flex flex-col gap-5 sm:flex-row sm:items-start">
         <figure className="w-48 shrink-0">
           <div

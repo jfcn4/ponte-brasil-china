@@ -50,7 +50,12 @@ test("vitrine → 询价 → tradução e copiloto → resposta revisada → lin
     // 2. Comprador no celular, sem sessão: abre a vitrine e pergunta
     const buyer = await phone.newPage();
     await buyer.goto(new URL(link).pathname);
-    await buyer.getByRole("button", { name: /询价.*Solicitar cotação/ }).click();
+    // A cotação fica ao alcance já na primeira tela: atalho fixo no rodapé leva ao formulário aberto.
+    const shortcut = buyer.getByRole("button", { name: /询价.*Solicitar cotação/ }).last();
+    await expect(shortcut).toBeInViewport();
+    await shortcut.click();
+    await expect(buyer.getByLabel(/^留言/)).toBeFocused();
+    await expect(buyer.getByLabel(/^留言/)).toBeInViewport();
     await buyer.getByLabel(/^留言/).fill(QUESTION);
     await buyer.getByLabel("公司（选填）").fill("上海测试贸易");
     await buyer.getByRole("button", { name: "发送询价" }).click();
@@ -93,7 +98,7 @@ test("vitrine → 询价 → tradução e copiloto → resposta revisada → lin
     const send = reply.getByRole("button", { name: "Confirmar envio" });
     await expect(send).toBeDisabled();
     await reply.getByRole("button", { name: "Usar resposta sugerida" }).click();
-    const editor = reply.getByLabel("Texto em português");
+    const editor = reply.getByLabel("Sua resposta em português");
     await expect(editor).toHaveValue(/Obrigado pelo interesse/);
     await expect(editor).toBeFocused();
     await expect(reply.getByText(/^【测试译文】/)).toBeVisible();

@@ -107,6 +107,14 @@ export function ConversationView({ initial }: { initial: ConversationDetail }) {
     });
   }, [detail.id, detail.readSeq, lastShownBuyerSeq]);
 
+  // Ao abrir uma conversa longa, começa pela última entrada do comprador, com o editor logo abaixo.
+  const openedOn = useRef(latestBuyer?.id ?? null);
+  useEffect(() => {
+    const id = openedOn.current;
+    const el = id ? document.getElementById(`pmsg-${id}`) : null;
+    if (el && document.documentElement.scrollHeight > window.innerHeight) el.scrollIntoView({ block: "start" });
+  }, []);
+
   // Mostra a mensagem mais recente quando o histórico cresce.
   const messageCount = detail.messages.length;
   const seenCount = useRef(messageCount);
@@ -148,6 +156,7 @@ export function ConversationView({ initial }: { initial: ConversationDetail }) {
     [initial.id, refresh],
   );
 
+  const previewRef = useRef<HTMLDivElement>(null);
   const draft = detail.draft;
   const trimmed = body.trim();
   const translation = draft && draft.body === trimmed ? draft.translation : null;
@@ -262,7 +271,13 @@ export function ConversationView({ initial }: { initial: ConversationDetail }) {
         {latestBuyer && (
           <div className="mb-4 xl:col-start-2 xl:row-start-1 xl:mb-0">
             <div className="xl:sticky xl:top-4">
-              <Copilot message={latestBuyer} version={product.version} busy={retrying} onRetry={retryInterpretation} />
+              <Copilot
+                message={latestBuyer}
+                version={product.version}
+                answered={!detail.awaitingReply}
+                busy={retrying}
+                onRetry={retryInterpretation}
+              />
             </div>
           </div>
         )}
@@ -288,31 +303,38 @@ export function ConversationView({ initial }: { initial: ConversationDetail }) {
 
           <section
             aria-labelledby="reply-heading"
-            className="mt-4 border-t border-line pb-4 pt-3 lg:sticky lg:bottom-0 lg:bg-night/95 lg:backdrop-blur"
+            className="mt-4 border-t border-line pb-4 pt-3"
           >
             <h2 id="reply-heading" className="sr-only">
               Sua resposta
             </h2>
 
             {suggestion && trimmed !== suggestion && (
-              <div className="mb-2 flex items-start gap-2 rounded-lg border border-line/80 bg-panel/60 px-3 py-2 text-sm">
-                <span className="mt-0.5 shrink-0 text-xs font-medium text-coral">Sugestão</span>
-                <p lang="pt-BR" className="line-clamp-2 flex-1 text-snow/85">
-                  {suggestion}
+              <div className="mb-3 rounded-lg border border-line/80 bg-panel/60 px-3 py-2 text-sm">
+                <div className="flex flex-wrap items-start gap-x-3 gap-y-2">
+                  <div className="min-w-0 flex-1 basis-64">
+                    <p className="text-xs font-semibold text-coral">Sugestão do copiloto</p>
+                    <p lang="pt-BR" className="mt-0.5 text-snow/85">
+                      {suggestion}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => applySuggestion(suggestion)}
+                    aria-describedby="suggestion-note"
+                    className="inline-flex min-h-9 shrink-0 items-center rounded-md border border-coral/70 px-3 text-xs font-semibold text-coral hover:bg-coral/10"
+                  >
+                    Usar resposta sugerida
+                  </button>
+                </div>
+                <p id="suggestion-note" className="mt-1 text-xs text-mist">
+                  Usar só copia o texto para o editor, onde você ajusta. Nada é enviado ao comprador.
                 </p>
-                <button
-                  type="button"
-                  onClick={() => applySuggestion(suggestion)}
-                  aria-label="Usar resposta sugerida"
-                  className="inline-flex min-h-9 shrink-0 items-center rounded-md border border-coral/70 px-3 text-xs font-semibold text-coral hover:bg-coral/10"
-                >
-                  Usar
-                </button>
               </div>
             )}
 
-            <label htmlFor="reply-body" className="sr-only">
-              Texto em português
+            <label htmlFor="reply-body" className="mb-1 flex items-baseline gap-2 text-sm font-medium text-snow">
+              <StepNumber n={1} /> Sua resposta em português
             </label>
             <textarea
               id="reply-body"
@@ -337,13 +359,30 @@ export function ConversationView({ initial }: { initial: ConversationDetail }) {
               className="block w-full resize-y rounded-lg border border-line bg-panel px-3 py-2.5 leading-relaxed text-snow placeholder:text-mist/70"
             />
 
-            <div id="reply-preview" className="mt-2" aria-live="polite">
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+              <h3 className="flex items-baseline gap-2 text-sm font-medium text-snow">
+                <StepNumber n={2} /> Revisar tradução
+              </h3>
+              <button
+                type="button"
+                onClick={() => {
+                  if (!ready) void translate(trimmed);
+                  requestAnimationFrame(() => previewRef.current?.focus());
+                }}
+                disabled={!trimmed || translating || sending || Boolean(ready)}
+                className="inline-flex min-h-9 items-center rounded-md border border-line px-3 text-xs font-semibold text-snow hover:border-coral disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {translating ? "Traduzindo…" : ready ? "Tradução em dia" : "Revisar tradução"}
+              </button>
+            </div>
+            <div id="reply-preview" ref={previewRef} tabIndex={-1} className="mt-1 outline-none" aria-live="polite">
               {!trimmed ? (
                 <p className="text-xs text-mist">A tradução para {target} aparece aqui enquanto você escreve.</p>
               ) : ready ? (
                 <div className="rounded-lg border border-coral/30 bg-ivory/95 px-3 py-2">
                   <p className="text-xs text-ink-soft">
-                    O comprador vai receber ({target}){ready.isTestAdapter && " · resposta de teste (AI_MODE=test)"}:
+                    Confira números, unidades e negativas. É exatamente isto que o comprador vai receber ({target})
+                    {ready.isTestAdapter && " · resposta de teste (AI_MODE=test)"}:
                   </p>
                   <p lang={ready.lang} className="mt-0.5 whitespace-pre-line leading-relaxed text-ink">
                     {ready.text}
@@ -374,14 +413,21 @@ export function ConversationView({ initial }: { initial: ConversationDetail }) {
               )}
             </div>
 
-            <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
-              <p role="status" className="min-h-5 text-xs">
-                {notice ? (
-                  <span className={notice.tone === "error" ? "text-coral" : "text-ok"}>{notice.text}</span>
-                ) : (
-                  <span className="text-mist">O comprador só recebe depois que você confirmar.</span>
-                )}
-              </p>
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-t border-line/60 pt-3">
+              <div className="min-w-0 flex-1 basis-64">
+                <p className="flex items-baseline gap-2 text-sm font-medium text-snow">
+                  <StepNumber n={3} /> Confirmar envio
+                </p>
+                <p role="status" className="mt-0.5 min-h-5 text-xs">
+                  {notice ? (
+                    <span className={notice.tone === "error" ? "text-coral" : "text-ok"}>{notice.text}</span>
+                  ) : ready ? (
+                    <span className="text-mist">Envia ao comprador a tradução acima, uma única vez (Ctrl + Enter).</span>
+                  ) : (
+                    <span className="text-mist">Fica disponível quando a tradução do texto atual aparecer. Antes disso, nada chega ao comprador.</span>
+                  )}
+                </p>
+              </div>
               <button
                 type="button"
                 onClick={() => void confirmSend()}
@@ -412,7 +458,7 @@ function MessageItem({
 }) {
   if (message.author === "producer") {
     return (
-      <li className="ml-auto max-w-[85%] rounded-2xl rounded-br-sm bg-panel-2 px-4 py-3">
+      <li id={`pmsg-${message.id}`} className="ml-auto max-w-[85%] scroll-mt-4 rounded-2xl rounded-br-sm bg-panel-2 px-4 py-3">
         <p className="text-xs text-mist">
           Você · {timeFormat.format(new Date(message.createdAt))} · enviada em {langName(message.translation.lang)}
         </p>
@@ -432,7 +478,7 @@ function MessageItem({
   const { interpretation } = message;
   const originalLang = message.original.lang === "en" ? "en" : "zh-Hans";
   return (
-    <li className="mr-auto max-w-[85%] rounded-2xl rounded-bl-sm border border-line bg-panel px-4 py-3">
+    <li id={`pmsg-${message.id}`} className="mr-auto max-w-[85%] scroll-mt-4 rounded-2xl rounded-bl-sm border border-line bg-panel px-4 py-3">
       <p className="flex flex-wrap items-center gap-2 text-xs text-mist">
         <span>Comprador · {timeFormat.format(new Date(message.createdAt))}</span>
         {unread && <span className="rounded-full bg-coral/15 px-2 font-semibold text-coral">Nova</span>}
@@ -486,11 +532,14 @@ function MessageItem({
 function Copilot({
   message,
   version,
+  answered,
   busy,
   onRetry,
 }: {
   message: BuyerMessage;
   version: number;
+  /** A última consulta já recebeu resposta: as pendências viram registro. */
+  answered: boolean;
   busy: boolean;
   onRetry: (id: string) => void;
 }) {
@@ -516,7 +565,7 @@ function Copilot({
           <p className="mt-1 text-snow/90">{analysis.summary}</p>
           {analysis.pending.length > 0 && (
             <div className="mt-2">
-              <p className="text-xs text-warn">Confirme antes de responder:</p>
+              <p className="text-xs text-warn">{answered ? "Pontos da última consulta (já respondida):" : "Confirme antes de responder:"}</p>
               <ul className="mt-1 flex flex-wrap gap-1" aria-label="Pendências">
                 {analysis.pending.map((p) => (
                   <li key={p.topic} title={p.note} className="rounded-full border border-warn/40 bg-warn/10 px-2 py-0.5 text-xs text-warn">
@@ -582,5 +631,17 @@ function Copilot({
         </>
       )}
     </aside>
+  );
+}
+
+/** Número do passo da resposta: escrever, revisar a tradução, confirmar o envio. */
+function StepNumber({ n }: { n: number }) {
+  return (
+    <span
+      aria-hidden="true"
+      className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-coral/60 text-[0.7rem] font-semibold text-coral"
+    >
+      {n}
+    </span>
   );
 }

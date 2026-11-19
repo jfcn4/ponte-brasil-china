@@ -5,6 +5,8 @@ import { StoreCatalog } from "@/components/public/StoreCatalog";
 import { formatOrigin } from "@/modules/products/showcase";
 import { getStoreOrigin } from "@/modules/products/repository";
 import { getStoreOverview } from "@/modules/stores/catalog";
+import { DEMO_STORE_LABEL, isDemoStore } from "@/modules/stores/demo";
+import { DemoBadge } from "@/components/public/explore/DemoBadge";
 import { findCurrentStoreId } from "@/modules/stores/session";
 
 export const metadata: Metadata = { title: "Minha loja" };
@@ -68,6 +70,15 @@ export default async function MyStorePage() {
           No ar desde {live.publishedAt ? dateFormat.format(new Date(live.publishedAt)) : "a primeira publicação"} ·{" "}
           {catalog.items.length} {catalog.items.length === 1 ? "produto publicado" : "produtos publicados"}
         </p>
+        {isDemoStore(live.slug) && (
+          <p className="mt-3 rounded-lg border border-coral/40 bg-coral/10 px-3 py-2 text-sm text-snow">
+            Loja de demonstração: o catálogo e as vitrines mostram ao comprador o selo{" "}
+            <span lang="zh-Hans" className="font-semibold text-coral">
+              演示店铺
+            </span>
+            . As consultas e respostas funcionam normalmente.
+          </p>
+        )}
 
         <section aria-labelledby="perfil-titulo" className="mt-6 rounded-2xl border border-line bg-panel p-5 sm:p-6">
           <h2 id="perfil-titulo" className="text-lg font-semibold text-snow">
@@ -159,7 +170,7 @@ export default async function MyStorePage() {
           </h2>
           <p className="mb-3 text-xs text-mist">É o que o comprador vê ao escanear o QR da loja.</p>
           <div className="rounded-3xl bg-ivory p-3 lg:max-h-[calc(100dvh-7rem)] lg:overflow-y-auto">
-            <StoreCatalog view={catalog} titleAs="h2" />
+            <StoreCatalog view={catalog} titleAs="h2" notice={isDemoStore(live.slug) ? <DemoBadge label={DEMO_STORE_LABEL} className="mb-3" /> : undefined} />
           </div>
         </div>
       </aside>

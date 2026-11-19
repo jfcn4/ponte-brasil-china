@@ -35,32 +35,46 @@ export function SpaceNav({ unreadInitial = 0 }: { unreadInitial?: number }) {
     };
   }, [pathname]);
 
+  const onMessages = pathname.startsWith("/meu-espaco/mensagens");
   return (
-    <nav aria-label="Meu espaço" className="-mb-px flex gap-1 overflow-x-auto">
-      {TABS.map((tab) => {
-        const active = pathname === tab.href || pathname.startsWith(`${tab.href}/`);
-        const badge = tab.href === "/meu-espaco/mensagens" && unread > 0;
-        return (
-          <Link
-            key={tab.href}
-            href={tab.href}
-            aria-current={active ? "page" : undefined}
-            className={`inline-flex items-center gap-2 whitespace-nowrap border-b-2 px-3 py-3 text-sm font-medium transition-colors ${
-              active ? "border-coral text-snow" : "border-transparent text-mist hover:text-snow"
-            }`}
-          >
-            {tab.label}
-            {badge && (
-              <span
-                className="inline-flex min-w-5 items-center justify-center rounded-full bg-brand px-1.5 text-xs font-semibold text-white"
-                aria-label={`${unread} ${unread === 1 ? "conversa com novidades" : "conversas com novidades"}`}
-              >
-                {unread}
-              </span>
-            )}
+    <>
+      <nav aria-label="Meu espaço" className="-mb-px flex gap-1 overflow-x-auto">
+        {TABS.map((tab) => {
+          const active = pathname === tab.href || pathname.startsWith(`${tab.href}/`);
+          const badge = tab.href === "/meu-espaco/mensagens" && unread > 0;
+          return (
+            <Link
+              key={tab.href}
+              href={tab.href}
+              aria-current={active ? "page" : undefined}
+              className={`inline-flex items-center gap-2 whitespace-nowrap border-b-2 px-3 py-3 text-sm font-medium transition-colors ${
+                active ? "border-coral text-snow" : "border-transparent text-mist hover:text-snow"
+              }`}
+            >
+              {tab.label}
+              {badge && (
+                <span
+                  className="inline-flex min-w-5 items-center justify-center rounded-full bg-brand px-1.5 text-xs font-semibold text-white"
+                  aria-label={`${unread} ${unread === 1 ? "conversa com novidades" : "conversas com novidades"}`}
+                >
+                  {unread}
+                </span>
+              )}
+            </Link>
+          );
+        })}
+      </nav>
+      {/* Fora de Mensagens, uma consulta nova não pode passar despercebida. */}
+      {unread > 0 && !onMessages && (
+        <p className="order-last mb-3 flex basis-full flex-wrap items-center gap-x-3 gap-y-1 rounded-lg border border-coral/40 bg-coral/10 px-3 py-2 text-sm text-snow">
+          <span>
+            {unread === 1 ? "Um comprador mandou mensagem nova." : `${unread} conversas têm mensagens novas de compradores.`}
+          </span>
+          <Link href="/meu-espaco/mensagens" className="font-semibold text-coral underline underline-offset-4">
+            Abrir Mensagens →
           </Link>
-        );
-      })}
-    </nav>
+        </p>
+      )}
+    </>
   );
 }

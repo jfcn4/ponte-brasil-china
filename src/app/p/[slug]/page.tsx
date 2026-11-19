@@ -2,10 +2,12 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { cache } from "react";
 import { productPath, storePath } from "@/lib/paths";
+import { DemoBadge } from "@/components/public/explore/DemoBadge";
 import { ExploreLink } from "@/components/public/explore/ExploreLink";
 import { InquiryPanel } from "@/components/public/InquiryPanel";
 import { ProductShowcase } from "@/components/public/ProductShowcase";
 import { getPublicProduct } from "@/modules/products/publication";
+import { DEMO_STORE_LABEL, isDemoStore } from "@/modules/stores/demo";
 
 // URLs assinadas das fotos expiram: a página é sempre montada na hora.
 export const dynamic = "force-dynamic";
@@ -37,9 +39,13 @@ export default async function PublicProductPage({ params }: PageProps<"/p/[slug]
   const backToStore = product.store && (
     <a
       href={storePath(product.store.slug)}
-      className="inline-flex min-h-11 items-center gap-1 text-sm font-medium text-brand hover:underline"
+      className="inline-flex min-h-11 max-w-full items-center gap-1.5 text-sm font-medium text-brand hover:underline"
     >
-      <span aria-hidden="true">←</span> 返回店铺 · <span lang="pt-BR">{product.store.producer}</span>
+      <span aria-hidden="true">←</span>
+      <span className="shrink-0">返回店铺</span>
+      <span lang="pt-BR" className="min-w-0 truncate font-normal text-ink-soft">
+        · {product.store.producer}
+      </span>
     </a>
   );
 
@@ -58,10 +64,11 @@ export default async function PublicProductPage({ params }: PageProps<"/p/[slug]
 
   return (
     <div className="mx-auto w-full max-w-3xl px-2 py-4 sm:px-6 sm:py-8">
-      {backToStore && <nav aria-label="店铺" className="px-2 pb-2 sm:px-0">{backToStore}</nav>}
+      {backToStore && <nav aria-label="店铺" className="flex px-2 pb-2 sm:px-0">{backToStore}</nav>}
       <ProductShowcase
         view={product.view}
         titleAs="h1"
+        notice={isDemoStore(product.store?.slug) ? <DemoBadge label={DEMO_STORE_LABEL} className="mb-3" /> : undefined}
         inquiry={{ enabled: true, panel: <InquiryPanel slug={slug} version={product.version} /> }}
       />
       <div className="mt-6">

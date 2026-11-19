@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { tidyZh } from "./zh-text";
 import { PERSONALITY_LABELS, type CachacaAttributes, type ProductDraft, type StoreOrigin } from "@/modules/products/schema";
 
 /**
@@ -14,7 +15,7 @@ import { PERSONALITY_LABELS, type CachacaAttributes, type ProductDraft, type Sto
  * também uma apresentação curta da loja (store_intro), que o produtor aprova
  * ao publicar. Saídas v1 (sem store_intro) continuam válidas.
  */
-export const IDENTITY_PROMPT_VERSION = "identity-v3";
+export const IDENTITY_PROMPT_VERSION = "identity-v4";
 export const IDENTITY_SCHEMA_VERSION = "identity-output-v2";
 
 export const STRATEGIES = ["fonetica", "semantica", "equilibrada"] as const;
@@ -88,7 +89,8 @@ const zhText = (max: number) =>
     .refine((t) => {
       const cjk = count(t, CJK);
       return cjk >= 2 && cjk >= count(t, LATIN) * 0.5;
-    }, "Texto deveria estar em chinês");
+    }, "Texto deveria estar em chinês")
+    .transform(tidyZh);
 
 /** Explicação em português: letras latinas, sem hanzi predominando. */
 const ptText = (max: number, min = 2) =>

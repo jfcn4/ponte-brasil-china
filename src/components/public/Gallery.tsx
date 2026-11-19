@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { PublicPhoto } from "./PublicPhoto";
 
 type Image = { id: string; url: string; alt: string };
 
@@ -21,9 +22,9 @@ export function Gallery({ images }: { images: Image[] }) {
 
   return (
     <div>
-      <div className="flex aspect-[4/5] w-full items-center justify-center overflow-hidden rounded-2xl bg-paper">
-        {/* eslint-disable-next-line @next/next/no-img-element -- URL assinada temporária */}
-        <img src={selected.url} alt={selected.alt} className="h-full w-full object-contain" />
+      {/* A foto não passa de 60% da altura da tela, para o nome do produto aparecer logo abaixo. */}
+      <div className="flex aspect-[4/5] max-h-[60svh] w-full items-center justify-center overflow-hidden rounded-2xl bg-paper">
+        <PublicPhoto key={selected.id} src={selected.url} alt={selected.alt} priority className="h-full w-full object-contain" />
       </div>
       {images.length > 1 && (
         <ul className="mt-3 flex gap-2" aria-label="Fotos">
@@ -40,8 +41,7 @@ export function Gallery({ images }: { images: Image[] }) {
                     active ? "border-brand" : "border-transparent opacity-80 hover:opacity-100"
                   }`}
                 >
-                  {/* eslint-disable-next-line @next/next/no-img-element -- URL assinada temporária */}
-                  <img src={img.url} alt="" className="h-full w-full object-contain" />
+                  <PublicPhoto src={img.url} alt="" className="h-full w-full object-contain" />
                 </button>
               </li>
             );

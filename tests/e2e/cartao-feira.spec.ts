@@ -114,7 +114,7 @@ test("Minha loja → cartão para feira → PDF de uma página → QR → vitrin
     await buyer.getByRole("link").filter({ hasText: second }).click();
     await expect(buyer).toHaveURL(/\/p\/[a-z0-9]{10}$/);
     await expect(buyer.getByText(second).first()).toBeVisible();
-    await buyer.getByRole("button", { name: /询价.*Solicitar cotação/ }).click();
+    await buyer.getByRole("button", { name: /询价.*Solicitar cotação/ }).first().click();
     await buyer.getByLabel(/^留言/).fill("你好，我们在展会上看到你们的名片。请问300瓶的价格是多少？");
     await buyer.getByRole("button", { name: "发送询价" }).click();
     await expect(buyer).toHaveURL(/\/conversa#t=[A-Za-z0-9_-]{43}$/);

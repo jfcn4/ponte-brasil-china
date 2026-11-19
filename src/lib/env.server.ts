@@ -14,6 +14,8 @@ const ServerEnv = z.object({
   GEMINI_MODEL: z.string().regex(/^[a-z0-9.-]+$/).optional().or(z.literal("").transform(() => undefined)),
   /** Modelos reserva (separados por vírgula) para sobrecarga do principal; "off" desliga. */
   GEMINI_FALLBACK_MODEL: z.string().regex(/^[a-z0-9.-]+(,[a-z0-9.-]+)*$/).optional().or(z.literal("").transform(() => undefined)),
+  /** Códigos (/l/<código>) das lojas de demonstração da banca, separados por vírgula: ganham o selo "演示店铺". */
+  DEMO_STORE_SLUGS: z.string().optional(),
 });
 
 export type ServerEnv = z.infer<typeof ServerEnv>;
