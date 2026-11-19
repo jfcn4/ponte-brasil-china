@@ -48,18 +48,20 @@ export default function HomePage() {
 
       <main className="flex-1">
         <section className="hero">
-          <div className={`relative z-10 pt-8 lg:py-16 ${FRAME}`}>
-            <div className="max-w-xl xl:max-w-2xl 2xl:max-w-4xl">
-              <h1 className="text-[2.15rem] font-semibold leading-[1.08] tracking-tight text-snow sm:text-5xl lg:text-[3.3rem] xl:text-[3.6rem] 2xl:text-[4.75rem]">
-                Seu produto brasileiro. Seu próximo comprador, chinês.
+          <div className={`relative z-10 pt-8 lg:pb-16 lg:pt-[clamp(2rem,9vh,7rem)] ${FRAME}`}>
+            <div className="max-w-xl lg:max-w-[52vw]">
+              {/* No desktop o título ocupa quatro linhas e cresce com a tela, sem encostar no globo. */}
+              <h1 className="text-[2.15rem] font-semibold leading-[1.08] tracking-tight text-snow sm:text-5xl lg:text-[min(4.4vw,5.75rem)] lg:leading-[1.02] lg:tracking-[-0.025em]">
+                <span className="lg:block">Seu produto</span> <span className="lg:block">brasileiro.</span>{" "}
+                <span className="lg:mt-[0.2em] lg:block">Seu próximo</span> <span className="lg:block">comprador, chinês.</span>
               </h1>
-              <p className="mt-6 max-w-2xl text-lg leading-relaxed text-mist 2xl:text-xl">
+              <p className="mt-6 max-w-2xl text-lg leading-relaxed text-mist lg:mt-8 xl:text-xl">
                 Crie sua vitrine em chinês e converse com compradores no seu idioma.
               </p>
               <div className="mt-8 flex flex-wrap items-center gap-4">
                 <Link
                   href="/meu-espaco/produtos/novo"
-                  className="inline-flex min-h-12 items-center rounded-lg bg-brand px-6 text-base font-semibold text-white shadow-[0_0_30px_rgba(184,45,53,0.45)] transition-colors hover:bg-brand-strong"
+                  className="inline-flex min-h-13 items-center rounded-lg bg-brand px-7 text-lg font-semibold text-white shadow-[0_0_30px_rgba(184,45,53,0.45)] transition-colors hover:bg-brand-strong lg:min-h-15 lg:rounded-xl lg:px-9 lg:text-xl"
                 >
                   Criar minha vitrine
                 </Link>

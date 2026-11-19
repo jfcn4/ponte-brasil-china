@@ -107,9 +107,9 @@ dialog::backdrop {
   .hero {
     --globe: min(56vw, 60rem, calc(100svh + 4rem));
     min-height: max(calc(100svh - 5.25rem), calc(var(--globe) * 0.8));
-    /* Texto centrado na altura da abertura, ao lado do globo. */
+    /* Texto no alto da abertura, ao lado do globo. */
     display: flex;
-    align-items: center;
+    align-items: flex-start;
   }
 
   .hero-globe {
