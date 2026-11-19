@@ -181,18 +181,18 @@ export function Globe({ className = "" }: { className?: string }) {
 
       // Grade de 5°, sobre oceano e continentes.
       ctx.lineWidth = 0.6 * unit;
-      ctx.strokeStyle = "rgba(170, 15, 35, 0.3)";
+      ctx.strokeStyle = "rgba(170, 15, 35, 0.2)";
       ctx.stroke(frontPath(grid));
 
       // Malha de pontos nos continentes e algumas luzes mais fortes.
       const dot = Math.max(0.9, 1.1 * unit);
-      ctx.fillStyle = "rgba(200, 25, 45, 0.45)";
+      ctx.fillStyle = "rgba(200, 25, 45, 0.3)";
       for (const p of lattice) {
         const v = apply(m, p);
         if (v[2] <= 0.04) continue;
         ctx.fillRect(cx + v[0] * radius - dot / 2, cy - v[1] * radius - dot / 2, dot, dot);
       }
-      ctx.fillStyle = "rgba(255, 50, 60, 0.8)";
+      ctx.fillStyle = "rgba(255, 50, 60, 0.6)";
       const spark = dot * 1.6;
       for (const p of sparks) {
         const v = apply(m, p);

@@ -103,21 +103,6 @@ dialog::backdrop {
   transform: translateX(-50%);
 }
 
-/* Destaques: ao lado do globo só quando há altura; senão, logo abaixo da abertura. */
-.hero-highlights-side {
-  display: none;
-}
-
-@media (min-width: 64rem) and (min-height: 50rem) {
-  .hero-highlights-side {
-    display: grid;
-  }
-
-  .hero-highlights-below {
-    display: none;
-  }
-}
-
 @media (min-width: 64rem) {
   .hero {
     --globe: min(56vw, 60rem, calc(100svh + 4rem));
@@ -149,5 +134,11 @@ dialog::backdrop {
 @media (min-width: 80rem) {
   .hero {
     --globe: min(60vw, 64rem, calc(100svh + 6rem));
+  }
+}
+
+@media (min-width: 96rem) {
+  .hero {
+    --globe: min(62vw, 74rem, calc(100svh + 8rem));
   }
 }
