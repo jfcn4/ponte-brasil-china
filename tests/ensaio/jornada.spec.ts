@@ -160,7 +160,11 @@ test("2 · QR da loja e do produto em outro navegador; reordenar muda o destaque
   await shot(buyer, "loja-antes");
 
   await page.goto("/meu-espaco/produtos");
-  await page.getByRole("button", { name: `Mover para cima: ${NAME_2}` }).click();
+  const handle = page.getByRole("button", { name: new RegExp(`^Reordenar ${NAME_2}`) });
+  await handle.focus();
+  await page.keyboard.press("Space");
+  await page.keyboard.press("ArrowUp");
+  await page.keyboard.press("Space");
   await expect(page.getByRole("status").filter({ hasText: "Ordem salva" })).toBeVisible();
   await page.reload();
   const items = page.getByRole("list", { name: "Produtos da loja, na ordem do catálogo" }).getByRole("listitem");
