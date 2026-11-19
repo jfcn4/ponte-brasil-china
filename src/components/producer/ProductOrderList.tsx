@@ -8,14 +8,6 @@ import type { ProductListItem } from "@/modules/products/repository";
 import { featuredProductId, moveInOrder } from "@/modules/stores/catalog-view";
 import { StatusLabel } from "./StatusLabel";
 
-const dateFormat = new Intl.DateTimeFormat("pt-BR", {
-  day: "2-digit",
-  month: "2-digit",
-  hour: "2-digit",
-  minute: "2-digit",
-  timeZone: "America/Sao_Paulo",
-});
-
 type OrderResponse = { catalogRevision: number; products: ProductListItem[] };
 type Direction = "up" | "down";
 
@@ -142,17 +134,17 @@ export function ProductOrderList({
                 )}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-xs text-mist">Posição {index + 1}</p>
                 <p className="line-clamp-2 break-words font-semibold text-snow">
                   {product.name ?? <span className="italic text-mist">Sem nome</span>}
                 </p>
-                <StatusLabel status={product.status} className="mt-0.5" />
-                <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
-                  {product.id === featured && <span className="font-medium text-coral">Destaque da loja</span>}
-                  {product.publishedVersion !== null && <span className="text-mist">versão {product.publishedVersion} no ar</span>}
-                  <span className="text-mist">
-                    {product.imageCount} de 3 fotos · atualizado {dateFormat.format(new Date(product.updatedAt))}
-                  </span>
+                <div className="mt-0.5 flex flex-wrap items-center gap-x-2">
+                  <StatusLabel status={product.status} />
+                  {product.id === featured && (
+                    <>
+                      <span aria-hidden="true" className="text-mist">·</span>
+                      <span className="text-sm font-medium text-coral">Destaque da loja</span>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
