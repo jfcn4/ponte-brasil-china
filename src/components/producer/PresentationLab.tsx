@@ -295,7 +295,14 @@ export function PresentationLab({ initial, autoGenerate }: { initial: LabState; 
 
         {output && (
           <>
-            <NameOptions output={output} lab={lab} choice={choice} onChoose={setChoice} />
+            <NameOptions
+              output={output}
+              lab={lab}
+              choice={choice}
+              onChoose={setChoice}
+              busy={phase !== "idle" || lab.latest?.status === "generating"}
+              onGenerate={() => void generate()}
+            />
 
             {/* No celular, a prévia segue a escolha na ordem de leitura. */}
             <section aria-labelledby="preview-mobile" className="mt-8 lg:hidden">
@@ -595,19 +602,6 @@ function GenerationPanel({
         </div>
       )}
 
-      {!busy && lab.usable && (
-        <div className="flex flex-wrap items-center justify-end gap-3 text-sm text-mist">
-          <button
-            type="button"
-            onClick={onGenerate}
-            disabled={blocked}
-            className="min-h-10 rounded-lg border border-line px-4 font-medium text-snow hover:border-coral disabled:opacity-50"
-          >
-            Gerar novas opções
-          </button>
-        </div>
-      )}
-
       {lab.usable?.isTestAdapter && (
         <p className="mt-3 rounded-lg border border-warn/50 bg-warn/10 px-3 py-2 text-sm text-warn">
           Resposta de teste, sem IA real. Use apenas para ensaio.
@@ -622,11 +616,15 @@ function NameOptions({
   lab,
   choice,
   onChoose,
+  busy,
+  onGenerate,
 }: {
   output: IdentityOutput;
   lab: LabState;
   choice: Choice;
   onChoose: (choice: Choice) => void;
+  busy: boolean;
+  onGenerate: () => void;
 }) {
   const recommended = recommendedChoice(output);
   // Qual análise está aberta é independente de qual nome está escolhido.
@@ -635,8 +633,21 @@ function NameOptions({
   const panelId = useId();
 
   return (
-    <fieldset className="mt-6">
-      <legend className="text-lg font-semibold text-snow">Escolha o nome</legend>
+    <fieldset className="mt-6" aria-labelledby={`${panelId}-titulo`}>
+      <legend className="sr-only">Escolha o nome</legend>
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+        <h2 id={`${panelId}-titulo`} aria-hidden="true" className="text-lg font-semibold text-snow">
+          Escolha o nome
+        </h2>
+        <button
+          type="button"
+          onClick={onGenerate}
+          disabled={busy || lab.generationMissing.length > 0}
+          className="min-h-10 rounded-lg border border-line px-4 text-sm font-medium text-snow hover:border-coral disabled:opacity-50"
+        >
+          Gerar novos nomes
+        </button>
+      </div>
 
       <div className="mt-3 grid gap-3 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
         {STRATEGIES.map((strategy) => {
@@ -652,7 +663,7 @@ function NameOptions({
               } ${open ? "ring-1 ring-inset ring-line" : ""}`}
             >
               <label className="flex min-h-[10.5rem] flex-1 cursor-pointer flex-col gap-1.5 rounded-t-2xl p-4 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-coral">
-                <span className="flex items-center justify-between gap-2">
+                <span className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5">
                   <span className="flex items-center gap-2 text-sm font-medium text-snow">
                     <input
                       type="radio"
@@ -665,7 +676,7 @@ function NameOptions({
                     {CHOICE_LABELS[strategy]}
                   </span>
                   {strategy === recommended && (
-                    <span className="rounded-full border border-coral/50 px-2 py-0.5 text-xs font-medium text-coral">
+                    <span className="whitespace-nowrap rounded-full border border-coral/50 px-2 py-0.5 text-xs font-medium text-coral">
                       Recomendada
                     </span>
                   )}
