@@ -69,7 +69,6 @@ export function PresentationLab({ initial, autoGenerate }: { initial: LabState; 
   const [phase, setPhase] = useState<Phase>("idle");
   const [notice, setNotice] = useState<{ tone: "error" | "info"; text: string } | null>(null);
   // Aprovação da apresentação da loja: por padrão, só quando a loja ainda não tem uma.
-  const [introOverride, setIntroOverride] = useState<{ adaptationId: string; approve: boolean } | null>(null);
   const confirmDialog = useRef<HTMLDialogElement>(null);
   const shareHeading = useRef<HTMLHeadingElement>(null);
   const autoStarted = useRef(false);
@@ -178,13 +177,6 @@ export function PresentationLab({ initial, autoGenerate }: { initial: LabState; 
     lab.published.choice === choice;
   const canPublish = lab.usable !== null && lab.publicationMissing.length === 0 && !alreadyLive && phase === "idle";
 
-  const proposedIntro = output?.store_intro ?? null;
-  const introAlreadyApproved = lab.usable !== null && lab.storeIntro?.adaptationId === lab.usable.id;
-  const approveIntro =
-    proposedIntro !== null &&
-    !introAlreadyApproved &&
-    (introOverride && introOverride.adaptationId === lab.usable?.id ? introOverride.approve : lab.storeIntro === null);
-
   const publish = async () => {
     if (!lab.usable || phaseRef.current !== "idle") return;
     phaseRef.current = "publishing";
@@ -199,7 +191,6 @@ export function PresentationLab({ initial, autoGenerate }: { initial: LabState; 
           choice,
           expectedRevision: lab.product.revision,
           expectedMediaRevision: lab.product.mediaRevision,
-          approveStoreIntro: approveIntro,
           confirmed: true,
         }),
       });
@@ -219,16 +210,15 @@ export function PresentationLab({ initial, autoGenerate }: { initial: LabState; 
       }
       const { lab: next, published } = (await response.json()) as {
         lab: LabState;
-        published: { version: number; created: boolean; storeIntroApproved: boolean };
+        published: { version: number; created: boolean };
       };
       applyLab(next);
-      const introNote = published.storeIntroApproved ? " A apresentação da loja também foi aprovada." : "";
       setNotice({
         tone: "info",
         text:
           (published.created
             ? `Versão ${published.version} publicada. O link e o QR abaixo já mostram esta versão; o catálogo da loja também.`
-            : `A versão ${published.version} já estava no ar. Nada foi duplicado.`) + introNote,
+            : `A versão ${published.version} já estava no ar. Nada foi duplicado.`),
       });
       requestAnimationFrame(() => shareHeading.current?.focus());
     } catch {
@@ -423,32 +413,6 @@ export function PresentationLab({ initial, autoGenerate }: { initial: LabState; 
                 {lab.images.length} {lab.images.length === 1 ? "foto" : "fotos"}
               </dd>
             </div>
-            {proposedIntro && (
-              <div>
-                <dt className="text-mist">Apresentação da loja</dt>
-                <dd className="mt-1 space-y-1">
-                  <p lang="zh-Hans" className="text-base">
-                    {proposedIntro.zh}
-                  </p>
-                  <p className="text-mist">{proposedIntro.pt}</p>
-                  {introAlreadyApproved ? (
-                    <p className="text-ok">Já aprovada: é a apresentação atual do catálogo.</p>
-                  ) : (
-                    <label className="mt-1 flex min-h-11 cursor-pointer items-center gap-2">
-                      <input
-                        type="checkbox"
-                        checked={approveIntro}
-                        onChange={(event) =>
-                          lab.usable && setIntroOverride({ adaptationId: lab.usable.id, approve: event.target.checked })
-                        }
-                        className="h-5 w-5 accent-[var(--color-brand)]"
-                      />
-                      {lab.storeIntro ? "Substituir a apresentação atual da loja por esta" : "Aprovar como apresentação da loja"}
-                    </label>
-                  )}
-                </dd>
-              </div>
-            )}
             <div>
               <dt className="text-mist">Endereço</dt>
               <dd className="mt-0.5">
@@ -874,10 +838,6 @@ function ContentReview({ output }: { output: IdentityOutput }) {
   output.content.highlights.forEach((h, i) =>
     rows.push({ label: `Destaque ${i + 1}`, zh: h.zh, pt: h.pt, source: SOURCE_LABELS[h.source_field] }),
   );
-  if (output.store_intro) {
-    rows.push({ label: "Apresentação da loja", ...output.store_intro, source: "Produtor e origem (aprovada na publicação)" });
-  }
-
   return (
     <section aria-labelledby="textos-titulo" className="mt-8">
       <h2 id="textos-titulo" className="text-lg font-semibold text-snow">

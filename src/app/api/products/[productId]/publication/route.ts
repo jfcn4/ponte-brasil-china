@@ -12,7 +12,6 @@ const Body = z
     choice: z.enum(CHOICES),
     expectedRevision: z.number().int().positive(),
     expectedMediaRevision: z.number().int().positive(),
-    approveStoreIntro: z.boolean().optional(),
     confirmed: z.literal(true),
   })
   .strict();

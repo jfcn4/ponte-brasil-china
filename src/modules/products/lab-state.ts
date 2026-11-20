@@ -48,7 +48,6 @@ export type LabState = {
     qrPngDataUrl: string;
   } | null;
   /** Apresentação chinesa da loja já aprovada (null até a primeira aprovação). */
-  storeIntro: { zh: string; pt: string; adaptationId: string } | null;
   /** Catálogo público da loja, quando já existe. */
   storeUrl: string | null;
 };

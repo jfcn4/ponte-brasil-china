@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { StoreIntroEditor } from "@/components/producer/StoreIntroEditor";
 import { ShareCard } from "@/components/producer/ShareCard";
 import { StoreCatalog } from "@/components/public/StoreCatalog";
 import { formatOrigin } from "@/modules/products/showcase";
@@ -10,8 +11,6 @@ import { DemoBadge } from "@/components/public/explore/DemoBadge";
 import { findCurrentStoreId } from "@/modules/stores/session";
 
 export const metadata: Metadata = { title: "Minha loja" };
-
-const dateFormat = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "America/Sao_Paulo" });
 
 function Field({ term, children }: { term: string; children: React.ReactNode }) {
   return (
@@ -65,10 +64,6 @@ export default async function MyStorePage() {
     <div className="mx-auto w-full max-w-6xl px-4 pb-16 pt-8 sm:px-6 lg:grid lg:grid-cols-[minmax(0,1fr)_26rem] lg:gap-8">
       <div className="min-w-0">
         <h1 className="text-2xl font-semibold tracking-tight text-snow">Minha loja</h1>
-        <p className="mt-1 text-sm text-mist">
-          No ar desde {live.publishedAt ? dateFormat.format(new Date(live.publishedAt)) : "a primeira publicação"} ·{" "}
-          {catalog.items.length} {catalog.items.length === 1 ? "produto publicado" : "produtos publicados"}
-        </p>
         {isDemoStore(live.slug) && (
           <p className="mt-3 rounded-lg border border-coral/40 bg-coral/10 px-3 py-2 text-sm text-snow">
             Loja de demonstração, com o selo{" "}
@@ -87,22 +82,8 @@ export default async function MyStorePage() {
             <Field term="Produtor ou engenho">{profile.name}</Field>
             <Field term="Região e origem">{approvedOrigin ?? "Não informada"}</Field>
             <div className="sm:col-span-2">
-              <dt className="text-xs uppercase tracking-wide text-mist">Apresentação chinesa aprovada</dt>
-              {intro ? (
-                <dd className="mt-1 space-y-2">
-                  <p lang="zh-Hans" className="text-lg leading-relaxed text-snow">
-                    {intro.zh}
-                  </p>
-                  <p className="text-sm text-mist">
-                    Em português: <span className="text-snow">{intro.pt}</span>
-                  </p>
-                  <p className="text-xs text-mist">Aprovada em {dateFormat.format(new Date(intro.approved_at))}.</p>
-                </dd>
-              ) : (
-                <dd className="mt-1 text-sm text-mist">
-                  Ainda não aprovada. Ela é gerada com os nomes de um produto e aprovada ao publicar.
-                </dd>
-              )}
+              <dt className="text-xs uppercase tracking-wide text-mist">Apresentação da loja</dt>
+              <dd><StoreIntroEditor initial={intro ? { zh: intro.zh, pt: intro.pt } : null} /></dd>
             </div>
             <Field term="Destaque da loja">
               {featured ? (
@@ -137,7 +118,7 @@ export default async function MyStorePage() {
 
         <section aria-labelledby="feira-titulo" className="mt-8 rounded-2xl border border-line bg-panel p-5 sm:p-6">
           <h2 id="feira-titulo" className="text-lg font-semibold text-snow">
-            Modo Feira <span className="text-sm font-normal text-mist">· extra</span>
+            Modo Feira
           </h2>
           <p className="mt-1 text-sm text-mist">Cartão em português e chinês para imprimir ou salvar em PDF.</p>
           {featured ? (

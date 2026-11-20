@@ -11,12 +11,11 @@ import { formatOrigin } from "@/modules/products/showcase";
 export const StorePublicProfile = PresentationSnapshot.shape.producer;
 export type StorePublicProfile = z.infer<typeof StorePublicProfile>;
 
-/** Apresentação chinesa da loja aprovada pelo produtor. */
+/** Apresentação da loja escrita pelo produtor em português e traduzida; aprovada por ele. */
 export const StoreIntro = z
   .object({
     zh: z.string().min(1),
     pt: z.string().min(1),
-    adaptation_id: z.uuid(),
     approved_at: z.string(),
   })
   .strict();

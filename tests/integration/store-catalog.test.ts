@@ -19,6 +19,7 @@ import {
   getStoreOverview,
   reorderProducts,
 } from "@/modules/stores/catalog";
+import { saveStoreIntro } from "@/modules/stores/intro";
 import { ensureStoreForToken } from "@/modules/stores/session";
 import { generateSessionToken } from "@/modules/stores/token";
 
@@ -61,7 +62,7 @@ async function product(storeId: string, overrides: Partial<typeof EMPTY_FORM>) {
   return saved.id;
 }
 
-async function publish(storeId: string, productId: string, options: { approveStoreIntro?: boolean } = {}) {
+async function publish(storeId: string, productId: string) {
   const current = await getProductForEdit(storeId, productId);
   await generateAdaptation(storeId, productId, current!.product.revision, createTestAdapter());
   const lab = await getLabState(storeId, productId);
@@ -70,7 +71,6 @@ async function publish(storeId: string, productId: string, options: { approveSto
     choice: "semantica",
     expectedRevision: lab!.product.revision,
     expectedMediaRevision: lab!.product.mediaRevision,
-    ...options,
   });
 }
 
@@ -121,7 +121,6 @@ describe("abertura da loja", () => {
   it("a primeira publicação abre a loja; a apresentação só entra quando aprovada", async () => {
     const published = await publish(storeA, first);
     firstSlug = published.slug;
-    expect(published.storeIntroApproved).toBe(false);
 
     const overview = await getStoreOverview(storeA);
     expect(overview?.public).not.toBeNull();
@@ -132,10 +131,10 @@ describe("abertura da loja", () => {
     expect(overview!.public!.intro).toBeNull();
     expect(overview!.public!.catalog.intro).toBeNull();
 
-    // A segunda publicação aprova a apresentação gerada junto com as opções.
-    const again = await publish(storeA, second, { approveStoreIntro: true });
+    // A apresentação é escrita pelo produtor, traduzida e aprovada à parte.
+    const again = await publish(storeA, second);
     secondSlug = again.slug;
-    expect(again.storeIntroApproved).toBe(true);
+    await saveStoreIntro(storeA, "Engenho familiar de Salinas, feito em alambique de cobre.", "萨利纳斯的家族酿酒厂，使用铜制蒸馏器酿造。");
     const after = await getStoreOverview(storeA);
     expect(after!.public!.slug).toBe(storeSlug);
     expect(after!.public!.intro?.zh).toMatch(/[一-鿿]/);

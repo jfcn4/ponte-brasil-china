@@ -82,7 +82,7 @@ describe("projeção pública", () => {
     const view = buildCatalogView({
       slug: "lojaabcdef",
       profile: { name: "Engenho Serra Azul", city: "Salinas", state: "MG", region: "Norte de Minas" },
-      intro: { zh: "来自巴西的卡沙萨生产者。", pt: "Produtor de cachaça do Brasil.", adaptation_id: crypto.randomUUID(), approved_at: "2026-11-18" },
+      intro: { zh: "来自巴西的卡沙萨生产者。", pt: "Produtor de cachaça do Brasil.", approved_at: "2026-11-18" },
       items: [],
     });
     expect(view).toEqual({

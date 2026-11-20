@@ -16,7 +16,7 @@ import {
   type AdaptationInput,
 } from "@/modules/ai/identity-contract";
 import { TEST_MODEL } from "@/modules/ai/test-adapter";
-import { approveStoreIntro, getStoreIntroAndLink, publicStoreLink } from "@/modules/stores/catalog";
+import { getStoreIntroAndLink, publicStoreLink } from "@/modules/stores/catalog";
 import type { LabState } from "./lab-state";
 import {
   CHOICES,
@@ -283,7 +283,7 @@ export async function getLabState(storeId: string, productId: string): Promise<L
     };
   }
 
-  const { intro: storeIntro, link } = await getStoreIntroAndLink(storeId);
+  const { link } = await getStoreIntroAndLink(storeId);
   const storeLink = presentation ? link : null;
 
   return {
@@ -320,7 +320,6 @@ export async function getLabState(storeId: string, productId: string): Promise<L
         : null,
     hasStaleReady: !usableRow && adaptations.some((a) => a.status === "ready"),
     published,
-    storeIntro: storeIntro ? { zh: storeIntro.zh, pt: storeIntro.pt, adaptationId: storeIntro.adaptation_id } : null,
     storeUrl: storeLink ? `${await publicOrigin()}${storePath(storeLink.slug)}` : null,
   };
 }
@@ -342,7 +341,6 @@ export type PublishRequest = {
   expectedRevision: number;
   expectedMediaRevision: number;
   /** O produtor aprovou também a apresentação da loja gerada nesta adaptação. */
-  approveStoreIntro?: boolean;
 };
 
 /**
@@ -353,7 +351,7 @@ export async function publishProduct(
   storeId: string,
   productId: string,
   request: PublishRequest,
-): Promise<{ version: number; slug: string; created: boolean; storeIntroApproved: boolean }> {
+): Promise<{ version: number; slug: string; created: boolean }> {
   if (!(CHOICES as readonly string[]).includes(request.choice)) throw new PublicationError("adaptation_not_ready");
   const { store, draft } = await loadOwned(storeId, productId);
 
@@ -415,15 +413,6 @@ export async function publishProduct(
     | undefined;
   if (!row) throw new Error("publish_failed: no_row");
 
-  // A apresentação da loja é um objeto à parte: aprovada depois da publicação,
-  // de forma repetível (repetir a confirmação conclui o que faltou).
-  const output = IdentityOutput.parse(adaptation.output);
-  let storeIntroApproved = false;
-  if (request.approveStoreIntro && output.store_intro) {
-    await approveStoreIntro(storeId, request.adaptationId);
-    storeIntroApproved = true;
-  }
-
   logEvent("product.published", {
     storeId,
     productId,
@@ -433,7 +422,7 @@ export async function publishProduct(
     created: row.created,
     ms: Date.now() - started,
   });
-  return { version: row.version, slug: row.public_slug, created: row.created, storeIntroApproved };
+  return { version: row.version, slug: row.public_slug, created: row.created };
 }
 
 // ---------------------------------------------------------------------------
