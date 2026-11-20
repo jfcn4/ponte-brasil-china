@@ -249,6 +249,7 @@ export function ConversationView({ initial }: { initial: ConversationDetail }) {
         : null;
   // A sugestão responde à última entrada; depois de respondida, deixa de aparecer.
   const suggestion = detail.awaitingReply ? (latestBuyer?.analysis?.suggestedReply ?? null) : null;
+  const culturalNote = detail.awaitingReply ? (latestBuyer?.analysis?.culturalNote ?? null) : null;
   const target = langName(detail.replyLang);
 
   return (
@@ -312,6 +313,13 @@ export function ConversationView({ initial }: { initial: ConversationDetail }) {
             <h2 id="reply-heading" className="sr-only">
               Sua resposta
             </h2>
+
+            {culturalNote && (
+              <p className="mb-2 rounded-lg border border-warn/50 bg-warn/10 px-3 py-2 text-sm text-snow">
+                <span className="font-semibold text-warn">Nota cultural: </span>
+                {culturalNote}
+              </p>
+            )}
 
             {suggestion && trimmed !== suggestion && (
               <div className="mb-3 rounded-lg border border-line/80 bg-panel/60 px-3 py-2 text-sm">
@@ -624,12 +632,6 @@ function Copilot({
                 <dt className="text-mist">Próximo passo</dt>
                 <dd>{analysis.nextStep}</dd>
               </div>
-              {analysis.culturalNote && (
-                <div>
-                  <dt className="text-mist">Nota cultural</dt>
-                  <dd>{analysis.culturalNote}</dd>
-                </div>
-              )}
             </dl>
           </details>
         </>

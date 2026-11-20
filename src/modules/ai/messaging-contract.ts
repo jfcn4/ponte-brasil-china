@@ -9,7 +9,7 @@ import { checkNumbers, detectScript, isMostlyChinese, isMostlyLatin, meaningWarn
  * teor, preço, pedido mínimo) vêm da versão publicada que o comprador abriu e
  * são exibidos pela aplicação. Nenhuma saída tem poder de enviar mensagem.
  */
-export const INTERPRET_PROMPT_VERSION = "interpret-v2";
+export const INTERPRET_PROMPT_VERSION = "interpret-v4";
 export const INTERPRET_SCHEMA_VERSION = "interpret-output-v1";
 export const TRANSLATE_PROMPT_VERSION = "translate-v2";
 export const TRANSLATE_SCHEMA_VERSION = "translate-output-v1";

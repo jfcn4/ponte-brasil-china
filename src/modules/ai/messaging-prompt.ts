@@ -15,7 +15,7 @@ Responda somente com JSON no esquema fornecido.
 - missing: o que o produtor precisa confirmar antes de responder (por exemplo capacidade de produção para a quantidade, frete e prazo até o destino, preço final). A ficha nunca contém capacidade de produção, frete, prazo, impostos ou pagamento.
 - next_step_pt: o próximo passo sugerido ao produtor, em uma frase.
 - suggested_reply_pt: rascunho curto (1 ou 2 frases) em português que o produtor pode enviar: agradeça, responda só com dados de "facts" e diga que vai confirmar o que falta. Nunca confirme capacidade, frete, prazo, desconto ou preço final. Não use números que não estejam na mensagem ou em "facts".
-- cultural_note_pt: nota cultural curta somente se for específica a esta mensagem (ex.: forma de tratamento); caso contrário null.`;
+- cultural_note_pt: nota cultural de UMA frase curta (máx. 20 palavras), em português, quando a mensagem tocar em prática comercial chinesa. Ex.: pedido de desconto → "Pedir desconto é muito comum na China; não é desrespeito nem desinteresse." Também para amostras e forma de tratamento. Se nada se aplicar, null.`;
 
 export function interpretUserPrompt(input: InterpretInput): string {
   return `Contexto (fonte de verdade para dados do produto; campos ausentes não foram informados):\n${canonicalJson({

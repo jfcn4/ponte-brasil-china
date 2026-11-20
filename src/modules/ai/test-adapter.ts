@@ -184,6 +184,8 @@ export function validTestInterpretation(input: InterpretInput): InterpretOutput 
   }
   if (/价|报价|多少钱|price|quote|cost/i.test(message)) intents.push("price");
   if (/样品|sample/i.test(message)) intents.push("samples");
+  const discount = /折扣|优惠|便宜|讨价|discount/i.test(message);
+  if (discount && !intents.includes("price")) intents.push("price");
   if (intents.length === 0) intents.push("other");
 
   const place = [...cities, ...english].join(", ");
@@ -203,7 +205,9 @@ export function validTestInterpretation(input: InterpretInput): InterpretOutput 
     missing: [],
     next_step_pt: "Verificar os pontos pendentes antes de responder.",
     suggested_reply_pt: "Obrigado pelo interesse! Vou confirmar a capacidade de produção e o frete e retorno em breve.",
-    cultural_note_pt: null,
+    cultural_note_pt: discount
+      ? "Pedir desconto é muito comum na China; não é desrespeito nem desinteresse."
+      : null,
   };
 }
 
