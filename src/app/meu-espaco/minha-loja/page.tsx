@@ -42,8 +42,7 @@ export default async function MyStorePage() {
             <Field term="Origem">{place ?? "Não informada"}</Field>
           </dl>
           <p className="mt-6 border-t border-line pt-4 text-sm text-mist">
-            A loja em chinês, com link e QR próprios, nasce quando você publica o primeiro produto. Estes dados vêm da
-            seção “Origem e história” do cadastro.
+            A loja em chinês, com link e QR, nasce ao publicar o primeiro produto.
           </p>
           <Link
             href="/meu-espaco/produtos"
@@ -72,11 +71,11 @@ export default async function MyStorePage() {
         </p>
         {isDemoStore(live.slug) && (
           <p className="mt-3 rounded-lg border border-coral/40 bg-coral/10 px-3 py-2 text-sm text-snow">
-            Loja de demonstração: o catálogo e as vitrines mostram ao comprador o selo{" "}
+            Loja de demonstração, com o selo{" "}
             <span lang="zh-Hans" className="font-semibold text-coral">
               演示店铺
-            </span>
-            . As consultas e respostas funcionam normalmente.
+            </span>{" "}
+            para o comprador.
           </p>
         )}
 
@@ -84,7 +83,6 @@ export default async function MyStorePage() {
           <h2 id="perfil-titulo" className="text-lg font-semibold text-snow">
             Perfil público
           </h2>
-          <p className="mt-1 text-sm text-mist">Só o que você aprovou ao publicar aparece para o comprador.</p>
           <dl className="mt-4 grid gap-4 sm:grid-cols-2">
             <Field term="Produtor ou engenho">{profile.name}</Field>
             <Field term="Região e origem">{approvedOrigin ?? "Não informada"}</Field>
@@ -102,8 +100,7 @@ export default async function MyStorePage() {
                 </dd>
               ) : (
                 <dd className="mt-1 text-sm text-mist">
-                  Ainda não há apresentação aprovada; o catálogo mostra só o nome e a origem. Ela é gerada junto com as opções de
-                  nome de um produto e você a aprova na confirmação da publicação.
+                  Ainda não aprovada. Ela é gerada com os nomes de um produto e aprovada ao publicar.
                 </dd>
               )}
             </div>
@@ -125,8 +122,7 @@ export default async function MyStorePage() {
           </dl>
           {originChanged && (
             <p className="mt-4 rounded-lg border border-coral/40 bg-coral/10 p-3 text-sm text-snow">
-              O cadastro tem produtor ou origem diferentes da versão pública. A loja passa a mostrar os novos dados quando você
-              republicar um produto.
+              Produtor ou origem foram alterados. A loja mostra os novos dados quando você republicar um produto.
             </p>
           )}
         </section>
@@ -138,18 +134,12 @@ export default async function MyStorePage() {
           qrPngDataUrl={live.qrPngDataUrl}
           fileName={`qr-loja-${live.slug}.png`}
         />
-        <p className="mt-3 text-sm text-mist">
-          O QR de cada produto continua em Produtos → Link e QR e abre direto a vitrine daquele produto.
-        </p>
 
         <section aria-labelledby="feira-titulo" className="mt-8 rounded-2xl border border-line bg-panel p-5 sm:p-6">
           <h2 id="feira-titulo" className="text-lg font-semibold text-snow">
             Modo Feira <span className="text-sm font-normal text-mist">· extra</span>
           </h2>
-          <p className="mt-1 text-sm text-mist">
-            Cartão comercial em português e chinês, pronto para imprimir ou salvar em PDF, com o nome do produtor, a região, a
-            foto do produto em destaque e este mesmo QR da loja.
-          </p>
+          <p className="mt-1 text-sm text-mist">Cartão em português e chinês para imprimir ou salvar em PDF.</p>
           {featured ? (
             <Link
               href="/meu-espaco/minha-loja/cartao"
@@ -158,7 +148,7 @@ export default async function MyStorePage() {
               Criar cartão para feira
             </Link>
           ) : (
-            <p className="mt-4 text-sm text-snow">Publique um produto para criar o cartão: o QR abriria um catálogo vazio.</p>
+            <p className="mt-4 text-sm text-snow">Publique um produto para criar o cartão.</p>
           )}
         </section>
       </div>
@@ -168,7 +158,6 @@ export default async function MyStorePage() {
           <h2 id="previa-loja" className="mb-1 text-lg font-semibold text-snow lg:text-sm lg:font-medium">
             Prévia do catálogo
           </h2>
-          <p className="mb-3 text-xs text-mist">É o que o comprador vê ao escanear o QR da loja.</p>
           <div className="rounded-3xl bg-ivory p-3 lg:max-h-[calc(100dvh-7rem)] lg:overflow-y-auto">
             <StoreCatalog view={catalog} titleAs="h2" notice={isDemoStore(live.slug) ? <DemoBadge label={DEMO_STORE_LABEL} className="mb-3" /> : undefined} />
           </div>

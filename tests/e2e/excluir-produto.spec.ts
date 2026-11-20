@@ -105,7 +105,7 @@ test("excluir produto: cancelar não muda nada; excluir apaga só aquele produto
     // Sem recarregar: A saiu e B assumiu o destaque.
     await expect(page.getByRole("listitem").filter({ hasText: A })).toHaveCount(0);
     await expect(page.getByRole("listitem").filter({ hasText: B })).toContainText("Destaque da loja");
-    await expect(page.getByText("1 produto nesta loja")).toBeVisible();
+    await expect(page.getByText("1 produto", { exact: true })).toBeVisible();
 
     // Depois de recarregar: A e sua conversa sumiram; B e a dele continuam.
     await page.reload();

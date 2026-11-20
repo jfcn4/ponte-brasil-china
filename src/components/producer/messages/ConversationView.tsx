@@ -332,7 +332,7 @@ export function ConversationView({ initial }: { initial: ConversationDetail }) {
                   </button>
                 </div>
                 <p id="suggestion-note" className="mt-1 text-xs text-mist">
-                  Usar só copia o texto para o editor, onde você ajusta. Nada é enviado ao comprador.
+                  Copia o texto para o editor. Nada é enviado.
                 </p>
               </div>
             )}

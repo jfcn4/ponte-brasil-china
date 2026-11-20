@@ -313,7 +313,6 @@ export function PresentationLab({ initial, autoGenerate }: { initial: LabState; 
               <h2 id="preview-mobile" className="text-lg font-semibold text-snow">
                 Prévia da vitrine
               </h2>
-              <p className="mb-3 mt-1 text-sm text-mist">Assim o comprador verá depois que você publicar.</p>
               {showcase}
             </section>
 
@@ -327,9 +326,6 @@ export function PresentationLab({ initial, autoGenerate }: { initial: LabState; 
               <h2 id="publicar-titulo" className="text-lg font-semibold text-snow">
                 {lab.published ? "Republicar" : "Publicar"}
               </h2>
-              <p className="mt-1 text-sm text-mist">
-                Escolher um nome não publica nada. A vitrine só muda quando você confirmar a publicação.
-              </p>
               <ul className="mt-3 space-y-1.5 text-sm">
                 <li className={lab.publicationMissing.includes("producer_name") ? "text-mist" : "text-ok"}>
                   <span aria-hidden="true">{lab.publicationMissing.includes("producer_name") ? "○ " : "✓ "}</span>
@@ -389,11 +385,6 @@ export function PresentationLab({ initial, autoGenerate }: { initial: LabState; 
       <aside className="hidden lg:block" aria-label="Prévia da vitrine">
         <div className="sticky top-6">
           <p className="mb-1 text-sm font-medium text-snow">Prévia da vitrine</p>
-          <p className="mb-3 text-xs text-mist">
-            {output
-              ? "Com o nome escolhido. A versão no ar só muda quando você confirmar."
-              : "Em português até a geração. Depois, a prévia mostra a versão chinesa."}
-          </p>
           <div className="max-h-[calc(100dvh-7rem)] overflow-y-auto rounded-3xl">{showcase}</div>
         </div>
       </aside>
@@ -426,14 +417,14 @@ export function PresentationLab({ initial, autoGenerate }: { initial: LabState; 
                     <span className="text-mist">({formatBrl(preview.price.brlCents)} · taxa demonstrativa 1,15)</span>
                   </>
                 ) : (
-                  "Sem preço: a vitrine mostra apenas “询价” (solicitar cotação)"
+                  "Sem preço (só “询价”)"
                 )}
               </dd>
             </div>
             <div>
               <dt className="text-mist">Fotos</dt>
               <dd className="mt-0.5">
-                {lab.images.length} {lab.images.length === 1 ? "foto" : "fotos"}, na ordem do cadastro
+                {lab.images.length} {lab.images.length === 1 ? "foto" : "fotos"}
               </dd>
             </div>
             {proposedIntro && (
@@ -467,7 +458,7 @@ export function PresentationLab({ initial, autoGenerate }: { initial: LabState; 
               <dd className="mt-0.5">
                 {lab.published
                   ? `Substitui a versão ${lab.published.version} no mesmo link e QR.`
-                  : "Cria um link público permanente e o QR desta vitrine."}
+                  : "Cria o link público e o QR desta vitrine."}
               </dd>
             </div>
           </dl>
@@ -522,9 +513,7 @@ function GenerationPanel({
               <span aria-hidden="true" className="h-3 w-3 animate-pulse rounded-full bg-coral" />
               Gerando três nomes e a vitrine em chinês…
             </p>
-            <p className="mt-1 text-sm text-mist">
-              Costuma levar de 10 a 30 segundos. Seu rascunho já está salvo e não é alterado pela geração.
-            </p>
+            <p className="mt-1 text-sm text-mist">Leva de 10 a 30 segundos.</p>
           </div>
         )}
       </div>
@@ -550,8 +539,7 @@ function GenerationPanel({
         <div role="alert" className="rounded-xl border border-coral/60 bg-coral/10 p-4 text-sm">
           <p className="font-medium text-snow">A geração não deu certo.</p>
           <p className="mt-1 text-mist">
-            {GENERATION_ERROR_MESSAGES[lab.latest?.errorCode ?? ""] ?? "Erro inesperado na geração."} Seu cadastro e a
-            vitrine publicada continuam como estavam.
+            {GENERATION_ERROR_MESSAGES[lab.latest?.errorCode ?? ""] ?? "Erro inesperado na geração."}
           </p>
           <button
             type="button"
@@ -567,8 +555,8 @@ function GenerationPanel({
         <div className="rounded-xl border border-line bg-panel p-4 text-sm">
           <p className="text-snow">
             {lab.hasStaleReady
-              ? "O cadastro mudou depois da última geração (nome, descrição, características, origem ou história). Gere novas opções para refletir os dados atuais."
-              : "Gere três propostas de nome chinês e os textos da vitrine a partir do seu cadastro."}
+              ? "O cadastro mudou depois da última geração. Gere novas opções."
+              : "Gere três propostas de nome chinês e os textos da vitrine."}
           </p>
           <button
             type="button"
@@ -583,7 +571,7 @@ function GenerationPanel({
       {!busy && lab.usable && (
         <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-mist">
           <p>
-            Opções geradas em {dateTime.format(new Date(lab.usable.createdAt))} a partir do cadastro atual.
+            Opções geradas em {dateTime.format(new Date(lab.usable.createdAt))}.
           </p>
           <button
             type="button"
@@ -598,7 +586,7 @@ function GenerationPanel({
 
       {lab.usable?.isTestAdapter && (
         <p className="mt-3 rounded-lg border border-warn/50 bg-warn/10 px-3 py-2 text-sm text-warn">
-          Resposta de teste: nomes e textos fixos do adaptador de teste, sem chamada à IA real. Use apenas para ensaio.
+          Resposta de teste, sem IA real. Use apenas para ensaio.
         </p>
       )}
     </section>
@@ -754,8 +742,7 @@ function ContentReview({ output }: { output: IdentityOutput }) {
         Textos da vitrine
       </h2>
       <p className="mt-1 text-sm text-mist">
-        O que o comprador lê em chinês, com o sentido em português. Preço, volume, teor e pedido mínimo vêm do seu
-        cadastro, não da IA. Para corrigir um texto, ajuste o cadastro em português e gere novamente.
+        Para corrigir um texto, ajuste o cadastro e gere novamente.
       </p>
       <ul className="mt-4 divide-y divide-line rounded-xl border border-line bg-panel">
         {rows.map((row) => (

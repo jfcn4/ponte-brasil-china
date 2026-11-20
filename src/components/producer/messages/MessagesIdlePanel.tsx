@@ -37,11 +37,9 @@ export function MessagesIdlePanel({
     body = (
       <>
         <p className="mt-2 max-w-md text-sm text-mist">
-          As consultas dos compradores chegam aqui, já traduzidas para o português, quando alguém usa “询价 · Solicitar
-          cotação” na vitrine publicada.
           {storeUrl
-            ? " Compartilhe o link da loja para receber a primeira."
-            : " Publique um produto em Produtos para ter um link e um QR para compartilhar."}
+            ? "As consultas chegam aqui, traduzidas. Compartilhe o link da loja para receber a primeira."
+            : "As consultas chegam aqui, traduzidas. Publique um produto para ter link e QR."}
         </p>
         {storeUrl ? (
           <div className="mt-4">
@@ -75,7 +73,6 @@ export function MessagesIdlePanel({
       <>
         <p className="mt-2 max-w-md text-sm text-mist">
           {pendingCount === 1 ? "Há 1 consulta aguardando sua resposta." : `Há ${pendingCount} consultas aguardando sua resposta.`}{" "}
-          Abra a mais antiga para ler a tradução e responder.
         </p>
         <Link
           href={`/meu-espaco/mensagens/${nextPendingId}`}
@@ -88,7 +85,7 @@ export function MessagesIdlePanel({
   } else {
     body = (
       <p className="mt-2 max-w-md text-sm text-mist">
-        Todas as consultas foram respondidas. Escolha uma conversa na lista para rever a tradução ou continuar o contato.
+        Todas as consultas foram respondidas.
       </p>
     );
   }

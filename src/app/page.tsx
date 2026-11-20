@@ -5,19 +5,19 @@ import { Logo } from "@/components/brand/Logo";
 const STEPS = [
   {
     title: "Conte sobre sua cachaça",
-    text: "Preencha uma única página em português, com fotos reais, características, origem e informações comerciais.",
+    text: "Uma página em português, com fotos reais e dados comerciais.",
   },
   {
     title: "Escolha seu nome em chinês",
-    text: "Compare três propostas — fonética, semântica e equilibrada — com pinyin, significado e explicação em português.",
+    text: "Compare três propostas, com pinyin e significado.",
   },
   {
     title: "Publique e compartilhe",
-    text: "Revise a vitrine em chinês antes de publicar. Compartilhe o QR da loja ou de cada produto.",
+    text: "Revise a vitrine em chinês e compartilhe o QR.",
   },
   {
     title: "Responda no seu idioma",
-    text: "Leia cada consulta traduzida, escreva em português e confirme a tradução antes de enviar.",
+    text: "Leia as consultas traduzidas e responda em português.",
   },
 ];
 
@@ -81,10 +81,6 @@ export default function HomePage() {
             <h2 id="como-funciona-titulo" className="text-2xl font-semibold tracking-tight text-snow sm:text-3xl">
               Como funciona
             </h2>
-            <p className="mt-2 max-w-2xl text-mist">
-              Você informa os dados uma vez, em português. A decisão sobre o que publicar e o que responder continua com
-              você.
-            </p>
             <ol className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {STEPS.map((step, index) => (
                 <li key={step.title} className="rounded-xl border border-line bg-panel p-5">
@@ -106,7 +102,7 @@ export default function HomePage() {
 
       <footer className="border-t border-line/70">
         <div className={`flex flex-wrap items-center justify-between gap-2 py-6 text-xs text-mist ${FRAME}`}>
-          <span>BAQIAO 巴桥 · demonstração para o desafio CITi</span>
+          <span>BAQIAO 巴桥</span>
           <span>Câmbio demonstrativo: BRL 1 = CNY 1,15</span>
         </div>
       </footer>

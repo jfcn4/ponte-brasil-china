@@ -18,11 +18,11 @@ export default async function ProductsPage() {
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-snow">Produtos</h1>
-          <p className="mt-1 text-sm text-mist">
-            {products.length === 0
-              ? "Cadastre sua primeira cachaça para começar."
-              : `${products.length} ${products.length === 1 ? "produto" : "produtos"} nesta loja`}
-          </p>
+          {products.length > 0 && (
+            <p className="mt-1 text-sm text-mist">
+              {products.length} {products.length === 1 ? "produto" : "produtos"}
+            </p>
+          )}
         </div>
         {products.length > 0 && (
           <Link
@@ -37,9 +37,6 @@ export default async function ProductsPage() {
       {products.length === 0 && pendingCleanup === 0 ? (
         <div className="mt-8 rounded-xl border border-dashed border-line bg-panel/50 px-6 py-12 text-center">
           <p className="font-medium text-snow">Nenhum produto ainda</p>
-          <p className="mx-auto mt-2 max-w-md text-sm text-mist">
-            Descreva sua cachaça em português e adicione até três fotos reais. O rascunho fica salvo enquanto você preenche.
-          </p>
           <Link
             href="/meu-espaco/produtos/novo"
             className="mt-6 inline-flex min-h-12 items-center rounded-lg bg-brand px-6 font-semibold text-white hover:bg-brand-strong"

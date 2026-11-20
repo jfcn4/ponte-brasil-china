@@ -133,7 +133,7 @@ export function DeleteProductDialog({
         )}
 
         <p id="excluir-aviso" className="mt-4 rounded-lg border border-coral/40 bg-coral/10 px-3 py-2 text-sm">
-          Isso vai apagar definitivamente o produto e todas as conversas sobre ele, incluindo as mensagens.
+          Apaga o produto e suas conversas, sem volta.
         </p>
 
         <div className="mt-6 flex flex-wrap justify-end gap-3">

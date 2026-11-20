@@ -423,7 +423,7 @@ export function ProductOrderList({
               {pendingCleanup === 1
                 ? "1 foto de produto excluído ainda não saiu do armazenamento."
                 : `${pendingCleanup} fotos de produtos excluídos ainda não saíram do armazenamento.`}{" "}
-              Os produtos e as conversas já foram apagados.
+              Os produtos já foram apagados.
             </span>
             <button
               type="button"
@@ -437,14 +437,12 @@ export function ProductOrderList({
         )}
         {tab === "published" && published.length > 0 && (
           <p className="mt-4 text-sm text-mist">
-            A ordem abaixo é a do catálogo da loja; o primeiro produto fica em
-            destaque. Links e QRs não mudam ao reordenar.
+            A ordem é a do catálogo; o primeiro fica em destaque.
           </p>
         )}
         {tab === "published" && published.length > 1 && (
           <p id="ajuda-ordem" className="mt-1 text-sm text-mist">
-            Arraste pela alça de seis pontos. Com o teclado, foque a alça, use
-            Espaço para pegar e soltar, setas para mover e Esc para cancelar.
+            Arraste pela alça. No teclado: Espaço pega e solta, setas movem, Esc cancela.
           </p>
         )}
         <p aria-live="assertive" role="status" className="sr-only">
@@ -477,8 +475,7 @@ export function ProductOrderList({
                   Nenhum produto publicado
                 </p>
                 <p className="mx-auto mt-2 max-w-md text-sm text-mist">
-                  Publique um rascunho para ele aparecer na vitrine e no
-                  catálogo da loja.
+                  Publique um rascunho para ele aparecer na loja.
                 </p>
               </>
             )}

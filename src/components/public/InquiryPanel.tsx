@@ -154,7 +154,6 @@ export function InquiryPanel({ slug, version }: { slug: string; version: number 
         >
           <InquiryLabel />
         </button>
-        <p className="text-center text-xs text-ink-soft">无需注册，直接向巴西生产者发送询价。</p>
         {previous && (
           <p className="text-center text-sm">
             <a href={conversationHref(previous)} className="font-medium text-brand underline underline-offset-4">
@@ -174,7 +173,7 @@ export function InquiryPanel({ slug, version }: { slug: string; version: number 
             询价 <span lang="pt-BR" className="text-sm font-medium text-ink-soft">· Solicitar cotação</span>
           </h3>
           <p className="mt-1 text-sm leading-relaxed text-ink-soft">
-            无需注册。发送后您会获得一个私密链接，用于随时返回本对话。生产者确认回复后，回复才会显示。
+            无需注册。发送后将获得私密链接，可随时返回本对话。
           </p>
         </div>
 
@@ -199,7 +198,7 @@ export function InquiryPanel({ slug, version }: { slug: string; version: number 
             className="mt-1 block w-full rounded-xl border border-sand bg-white px-3 py-2.5 text-base leading-relaxed text-ink placeholder:text-ink-soft/70"
           />
           <p id={`${formId}-hint`} className="mt-1 text-xs text-ink-soft">
-            可使用中文或英文（English is welcome）。
+            可使用中文或英文。
           </p>
         </div>
 

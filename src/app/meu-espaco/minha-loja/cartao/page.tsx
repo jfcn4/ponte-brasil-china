@@ -38,13 +38,13 @@ export default async function FairCardPage() {
   const live = storeId ? ((await getStoreOverview(storeId))?.public ?? null) : null;
 
   if (!live) {
-    return <Unavailable>O cartão usa a loja publicada. Publique o primeiro produto para criar a loja em chinês e o QR.</Unavailable>;
+    return <Unavailable>Publique o primeiro produto para criar o cartão.</Unavailable>;
   }
   const card = buildFairCard(live.catalog, live.url);
   if (!card) {
     return (
       <Unavailable>
-        A loja está sem produtos publicados: o QR abriria um catálogo vazio. Publique um produto para criar o cartão.
+        Sem produtos publicados. Publique um produto para criar o cartão.
       </Unavailable>
     );
   }
@@ -58,9 +58,7 @@ export default async function FairCardPage() {
         </Link>
         <h1 className="mt-3 text-2xl font-semibold tracking-tight text-snow">Cartão para feira</h1>
         <p className="mt-1 max-w-3xl text-sm text-mist">
-          Modo Feira · extra. Cartão em português e chinês para entregar ou expor no estande. Usa só o que já está publicado:
-          o perfil aprovado da loja, o produto em destaque e o mesmo QR e endereço de Minha loja. O QR abre o catálogo da
-          loja, com todos os produtos publicados; o endereço não muda ao reordenar, editar ou republicar.
+          Cartão em português e chinês, só com dados publicados. O QR abre o catálogo da loja.
         </p>
       </div>
 

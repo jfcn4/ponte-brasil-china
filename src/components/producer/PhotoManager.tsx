@@ -60,8 +60,7 @@ export function PhotoManager({
         </p>
       </div>
       <p className="mb-3 text-sm text-mist">
-        Enquadre a garrafa e deixe o rótulo legível. A primeira é a foto principal da vitrine. Removemos a localização
-        gravada nas fotos.
+        Deixe o rótulo legível. A primeira é a foto principal.
       </p>
 
       <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3" aria-labelledby={`${inputId}-label`}>

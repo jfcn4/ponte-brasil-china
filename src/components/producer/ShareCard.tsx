@@ -7,7 +7,7 @@ const KINDS = {
   product: {
     id: "compartilhar",
     title: "Link e QR do produto",
-    description: "Este QR abre diretamente a vitrine deste produto. O endereço não muda quando você edita ou republica.",
+    description: "Abre direto a vitrine deste produto. O endereço não muda.",
     qrLabel: "QR code da vitrine",
     open: "Abrir vitrine",
   },
@@ -15,7 +15,7 @@ const KINDS = {
     id: "compartilhar-loja",
     title: "Link e QR da loja",
     description:
-      "Este QR abre o catálogo da loja em chinês, com todos os produtos publicados e o primeiro em destaque. O endereço não muda ao reordenar, editar ou republicar.",
+      "Abre o catálogo da loja em chinês. O endereço não muda.",
     qrLabel: "QR code do catálogo da loja",
     open: "Abrir catálogo",
   },
@@ -64,8 +64,7 @@ export function ShareCard({
             className="overflow-hidden rounded-xl bg-white p-1 [&_svg]:h-auto [&_svg]:w-full"
             dangerouslySetInnerHTML={{ __html: qrSvg }}
           />
-          <figcaption className="mt-2 text-xs text-mist">Aponte a câmera do celular para abrir.</figcaption>
-        </figure>
+                  </figure>
         <div className="min-w-0 flex-1 space-y-3">
           <label className="block text-sm font-medium text-snow" htmlFor={`${text.id}-link`}>
             Link público

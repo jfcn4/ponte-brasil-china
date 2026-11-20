@@ -22,10 +22,7 @@ export default function ExploreDirectoryPage() {
           {EXPLORE_TITLE}
         </h1>
         <p className="mt-4 max-w-2xl text-lg leading-relaxed text-ink">
-          浏览来自巴西不同地区的示例店铺，了解卡沙萨、咖啡与蜂蜜生产者如何展示自己的产品。
-        </p>
-        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-ink-soft">
-          以下品牌均为虚构，仅用于演示，无法发起询价。
+          浏览巴西示例店铺。品牌均为虚构，仅用于演示，无法询价。
         </p>
       </header>
 

@@ -68,10 +68,7 @@ export function ConversationList({
     return (
       <div className="rounded-xl border border-dashed border-line bg-panel/50 p-8 text-center">
         <p className="font-medium text-snow">Nenhuma conversa ainda</p>
-        <p className="mx-auto mt-2 max-w-md text-sm text-mist">
-          As consultas chegam aqui quando um comprador usa “询价 · Solicitar cotação” na vitrine publicada. Compartilhe o link
-          ou o QR do produto em <Link href="/meu-espaco/produtos" className="text-coral underline underline-offset-4">Produtos</Link>.
-        </p>
+        <p className="mx-auto mt-2 max-w-md text-sm text-mist">As consultas dos compradores chegam aqui.</p>
       </div>
     );
   }

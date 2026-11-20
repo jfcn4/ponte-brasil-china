@@ -254,7 +254,7 @@ export function ProductEditor({ initial }: { initial: EditorInitial }) {
             message:
               error instanceof ImagePrepError
                 ? error.message
-                : "O envio falhou. Verifique a conexão e tente novamente; o restante do cadastro está preservado.",
+                : "O envio falhou. Verifique a conexão e tente novamente.",
           });
         }
       });
@@ -325,7 +325,7 @@ export function ProductEditor({ initial }: { initial: EditorInitial }) {
     const ok = pendingSave ? await flush() : inflight.current ? await inflight.current : true;
     if (!ok || !productIdRef.current) {
       setLeaving(false);
-      setGenerateNotice("Não foi possível salvar o rascunho agora. Tente novamente; nada foi perdido nesta página.");
+      setGenerateNotice("Não foi possível salvar o rascunho. Tente novamente.");
       return;
     }
     router.push(`/meu-espaco/produtos/${productIdRef.current}/apresentacao?gerar=1`);
@@ -334,7 +334,7 @@ export function ProductEditor({ initial }: { initial: EditorInitial }) {
   const showcase = (
     <ProductShowcase
       view={preview}
-      inquiry={{ enabled: false, reason: "Prévia: o botão de cotação funciona depois da publicação." }}
+      inquiry={{ enabled: false, reason: "Prévia: a cotação funciona após publicar." }}
     />
   );
 
@@ -364,9 +364,7 @@ export function ProductEditor({ initial }: { initial: EditorInitial }) {
               </p>
             )}
             {initial.status !== "draft" && (
-              <p className="mt-1 text-sm text-mist">
-                Edições ficam privadas: a vitrine publicada só muda quando você republicar.
-              </p>
+              <p className="mt-1 text-sm text-mist">A vitrine só muda quando você republicar.</p>
             )}
           </div>
           <div className="hidden flex-col items-end gap-1 lg:flex">
@@ -379,8 +377,7 @@ export function ProductEditor({ initial }: { initial: EditorInitial }) {
           <div role="alert" className="mt-4 rounded-xl border border-coral/60 bg-coral/10 p-4 text-sm">
             <p className="font-medium text-snow">Este rascunho foi alterado em outra aba ou janela.</p>
             <p className="mt-1 text-mist">
-              Para não sobrescrever a outra versão, o salvamento automático foi pausado. Recarregue para continuar a partir
-              da versão mais recente.
+              Salvamento pausado. Recarregue para continuar da versão mais recente.
             </p>
             <button
               type="button"
@@ -404,7 +401,7 @@ export function ProductEditor({ initial }: { initial: EditorInitial }) {
             id="identidade"
             number={1}
             title="Identidade"
-            description="Como sua cachaça se apresenta. Nome, descrição e uma foto bastam para gerar a apresentação em chinês."
+            description="Nome, descrição e uma foto bastam para gerar a versão em chinês."
             visibility="Aparece na vitrine"
           >
             <div className="grid gap-5 sm:grid-cols-2">
@@ -432,7 +429,7 @@ export function ProductEditor({ initial }: { initial: EditorInitial }) {
               onChange={(v) => update("short_description", v)}
               maxLength={LIMITS.shortDescription}
               rows={3}
-              placeholder="Em uma ou duas frases, o que o comprador precisa saber sobre esta cachaça."
+              placeholder="Em uma ou duas frases"
               error={errors.short_description}
             />
             <PhotoManager
@@ -494,7 +491,7 @@ export function ProductEditor({ initial }: { initial: EditorInitial }) {
             id="caracteristicas"
             number={2}
             title="Características"
-            description="Dados técnicos exibidos pela própria aplicação, com as unidades que você informar."
+            description="Dados técnicos, com as unidades que você informar."
             visibility="Aparece na vitrine"
           >
             <SelectField
@@ -570,12 +567,12 @@ export function ProductEditor({ initial }: { initial: EditorInitial }) {
             id="origem"
             number={3}
             title="Origem e história"
-            description="Quem produz e de onde vem. Estes dados de origem valem para toda a sua loja."
+            description="Quem produz e de onde vem. Valem para toda a loja."
             visibility="Aparece na vitrine e na loja"
           >
             <TextField
               label="Nome do produtor ou engenho"
-              hint="Necessário para publicar. Aparece publicamente como responsável pela loja."
+              hint="Necessário para publicar."
               value={form.producer_name}
               onChange={(v) => update("producer_name", v)}
               maxLength={maxLengthOf("producer_name")}
@@ -618,7 +615,7 @@ export function ProductEditor({ initial }: { initial: EditorInitial }) {
               onChange={(v) => update("story", v)}
               maxLength={LIMITS.story}
               rows={5}
-              placeholder="Como o engenho começou, quem produz, o que mudou ao longo do tempo."
+              placeholder="Como o engenho começou e quem produz"
               error={errors.story}
             />
             <TextArea
@@ -630,16 +627,13 @@ export function ProductEditor({ initial }: { initial: EditorInitial }) {
               rows={3}
               error={errors.differentiator}
             />
-            <p className="text-sm text-mist">
-              Nenhum contato pessoal é pedido aqui. As consultas chegam pela própria plataforma.
-            </p>
           </Section>
 
           <Section
             id="comercial"
             number={4}
             title="Informações comerciais"
-            description="Valores de referência. A negociação com o comprador define o preço final."
+            description="Valores de referência. O preço final é negociado."
             visibility="Preço, pedido mínimo e disponibilidade aparecem na vitrine"
           >
             <div className="grid gap-5 sm:grid-cols-2">
@@ -689,7 +683,7 @@ export function ProductEditor({ initial }: { initial: EditorInitial }) {
               onChange={(v) => update("notes", v)}
               maxLength={LIMITS.notes}
               rows={3}
-              hint="Anotações para você. Não aparecem na vitrine."
+              hint="Só para você. Não aparece na vitrine."
               error={errors.notes}
             />
           </Section>
@@ -746,9 +740,6 @@ export function ProductEditor({ initial }: { initial: EditorInitial }) {
       <aside className="hidden lg:block" aria-label="Prévia da vitrine">
         <div className="sticky top-6">
           <p className="mb-2 text-sm font-medium text-snow">Prévia da vitrine</p>
-          <p className="mb-3 text-xs text-mist">
-            Rascunho em português. A versão chinesa é criada a partir destes dados, e você revisa antes de publicar.
-          </p>
           <div className="max-h-[calc(100dvh-7rem)] overflow-y-auto rounded-3xl">{showcase}</div>
         </div>
       </aside>
@@ -789,7 +780,6 @@ export function ProductEditor({ initial }: { initial: EditorInitial }) {
           </button>
         </div>
         <div className="p-4">
-          <p className="mb-3 text-xs text-mist">Rascunho em português. A versão chinesa aparece na revisão.</p>
           {showcase}
         </div>
       </dialog>
