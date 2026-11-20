@@ -469,6 +469,44 @@ export function PresentationLab({ initial, autoGenerate }: { initial: LabState; 
 
 // ---------------------------------------------------------------------------
 
+// Marcos [ms desde o início, % exibido]: arranca rápido, desacelera e avança em saltos.
+const PROGRESS_STEPS: ReadonlyArray<readonly [number, number]> = [
+  [100, 12],
+  [600, 28],
+  [1200, 41],
+  [2500, 49],
+  [4000, 62],
+  [6500, 68],
+  [9000, 77],
+  [12500, 83],
+  [16000, 88],
+  [21000, 91],
+  [27000, 94],
+];
+
+function SimulatedProgress() {
+  const [pct, setPct] = useState(0);
+
+  useEffect(() => {
+    const timers = PROGRESS_STEPS.map(([at, value]) => setTimeout(() => setPct(value), at));
+    // Depois do último marco, avança em fração mínima sem nunca chegar a 100%.
+    const creep = setInterval(() => setPct((p) => (p >= 94 ? Math.min(p + 0.4, 98) : p)), 3000);
+    return () => {
+      timers.forEach(clearTimeout);
+      clearInterval(creep);
+    };
+  }, []);
+
+  return (
+    <div aria-hidden="true" className="mt-3 h-1 overflow-hidden rounded-full bg-line">
+      <div
+        className="h-full rounded-full bg-coral transition-[width] duration-700 ease-out motion-reduce:transition-none"
+        style={{ width: `${pct}%` }}
+      />
+    </div>
+  );
+}
+
 function GenerationPanel({
   lab,
   phase,
@@ -495,7 +533,7 @@ function GenerationPanel({
               <span aria-hidden="true" className="h-3 w-3 animate-pulse rounded-full bg-coral" />
               Gerando três nomes e a vitrine em chinês…
             </p>
-            <p className="mt-1 text-sm text-mist">Leva de 10 a 30 segundos.</p>
+            <SimulatedProgress />
           </div>
         )}
       </div>
