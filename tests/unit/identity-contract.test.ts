@@ -145,6 +145,18 @@ describe("validação da saída (T03)", () => {
     expect(schema.properties).toHaveProperty("store_intro");
   });
 
+  it("exige summary e commercial_fit no esquema do provedor, mas aceita saídas antigas sem eles", () => {
+    const schema = JSON.stringify(identityResponseSchema());
+    expect(schema).toContain('"summary"');
+    expect(schema).toContain('"commercial_fit"');
+    const legacy = structuredClone(validTestOutput(input));
+    for (const option of legacy.options) {
+      delete option.summary;
+      delete option.commercial_fit;
+    }
+    expect(validateIdentityOutput(legacy, input).ok).toBe(true);
+  });
+
   it("aceita números do cadastro com a mesma unidade", () => {
     const output = structuredClone(validTestOutput(input));
     output.content.description.zh = "700 毫升，40% 酒精度，木桶陈酿 12 个月，始于 1987 年。";

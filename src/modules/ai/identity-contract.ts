@@ -14,9 +14,14 @@ import { PERSONALITY_LABELS, type CachacaAttributes, type ProductDraft, type Sto
  * destaque ligado a um campo de origem presente na entrada. Desde a v2,
  * também uma apresentação curta da loja (store_intro), que o produtor aprova
  * ao publicar. Saídas v1 (sem store_intro) continuam válidas.
+ *
+ * v3: cada nome ganha `summary` (frase curta do cartão) e `commercial_fit`
+ * (adequação ao mercado chinês), ambos opcionais na leitura para que saídas
+ * antigas continuem válidas. Vantagens e limitações vêm de gains, losses e
+ * ambiguities.
  */
-export const IDENTITY_PROMPT_VERSION = "identity-v4";
-export const IDENTITY_SCHEMA_VERSION = "identity-output-v2";
+export const IDENTITY_PROMPT_VERSION = "identity-v5";
+export const IDENTITY_SCHEMA_VERSION = "identity-output-v3";
 
 export const STRATEGIES = ["fonetica", "semantica", "equilibrada"] as const;
 export type Strategy = (typeof STRATEGIES)[number];
@@ -112,6 +117,8 @@ export const NameOption = z
       .trim()
       .regex(/^[㐀-䶿一-鿿]{1,8}$/, "Use de 1 a 8 hanzi, sem outros caracteres"),
     pinyin: z.string().trim().min(1).max(80).regex(TONE_OR_LETTER, "Pinyin ausente"),
+    /** Frase curta do cartão de comparação (ausente nas saídas anteriores à v3). */
+    summary: ptText(70).optional(),
     meaning: ptText(300),
     relation_to_original: ptText(300),
     personality_link: ptText(300),
@@ -122,6 +129,8 @@ export const NameOption = z
     gains: z.array(ptText(200)).min(1).max(4),
     losses: z.array(ptText(200)).max(4),
     ambiguities: z.array(ptText(200)).max(4),
+    /** Como o nome tende a funcionar no mercado chinês, sem promessas (ausente antes da v3). */
+    commercial_fit: ptText(300).optional(),
   })
   .strict();
 export type NameOption = z.infer<typeof NameOption>;
@@ -298,5 +307,8 @@ export function jsonSchemaFor(schema: z.ZodType): JsonSchema {
  * obrigatório (pode ser null); a leitura local também aceita saídas v1.
  */
 export function identityResponseSchema(): JsonSchema {
-  return jsonSchemaFor(IdentityOutput.extend({ store_intro: StoreIntroText.nullable() }));
+  const Option = NameOption.extend({ summary: ptText(70), commercial_fit: ptText(300) });
+  return jsonSchemaFor(
+    IdentityOutput.extend({ options: z.array(Option).length(3), store_intro: StoreIntroText.nullable() }),
+  );
 }

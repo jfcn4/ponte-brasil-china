@@ -80,7 +80,7 @@ async function generateChooseAndPublish(p: Page, strategy: RegExp, label: string
   const options = p.getByRole("group", { name: "Escolha o nome" });
   await expect(options.getByRole("radio")).toHaveCount(4, { timeout: AI_TIMEOUT });
   test.info().annotations.push({ type: "tempo", description: `identidade ${label}: ${Date.now() - started} ms` });
-  await expect(p.getByText(/^Recomendação:/)).toBeVisible();
+  await expect(options.getByText("Recomendada").first()).toBeVisible();
   await expect(p.getByText("Resposta de teste")).toHaveCount(0);
   const choice = options.getByRole("radio", { name: strategy });
   await choice.check();

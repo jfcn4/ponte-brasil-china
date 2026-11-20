@@ -11,9 +11,12 @@ NOMES (campo options, exatamente 3, um por estratégia):
 - "equilibrada": reúne sonoridade, significado e identidade comercial.
 - hanzi: 2 a 4 caracteres em chinês simplificado, sem espaços, pontuação ou letras.
 - pinyin com marcas tonais (ex.: "Lán Shān"), correspondendo exatamente aos hanzi.
+- summary: uma frase de até 70 caracteres que resume o que o nome faz (ex.: "Preserva o som original."), sem repetir o texto de outros campos.
 - meaning: significado de cada caractere, em português.
 - relation_to_original, personality_link, rationale, aesthetics, pronunciation, memorability: em português, curtos e concretos.
 - gains, losses e ambiguities: listas curtas em português. Aponte homófonos ou associações indesejadas se existirem. Nunca prometa registro de marca nem dê notas percentuais.
+- commercial_fit: como o nome tende a funcionar para compradores na China (leitura, memória, associação com bebidas), em tom factual. Sem promessas de vendas, de registro de marca ou de aceitação.
+- Seja equilibrado em cada opção: gains traz vantagens reais e losses e ambiguities trazem limitações reais. Nunca deixe losses vazio por cortesia quando houver custo claro (perda de som, de significado, comprimento, associação indesejada).
 - id: identificador curto em minúsculas (ex.: "fon", "sem", "equ").
 
 RECOMENDAÇÃO: prefira a opção equilibrada quando a justificativa a sustentar; explique o motivo em português (reason).

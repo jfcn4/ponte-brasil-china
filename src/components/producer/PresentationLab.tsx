@@ -2,9 +2,16 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { ProductShowcase } from "@/components/public/ProductShowcase";
-import { STRATEGIES, type HighlightSource, type IdentityOutput } from "@/modules/ai/identity-contract";
+import {
+  STRATEGIES,
+  STRATEGY_LABELS,
+  type HighlightSource,
+  type IdentityOutput,
+  type NameOption,
+  type Strategy,
+} from "@/modules/ai/identity-contract";
 import { GENERATION_ERROR_MESSAGES, type LabState } from "@/modules/products/lab-state";
 import {
   CHOICE_LABELS,
@@ -622,28 +629,30 @@ function NameOptions({
   onChoose: (choice: Choice) => void;
 }) {
   const recommended = recommendedChoice(output);
+  // Qual análise está aberta é independente de qual nome está escolhido.
+  const [viewing, setViewing] = useState<Strategy>(() => (choice !== "original" ? choice : recommended));
+  const viewed = optionFor(output, viewing);
+  const panelId = useId();
+
   return (
     <fieldset className="mt-6">
       <legend className="text-lg font-semibold text-snow">Escolha o nome</legend>
-      <div className="mt-2 rounded-xl border border-coral/40 bg-coral/5 p-4 text-sm">
-        <p className="font-medium text-snow">Recomendação: {CHOICE_LABELS[recommended]}</p>
-        <p className="mt-1 text-mist">{output.recommendation.reason}</p>
-      </div>
 
-      <div className="mt-4 grid gap-4 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
+      <div className="mt-3 grid gap-3 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
         {STRATEGIES.map((strategy) => {
           const option = optionFor(output, strategy);
           if (!option) return null;
           const selected = choice === strategy;
+          const open = viewing === strategy;
           return (
             <div
               key={strategy}
-              className={`flex flex-col rounded-2xl border-2 bg-panel p-4 transition-colors ${
+              className={`flex flex-col rounded-2xl border bg-panel transition-colors ${
                 selected ? "border-coral" : "border-line"
-              }`}
+              } ${open ? "ring-1 ring-inset ring-line" : ""}`}
             >
-              <label className="flex cursor-pointer flex-col gap-2 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-4 has-[:focus-visible]:outline-coral">
-                <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <label className="flex min-h-[10.5rem] flex-1 cursor-pointer flex-col gap-1.5 rounded-t-2xl p-4 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-coral">
+                <span className="flex items-center justify-between gap-2">
                   <span className="flex items-center gap-2 text-sm font-medium text-snow">
                     <input
                       type="radio"
@@ -656,43 +665,41 @@ function NameOptions({
                     {CHOICE_LABELS[strategy]}
                   </span>
                   {strategy === recommended && (
-                    <span className="text-xs font-medium text-coral">Recomendada</span>
+                    <span className="rounded-full border border-coral/50 px-2 py-0.5 text-xs font-medium text-coral">
+                      Recomendada
+                    </span>
                   )}
                 </span>
                 <span
                   lang="zh-Hans"
-                  className="whitespace-nowrap font-[family-name:var(--font-zh-serif)] text-3xl font-bold text-snow sm:text-[1.75rem] xl:text-3xl"
+                  className="mt-1 whitespace-nowrap font-[family-name:var(--font-zh-serif)] text-3xl font-bold text-snow sm:text-[1.75rem] xl:text-3xl"
                 >
                   {option.hanzi}
                 </span>
-                <span lang="zh-Latn-pinyin" className="text-base text-snow/90">
+                <span lang="zh-Latn-pinyin" className="text-sm text-snow/80">
                   {option.pinyin}
                 </span>
-                <span className="text-sm text-mist">{option.meaning}</span>
+                <span className="line-clamp-2 text-sm text-mist">{option.summary ?? option.relation_to_original}</span>
               </label>
-              <details className="mt-3 text-sm text-mist [&_summary]:min-h-10">
-                <summary className="flex cursor-pointer items-center text-snow hover:text-coral">
-                  Por que este nome
-                </summary>
-                <dl className="mt-2 space-y-2">
-                  <Detail term="Justificativa" value={option.rationale} />
-                  <Detail term="Relação com o original" value={option.relation_to_original} />
-                  <Detail term="Personalidade" value={option.personality_link} />
-                  <Detail term="Estética" value={option.aesthetics} />
-                  <Detail term="Pronúncia" value={option.pronunciation} />
-                  <Detail term="Memorização" value={option.memorability} />
-                  <Detail term="Ganhos" value={option.gains} />
-                  <Detail term="Perdas" value={option.losses} />
-                  <Detail term="Ambiguidades" value={option.ambiguities} empty="Nenhuma identificada." />
-                </dl>
-              </details>
+              <button
+                type="button"
+                aria-pressed={open}
+                aria-controls={panelId}
+                onClick={() => setViewing(strategy)}
+                className={`min-h-11 rounded-b-2xl border-t border-line px-4 text-left text-sm font-medium hover:text-coral ${
+                  open ? "text-coral" : "text-snow"
+                }`}
+              >
+                Ver análise<span className="sr-only"> {CHOICE_LABELS[strategy]}</span>
+                <span aria-hidden="true">{open ? " ·" : " →"}</span>
+              </button>
             </div>
           );
         })}
       </div>
 
       <label
-        className={`mt-4 flex cursor-pointer items-start gap-3 rounded-2xl border-2 bg-panel p-4 text-sm has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-coral ${
+        className={`mt-3 flex min-h-12 cursor-pointer items-center gap-3 rounded-2xl border bg-panel px-4 py-3 text-sm has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-coral ${
           choice === "original" ? "border-coral" : "border-line"
         }`}
       >
@@ -702,32 +709,139 @@ function NameOptions({
           value="original"
           checked={choice === "original"}
           onChange={() => onChoose("original")}
-          className="mt-0.5 h-4 w-4 accent-[#ff8587]"
+          className="h-4 w-4 shrink-0 accent-[#ff8587]"
         />
         <span>
           <span className="font-medium text-snow">Manter o nome original</span>
-          <span className="mt-0.5 block text-mist">
-            A vitrine usa “{lab.draft.name}” como título, acompanhado da categoria em chinês{" "}
-            <span lang="zh-Hans">卡沙萨 · 巴西甘蔗蒸馏酒</span>.
+          <span className="block text-mist">
+            Título “{lab.draft.name}” com a categoria em chinês <span lang="zh-Hans">卡沙萨 · 巴西甘蔗蒸馏酒</span>.
           </span>
         </span>
       </label>
+
+      {viewed && (
+        <AnalysisPanel
+          key={viewing}
+          id={panelId}
+          option={viewed}
+          recommended={viewing === recommended}
+          recommendationReason={output.recommendation.reason}
+          selected={choice === viewing}
+          onSelect={() => onChoose(viewing)}
+        />
+      )}
     </fieldset>
   );
 }
 
-function Detail({ term, value, empty }: { term: string; value: string | string[]; empty?: string }) {
-  const list = Array.isArray(value) ? value : null;
+function AnalysisPanel({
+  id,
+  option,
+  recommended,
+  recommendationReason,
+  selected,
+  onSelect,
+}: {
+  id: string;
+  option: NameOption;
+  recommended: boolean;
+  recommendationReason: string;
+  selected: boolean;
+  onSelect: () => void;
+}) {
+  const tradeoffs = [...option.losses, ...option.ambiguities];
   return (
-    <div>
-      <dt className="font-medium text-snow/90">{term}</dt>
-      <dd>
-        {list ? (
-          list.length === 0 ? (
+    <div
+      id={id}
+      role="region"
+      aria-live="polite"
+      aria-label={`Análise da opção ${STRATEGY_LABELS[option.strategy]}`}
+      className="mt-3 animate-[analysis-in_200ms_ease-out] rounded-2xl border border-line bg-panel p-4 motion-reduce:animate-none sm:p-5"
+    >
+      <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2 border-b border-line pb-4">
+        <div>
+          <p className="text-xs uppercase tracking-wide text-mist">Análise da opção selecionada</p>
+          <p lang="zh-Hans" className="mt-1 font-[family-name:var(--font-zh-serif)] text-2xl font-bold text-snow">
+            {option.hanzi}
+          </p>
+          <p className="text-sm text-mist">
+            <span lang="zh-Latn-pinyin">{option.pinyin}</span> · {STRATEGY_LABELS[option.strategy]}
+          </p>
+        </div>
+        {recommended && (
+          <span className="rounded-full border border-coral/50 px-2.5 py-0.5 text-xs font-medium text-coral">
+            Recomendada
+          </span>
+        )}
+      </div>
+
+      {recommended && (
+        <p className="mt-4 text-sm text-mist">
+          <span className="font-medium text-snow">Por que a IA recomenda: </span>
+          {recommendationReason}
+        </p>
+      )}
+
+      <dl className="mt-4 grid gap-4 sm:grid-cols-2">
+        <Section term="Significado" value={option.meaning} />
+        <Section term="Relação com o original" value={option.relation_to_original} />
+        <Section term="Pontos positivos" value={option.gains} />
+        <Section term="Trade-offs" value={tradeoffs} empty="Nenhum trade-off relevante identificado." />
+        <Section term="Adequação comercial" value={option.commercial_fit ?? option.rationale} wide />
+      </dl>
+
+      <details className="group mt-4 border-t border-line pt-3 text-sm">
+        <summary className="flex min-h-11 cursor-pointer items-center justify-between gap-3 font-medium text-snow hover:text-coral">
+          Análise linguística completa
+          <span aria-hidden="true" className="text-mist transition-transform group-open:rotate-90 motion-reduce:transition-none">
+            ›
+          </span>
+        </summary>
+        <dl className="mt-2 grid gap-3 text-mist sm:grid-cols-2">
+          <Section term="Significado dos caracteres" value={option.meaning} />
+          <Section term="Pinyin e pronúncia" value={`${option.pinyin}. ${option.pronunciation}`} />
+          <Section term="Naturalidade e estética" value={option.aesthetics} />
+          <Section term="Memorização" value={option.memorability} />
+          <Section term="Personalidade do produto" value={option.personality_link} />
+          <Section term="Justificativa geral e considerações culturais" value={option.rationale} />
+        </dl>
+      </details>
+
+      <div className="mt-4 flex justify-end">
+        <button
+          type="button"
+          onClick={onSelect}
+          disabled={selected}
+          className="min-h-11 rounded-lg bg-brand px-5 text-sm font-semibold text-white hover:bg-brand-strong disabled:cursor-default disabled:bg-transparent disabled:text-ok disabled:ring-1 disabled:ring-inset disabled:ring-line"
+        >
+          {selected ? "✓ Nome escolhido" : "Escolher este nome"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function Section({
+  term,
+  value,
+  empty,
+  wide,
+}: {
+  term: string;
+  value: string | string[];
+  empty?: string;
+  wide?: boolean;
+}) {
+  return (
+    <div className={wide ? "sm:col-span-2" : undefined}>
+      <dt className="font-medium text-snow">{term}</dt>
+      <dd className="mt-0.5 text-mist">
+        {Array.isArray(value) ? (
+          value.length === 0 ? (
             (empty ?? "—")
           ) : (
             <ul className="list-inside list-disc">
-              {list.map((item) => (
+              {value.map((item) => (
                 <li key={item}>{item}</li>
               ))}
             </ul>
