@@ -231,7 +231,7 @@ export function Section({
     <section id={id} aria-labelledby={`${id}-title`} className="min-w-0 rounded-2xl border border-line bg-panel p-5 sm:p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-coral">Seção {number} de 4</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-coral">Seção {number} de 3</p>
           <h2 id={`${id}-title`} className="mt-1 text-xl font-semibold text-snow">
             {title}
           </h2>
