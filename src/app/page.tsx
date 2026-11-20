@@ -100,12 +100,6 @@ export default function HomePage() {
         </section>
       </main>
 
-      <footer className="border-t border-line/70">
-        <div className={`flex flex-wrap items-center justify-between gap-2 py-6 text-xs text-mist ${FRAME}`}>
-          <span>BAQIAO 巴桥</span>
-          <span>Câmbio demonstrativo: BRL 1 = CNY 1,15</span>
-        </div>
-      </footer>
     </div>
   );
 }

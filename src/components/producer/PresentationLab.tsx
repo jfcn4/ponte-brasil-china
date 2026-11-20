@@ -18,7 +18,6 @@ import { formatBrl, formatCny } from "@/modules/products/pricing";
 import { PRODUCT_STATUS_LABELS } from "@/modules/products/schema";
 import { buildDraftPreview } from "@/modules/products/showcase";
 import { ShareCard } from "./ShareCard";
-import { StatusLabel } from "./StatusLabel";
 
 const SOURCE_LABELS: Record<HighlightSource, string> = {
   short_description: "Descrição curta",
@@ -38,12 +37,6 @@ const SOURCE_LABELS: Record<HighlightSource, string> = {
   "producer.region": "Região",
 };
 
-const dateTime = new Intl.DateTimeFormat("pt-BR", {
-  day: "2-digit",
-  month: "2-digit",
-  hour: "2-digit",
-  minute: "2-digit",
-});
 
 type Phase = "idle" | "generating" | "publishing";
 
@@ -259,28 +252,17 @@ export function PresentationLab({ initial, autoGenerate }: { initial: LabState; 
         </nav>
         <div className="mt-2">
           <h1 className="text-2xl font-semibold tracking-tight text-snow">Apresentação em chinês</h1>
-          <StatusLabel status={lab.product.status} className="mt-0.5" />
         </div>
-        <p className="mt-1 text-sm text-mist">
-          {lab.product.name ?? "Produto sem nome"} · compare os nomes, confira a prévia e publique quando estiver pronto.
-        </p>
 
         {lab.published && (
           <div className="mt-4 rounded-xl border border-line bg-panel p-4 text-sm">
-            <p className="text-snow">
-              No ar: versão {lab.published.version} ·{" "}
-              <span lang={lab.published.choice === "original" ? "pt-BR" : "zh-Hans"} className="font-semibold">
-                {lab.published.title}
-              </span>{" "}
-              <span className="text-mist">desde {dateTime.format(new Date(lab.published.publishedAt))}</span>
-            </p>
             {lab.published.pending && (
               <p className="mt-1 text-warn">
                 {PRODUCT_STATUS_LABELS.pending}: o cadastro mudou depois da publicação. A vitrine continua mostrando a
                 versão {lab.published.version} até você republicar.
               </p>
             )}
-            <a href={lab.published.url} target="_blank" rel="noreferrer" className="mt-2 inline-block text-coral underline underline-offset-2">
+            <a href={lab.published.url} target="_blank" rel="noreferrer" className="inline-block text-coral underline underline-offset-2">
               Ver a vitrine publicada <span className="sr-only">(abre em nova aba)</span>
             </a>
           </div>
@@ -289,8 +271,8 @@ export function PresentationLab({ initial, autoGenerate }: { initial: LabState; 
         {notice && (
           <div
             role={notice.tone === "error" ? "alert" : "status"}
-            className={`mt-4 rounded-xl border p-4 text-sm ${
-              notice.tone === "error" ? "border-coral/60 bg-coral/10 text-snow" : "border-ok/50 bg-ok/10 text-snow"
+            className={`${notice.tone === "error" ? "mt-4 rounded-xl border p-4 text-sm" : ""} ${
+              notice.tone === "error" ? "border-coral/60 bg-coral/10 text-snow" : "sr-only"
             }`}
           >
             {notice.text}
@@ -569,10 +551,7 @@ function GenerationPanel({
       )}
 
       {!busy && lab.usable && (
-        <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-mist">
-          <p>
-            Opções geradas em {dateTime.format(new Date(lab.usable.createdAt))}.
-          </p>
+        <div className="flex flex-wrap items-center justify-end gap-3 text-sm text-mist">
           <button
             type="button"
             onClick={onGenerate}
