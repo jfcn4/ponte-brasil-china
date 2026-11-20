@@ -4,7 +4,7 @@ import { Logo } from "@/components/brand/Logo";
 
 const STEPS = [
   {
-    title: "Conte sobre sua cachaça",
+    title: "Conte sobre seu produto",
     text: "Uma página em português, com fotos reais e dados comerciais.",
   },
   {

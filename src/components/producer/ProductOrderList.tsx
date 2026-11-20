@@ -602,24 +602,15 @@ export function ProductOrderList({
                         Apresentação
                       </Link>
                       {product.publicSlug && (
-                        <>
-                          <a
-                            href={productPath(product.publicSlug)}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex min-h-11 items-center justify-center rounded-lg border border-line px-4 text-sm font-medium text-snow hover:border-coral"
-                            aria-label={`Visualizar a vitrine de ${label(product)} (nova aba)`}
-                          >
-                            Visualizar
-                          </a>
-                          <Link
-                            href={`/meu-espaco/produtos/${product.id}/apresentacao#compartilhar`}
-                            className="inline-flex min-h-11 items-center justify-center rounded-lg border border-line px-4 text-sm font-medium text-snow hover:border-coral"
-                            aria-label={`Link e QR de ${label(product)}`}
-                          >
-                            Link e QR
-                          </Link>
-                        </>
+                        <a
+                          href={productPath(product.publicSlug)}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex min-h-11 items-center justify-center rounded-lg border border-line px-4 text-sm font-medium text-snow hover:border-coral"
+                          aria-label={`Visualizar a vitrine de ${label(product)} (nova aba)`}
+                        >
+                          Visualizar
+                        </a>
                       )}
                       <ProductActionsMenu
                         productLabel={label(product)}
