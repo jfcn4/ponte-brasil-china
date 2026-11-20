@@ -355,24 +355,23 @@ export function ProductEditor({ initial }: { initial: EditorInitial }) {
             <h1 className="mt-1 text-2xl font-semibold tracking-tight text-snow">
               {productId ? "Editar cachaça" : "Nova cachaça"}
             </h1>
-            <StatusLabel status={status} className="mt-0.5" />
-            <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-mist">
-              Categoria: cachaça artesanal
-              {initial.publicPath && (
+            {initial.status !== "draft" && <StatusLabel status={status} className="mt-0.5" />}
+            {initial.publicPath && (
+              <p className="mt-1 text-sm">
                 <a href={initial.publicPath} target="_blank" rel="noreferrer" className="text-coral underline underline-offset-2">
                   Ver vitrine no ar <span className="sr-only">(nova aba)</span>
                 </a>
-              )}
-            </p>
+              </p>
+            )}
             {initial.status !== "draft" && (
               <p className="mt-1 text-sm text-mist">
                 Edições ficam privadas: a vitrine publicada só muda quando você republicar.
               </p>
             )}
           </div>
-          <div className="hidden items-center gap-3 lg:flex">
-            <SaveStatus state={save} onRetry={() => void flush()} />
+          <div className="hidden flex-col items-end gap-1 lg:flex">
             <SaveButton state={save} onSave={() => void flush()} />
+            <SaveStatus state={save} onRetry={() => void flush()} />
           </div>
         </div>
 
@@ -721,7 +720,7 @@ export function ProductEditor({ initial }: { initial: EditorInitial }) {
               type="button"
               onClick={() => void goToGeneration()}
               disabled={missing.length > 0 || leaving || save.kind === "conflict"}
-              aria-describedby="gerar-nota"
+              aria-describedby={missing.length === 0 ? "gerar-nota" : undefined}
               className="mt-4 inline-flex min-h-11 items-center rounded-lg bg-brand px-5 font-semibold text-white hover:bg-brand-strong disabled:cursor-not-allowed disabled:bg-brand/40 disabled:text-white/80"
             >
               {leaving
@@ -730,11 +729,11 @@ export function ProductEditor({ initial }: { initial: EditorInitial }) {
                   ? "Gerar apresentação chinesa"
                   : "Revisar apresentação e republicar"}
             </button>
-            <p id="gerar-nota" className="mt-2 text-sm text-mist">
-              {missing.length === 0
-                ? "Você compara três nomes chineses e confere a vitrine antes de publicar. Nada é publicado sem sua confirmação."
-                : "Complete os itens acima para gerar os nomes em chinês. O rascunho continua salvo enquanto isso."}
-            </p>
+            {missing.length === 0 && (
+              <p id="gerar-nota" className="mt-2 text-sm text-mist">
+                Nada é publicado sem sua confirmação.
+              </p>
+            )}
             {generateNotice && (
               <p role="alert" className="mt-2 text-sm text-coral">
                 {generateNotice}
@@ -802,7 +801,7 @@ function SaveStatus({ state, onRetry, compact }: { state: SaveState; onRetry: ()
   let content: React.ReactNode;
   switch (state.kind) {
     case "idle":
-      content = <span className="text-mist">Nada salvo ainda</span>;
+      content = null;
       break;
     case "dirty":
       content = <span className="text-mist">Alterações não salvas</span>;
@@ -811,7 +810,7 @@ function SaveStatus({ state, onRetry, compact }: { state: SaveState; onRetry: ()
       content = <span className="text-snow">Salvando…</span>;
       break;
     case "saved":
-      content = <span className="text-ok">Rascunho salvo às {timeFormat.format(state.at)}</span>;
+      content = <span className="text-mist">Rascunho salvo às {timeFormat.format(state.at)}</span>;
       break;
     case "invalid":
       content = <span className="text-warn">Corrija os campos destacados para salvar</span>;
@@ -831,7 +830,7 @@ function SaveStatus({ state, onRetry, compact }: { state: SaveState; onRetry: ()
       break;
   }
   return (
-    <p role="status" aria-live="polite" className={`min-w-0 text-sm ${compact ? "truncate" : ""}`}>
+    <p role="status" aria-live="polite" className={`min-w-0 text-xs ${compact ? "truncate" : ""}`}>
       {content}
     </p>
   );
