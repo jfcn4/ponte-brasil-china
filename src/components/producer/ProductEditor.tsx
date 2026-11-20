@@ -9,7 +9,6 @@ import { convertBrlCentsToCnyFen, formatCny } from "@/modules/products/pricing";
 import {
   AVAILABILITY_LABELS,
   AVAILABILITY_OPTIONS,
-  BR_STATES,
   CACHACA_TYPES,
   CACHACA_TYPE_LABELS,
   ImagesResponse,
@@ -453,9 +452,9 @@ export function ProductEditor({ initial }: { initial: EditorInitial }) {
             />
             <fieldset>
               <legend className="mb-1.5 text-sm font-medium text-snow">
-                Personalidade <span className="font-normal text-mist">(até duas · opcional)</span>
+                Estilo da apresentação <span className="font-normal text-mist">(opcional)</span>
               </legend>
-              <p className="mb-3 text-sm text-mist">Orienta o tom da apresentação em chinês.</p>
+              <p className="mb-3 text-sm text-mist">Escolha até 2 características do seu produto.</p>
               <div className="flex flex-wrap gap-2">
                 {PERSONALITY_TRAITS.map((trait) => {
                   const checked = form.personality.includes(trait);
@@ -564,74 +563,8 @@ export function ProductEditor({ initial }: { initial: EditorInitial }) {
           </Section>
 
           <Section
-            id="origem"
-            number={3}
-            title="Origem e história"
-            description="Quem produz e de onde vem. Valem para toda a loja."
-            visibility="Aparece na vitrine e na loja"
-          >
-            <TextField
-              label="Nome do produtor ou engenho"
-              hint="Necessário para publicar."
-              value={form.producer_name}
-              onChange={(v) => update("producer_name", v)}
-              maxLength={maxLengthOf("producer_name")}
-              autoComplete="organization"
-              error={errors.producer_name}
-            />
-            <div className="grid gap-5 sm:grid-cols-[1fr_8rem]">
-              <TextField
-                label="Cidade"
-                optional
-                value={form.city}
-                onChange={(v) => update("city", v)}
-                maxLength={maxLengthOf("city")}
-                autoComplete="address-level2"
-                error={errors.city}
-              />
-              <SelectField
-                label="Estado"
-                optional
-                value={form.state}
-                onChange={(v) => update("state", v)}
-                options={BR_STATES.map((uf) => ({ value: uf, label: uf }))}
-                placeholder="UF"
-                error={errors.state}
-              />
-            </div>
-            <TextField
-              label="Região"
-              optional
-              value={form.region}
-              onChange={(v) => update("region", v)}
-              maxLength={maxLengthOf("region")}
-              placeholder="Ex.: Norte de Minas, Serra Gaúcha"
-              error={errors.region}
-            />
-            <TextArea
-              label="História"
-              optional
-              value={form.story}
-              onChange={(v) => update("story", v)}
-              maxLength={LIMITS.story}
-              rows={5}
-              placeholder="Como o engenho começou e quem produz"
-              error={errors.story}
-            />
-            <TextArea
-              label="O que torna sua cachaça especial?"
-              optional
-              value={form.differentiator}
-              onChange={(v) => update("differentiator", v)}
-              maxLength={LIMITS.differentiator}
-              rows={3}
-              error={errors.differentiator}
-            />
-          </Section>
-
-          <Section
             id="comercial"
-            number={4}
+            number={3}
             title="Informações comerciais"
             description="Valores de referência. O preço final é negociado."
             visibility="Preço, pedido mínimo e disponibilidade aparecem na vitrine"
@@ -720,7 +653,7 @@ export function ProductEditor({ initial }: { initial: EditorInitial }) {
               {leaving
                 ? "Salvando e abrindo…"
                 : initial.status === "draft"
-                  ? "Gerar apresentação chinesa"
+                  ? "Gerar versão em chinês"
                   : "Revisar apresentação e republicar"}
             </button>
             {missing.length === 0 && (

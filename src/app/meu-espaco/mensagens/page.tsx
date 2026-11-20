@@ -26,7 +26,7 @@ export default async function MessagesPage() {
           <p className="mb-3 mt-0.5 text-xs text-mist">
             {conversations.length === 0
               ? "Consultas de compradores sobre seus produtos publicados."
-              : `${conversations.length} ${conversations.length === 1 ? "conversa" : "conversas"} · ${unread} com novidades`}
+              : `${conversations.length} ${conversations.length === 1 ? "conversa" : "conversas"} · ${unread} ${unread > 1 ? "não lidas" : "não lida"}`}
           </p>
         </div>
         <div className="mb-5 min-w-0 lg:col-start-2 lg:row-start-2 lg:mb-0">

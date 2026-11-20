@@ -75,7 +75,7 @@ async function fillDraft(p: Page, fields: Record<string, string>, photo?: string
 /** Gera, escolhe a estratégia e publica. Devolve o link público. */
 async function generateChooseAndPublish(p: Page, strategy: RegExp, label: string) {
   const started = Date.now();
-  await p.getByRole("button", { name: "Gerar apresentação chinesa" }).click();
+  await p.getByRole("button", { name: "Gerar versão em chinês" }).click();
   await expect(p).toHaveURL(/\/apresentacao/);
   const options = p.getByRole("group", { name: "Escolha o nome" });
   await expect(options.getByRole("radio")).toHaveCount(4, { timeout: AI_TIMEOUT });
@@ -99,6 +99,11 @@ async function generateChooseAndPublish(p: Page, strategy: RegExp, label: string
 
 test("1 · duas cachaças publicadas e um rascunho", async () => {
   test.setTimeout(6 * 60_000);
+  await page.goto("/meu-espaco/minha-loja");
+  await page.getByLabel(/Nome do produtor ou engenho/).fill(`Engenho Ensaio ${stamp}`);
+  await page.getByLabel(/^Cidade/).fill("Salinas");
+  await page.getByRole("button", { name: "Salvar origem" }).click();
+  await expect(page.getByText("Origem salva.")).toBeVisible();
   state.edit1 = await fillDraft(
     page,
     {
@@ -108,8 +113,6 @@ test("1 · duas cachaças publicadas e um rascunho", async () => {
       "Teor alcoólico": "40",
       Envelhecimento: "12",
       Madeira: "Amburana",
-      "Nome do produtor ou engenho": `Engenho Ensaio ${stamp}`,
-      Cidade: "Salinas",
       "Preço de referência": "79,00",
     },
     PHOTO_A,
@@ -125,7 +128,6 @@ test("1 · duas cachaças publicadas e um rascunho", async () => {
       "Descrição curta": "Cachaça prata de cana orgânica, destilada em alambique e descansada em inox, sabor limpo e herbal.",
       Volume: "750",
       "Teor alcoólico": "42",
-      "Nome do produtor ou engenho": `Engenho Ensaio ${stamp}`,
     },
     PHOTO_B,
   );
@@ -178,7 +180,7 @@ test("2 · QR da loja e do produto em outro navegador; reordenar muda o destaque
   await buyer.getByRole("link").filter({ hasText: NAME_1 }).first().click();
   await expect(buyer).toHaveURL(new RegExp(`${new URL(state.link1).pathname}$`));
   await expect(buyer.getByRole("link", { name: /返回店铺/ })).toBeVisible();
-  await buyer.getByRole("button", { name: /询价.*Solicitar cotação/ }).first().click();
+  await buyer.getByRole("button", { name: "询价", exact: true }).first().click();
   await expect(buyer.getByLabel(/^留言/)).toBeVisible();
   await shot(buyer, "ficha-1-consulta");
 
@@ -225,7 +227,7 @@ test("3 · preço ¥90.85 → ¥102.35 só após republicar, no mesmo link", asy
 test("4 · consulta em chinês, tradução, copiloto e resposta revisada", async () => {
   test.setTimeout(6 * 60_000);
   await buyer.goto(new URL(state.link1).pathname);
-  await buyer.getByRole("button", { name: /询价.*Solicitar cotação/ }).first().click();
+  await buyer.getByRole("button", { name: "询价", exact: true }).first().click();
   await buyer.getByLabel(/^留言/).fill(QUESTION);
   await buyer.getByLabel("公司（选填）").fill("上海酒业进口（演示）");
   await buyer.getByRole("button", { name: "发送询价" }).click();
@@ -318,7 +320,7 @@ test("5a · outra sessão não edita a loja A nem lê conversas alheias", async 
   // Outro comprador: o link privado só abre a própria conversa
   const otherBuyer = await other.newPage();
   await otherBuyer.goto(new URL(state.link2).pathname);
-  await otherBuyer.getByRole("button", { name: /询价.*Solicitar cotação/ }).first().click();
+  await otherBuyer.getByRole("button", { name: "询价", exact: true }).first().click();
   await otherBuyer.getByLabel(/^留言/).fill("Do you ship 120 bottles to Shenzhen?");
   await otherBuyer.getByRole("button", { name: "发送询价" }).click();
   await expect(otherBuyer).toHaveURL(/\/conversa#t=/);
@@ -340,7 +342,7 @@ test("5b · falha real da IA preserva rascunho e mensagem e permite tentar de no
   await page.locator('input[type="file"]').setInputFiles(PHOTO_A);
   await expect(page.getByText("1 de 3 fotos")).toBeVisible();
   await expect(page.getByRole("status").first()).toContainText("Rascunho salvo");
-  await page.getByRole("button", { name: "Gerar apresentação chinesa" }).click();
+  await page.getByRole("button", { name: "Gerar versão em chinês" }).click();
   await expect(page.getByText("A geração não deu certo.")).toBeVisible({ timeout: AI_TIMEOUT });
   await shot(page, "falha-geracao");
   await page.goto(`/meu-espaco/produtos/${productId}`);

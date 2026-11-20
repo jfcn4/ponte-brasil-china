@@ -1,6 +1,6 @@
 import path from "node:path";
 import { devices, expect, test, type Page } from "@playwright/test";
-import { cleanupStoreOf } from "./helpers";
+import { cleanupStoreOf, setStoreOrigin } from "./helpers";
 
 const PHOTO = path.join(__dirname, "..", "fixtures", "garrafa-teste.jpg");
 const QUESTION = "您好！我们是上海的进口商。请问你们能供应500瓶吗？可以送到上海吗？";
@@ -29,16 +29,16 @@ test("vitrine → 询价 → tradução e copiloto → resposta revisada → lin
   try {
     // 1. Produtor publica um produto de 700 mL
     const page = await producer.newPage();
+    await setStoreOrigin(page, "Engenho E2E");
     await page.goto("/meu-espaco/produtos/novo");
     await page.getByLabel("Nome da cachaça").fill(name);
     await page.getByLabel("Descrição curta").fill("Cachaça de alambique, 12 meses em amburana.");
     await page.getByLabel(/^Volume/).fill("700");
-    await page.getByLabel(/Nome do produtor ou engenho/).fill("Engenho E2E");
     await page.getByLabel(/Preço de referência/).fill("79,00");
     await page.locator('input[type="file"]').setInputFiles(PHOTO);
     await expect(page.getByText("1 de 3 fotos")).toBeVisible();
     await expect(page.getByRole("status").first()).toContainText("Rascunho salvo");
-    await page.getByRole("button", { name: "Gerar apresentação chinesa" }).click();
+    await page.getByRole("button", { name: "Gerar versão em chinês" }).click();
     await expect(page).toHaveURL(/\/apresentacao$/);
     await page.getByRole("button", { name: "Publicar vitrine" }).click();
     await page.getByRole("dialog", { name: "Confirmar publicação" }).getByRole("button", { name: "Confirmar publicação" }).click();
@@ -51,7 +51,7 @@ test("vitrine → 询价 → tradução e copiloto → resposta revisada → lin
     const buyer = await phone.newPage();
     await buyer.goto(new URL(link).pathname);
     // A cotação fica ao alcance já na primeira tela: atalho fixo no rodapé leva ao formulário aberto.
-    const shortcut = buyer.getByRole("button", { name: /询价.*Solicitar cotação/ }).last();
+    const shortcut = buyer.getByRole("button", { name: "询价", exact: true }).last();
     await expect(shortcut).toBeInViewport();
     await shortcut.click();
     await expect(buyer.getByLabel(/^留言/)).toBeFocused();

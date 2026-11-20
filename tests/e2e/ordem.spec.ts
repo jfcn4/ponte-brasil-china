@@ -1,6 +1,6 @@
 import path from "node:path";
 import { devices, expect, test, type Page } from "@playwright/test";
-import { cleanupStoreOf } from "./helpers";
+import { cleanupStoreOf, setStoreOrigin } from "./helpers";
 
 const PHOTO = path.join(__dirname, "..", "fixtures", "garrafa-teste.jpg");
 
@@ -10,13 +10,13 @@ const PHOTO = path.join(__dirname, "..", "fixtures", "garrafa-teste.jpg");
  * publicado. Duas cachaças publicadas e um rascunho; AI_MODE=test.
  */
 async function draft(page: Page, name: string) {
+  await setStoreOrigin(page, "Engenho Ordem");
   await page.goto("/meu-espaco/produtos/novo");
   await page.getByLabel("Nome da cachaça").fill(name);
   await page
     .getByLabel("Descrição curta")
     .fill("Cachaça de alambique, 12 meses em amburana.");
   await page.getByLabel(/^Volume/).fill("700");
-  await page.getByLabel(/Nome do produtor ou engenho/).fill("Engenho Ordem");
   await page.getByLabel(/Preço de referência/).fill("79,00");
   await page.locator('input[type="file"]').setInputFiles(PHOTO);
   await expect(page.getByText("1 de 3 fotos")).toBeVisible();
@@ -28,7 +28,7 @@ async function draft(page: Page, name: string) {
 async function publish(page: Page, name: string) {
   await draft(page, name);
   await page
-    .getByRole("button", { name: "Gerar apresentação chinesa" })
+    .getByRole("button", { name: "Gerar versão em chinês" })
     .click();
   await expect(
     page.getByRole("group", { name: "Escolha o nome" }).getByRole("radio"),

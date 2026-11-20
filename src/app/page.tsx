@@ -4,20 +4,20 @@ import { Logo } from "@/components/brand/Logo";
 
 const STEPS = [
   {
-    title: "Conte sobre seu produto",
-    text: "Uma página em português, com fotos reais e dados comerciais.",
+    title: "Cadastre seu produto",
+    text: "Adicione fotos e informações do produto em português.",
   },
   {
-    title: "Escolha seu nome em chinês",
-    text: "Compare três propostas, com pinyin e significado.",
+    title: "Escolha o nome chinês",
+    text: "Compare três opções para sua marca, com pronúncia e significado.",
   },
   {
-    title: "Publique e compartilhe",
-    text: "Revise a vitrine em chinês e compartilhe o QR.",
+    title: "Publique sua vitrine",
+    text: "Revise a versão em chinês e compartilhe o link ou QR Code.",
   },
   {
-    title: "Responda no seu idioma",
-    text: "Leia as consultas traduzidas e responda em português.",
+    title: "Converse em português",
+    text: "Receba mensagens traduzidas e responda no seu idioma.",
   },
 ];
 

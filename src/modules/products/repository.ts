@@ -127,6 +127,24 @@ export async function getStoreOrigin(storeId: string | null): Promise<StoreOrigi
   return data ? StoreOrigin.parse({ ...data, state: data.state?.trim() ?? null }) : null;
 }
 
+/** Atualiza a origem da loja (Minha loja). Vale para todos os produtos da loja. */
+export async function updateStoreOrigin(storeId: string, origin: StoreOrigin): Promise<StoreOrigin> {
+  const { data: current, error: readError } = await supabaseAdmin()
+    .from("stores")
+    .select("revision")
+    .eq("id", storeId)
+    .maybeSingle();
+  if (readError) throw new Error(`store_read_failed: ${readError.code}`);
+  if (!current) throw new Error("store_not_found");
+  const { error } = await supabaseAdmin()
+    .from("stores")
+    .update({ ...origin, revision: current.revision + 1, updated_at: new Date().toISOString() })
+    .eq("id", storeId);
+  if (error) throw new Error(`store_update_failed: ${error.code}`);
+  logEvent("store.origin_saved", { storeId });
+  return origin;
+}
+
 // ---------------------------------------------------------------------------
 // Rascunho
 // ---------------------------------------------------------------------------

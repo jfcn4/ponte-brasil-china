@@ -87,10 +87,11 @@ export function ProductShowcase({
         </dl>
       )}
 
+      {/* Só o nome do produtor não é origem nem história: o título muda e, sem nada, a seção some. */}
       {(view.origin || view.producer || view.story) && (
         <section className="mt-6" aria-labelledby="showcase-story">
           <h3 id="showcase-story" className="text-sm font-semibold text-ink">
-            产地与故事
+            {view.origin || view.story ? "产地与故事" : "生产者"}
           </h3>
           {(view.producer || view.origin) && (
             <p lang="pt-BR" className="mt-1 text-sm text-ink-soft">
@@ -139,15 +140,11 @@ export function ProductShowcase({
   );
 }
 
-/** Rótulo do botão de consulta: ação em chinês com o equivalente em português. */
+/** Rótulo do botão de consulta, só em chinês: a vitrine é lida pelo comprador. */
 export function InquiryLabel() {
   return (
     <>
       <span>询价</span>
-      <span aria-hidden="true">·</span>
-      <span lang="pt-BR" className="text-base font-medium">
-        Solicitar cotação
-      </span>
     </>
   );
 }

@@ -577,7 +577,7 @@ function Copilot({
           <p className="mt-1 text-snow/90">{analysis.summary}</p>
           {analysis.pending.length > 0 && (
             <div className="mt-2">
-              <p className="text-xs text-warn">{answered ? "Pontos da última consulta (já respondida):" : "Confirme antes de responder:"}</p>
+              <p className="text-xs text-warn">{answered ? "Pendências (já respondida):" : "Confirme antes de responder:"}</p>
               <ul className="mt-1 flex flex-wrap gap-1" aria-label="Pendências">
                 {analysis.pending.map((p) => (
                   <li key={p.topic} title={p.note} className="text-xs text-warn">
@@ -588,7 +588,7 @@ function Copilot({
             </div>
           )}
           <details className="mt-2 text-xs">
-            <summary className="cursor-pointer text-mist">Ver análise</summary>
+            <summary className="cursor-pointer text-mist">Ver detalhes</summary>
             <dl className="mt-2 space-y-2 text-snow/90">
               <div>
                 <dt className="text-mist">O que foi pedido</dt>
@@ -598,25 +598,11 @@ function Copilot({
                     ` · ${analysis.quantities.map((q) => `${q.value.toLocaleString("pt-BR")} ${q.unit}`).join(", ")}`}
                 </dd>
               </div>
-              {analysis.pending.length > 0 && (
-                <div>
-                  <dt className="text-mist">O que falta</dt>
-                  <dd>
-                    <ul className="space-y-0.5">
-                      {analysis.pending.map((p) => (
-                        <li key={p.topic}>
-                          {p.label}: {p.note}
-                        </li>
-                      ))}
-                    </ul>
-                  </dd>
-                </div>
-              )}
               <div>
                 <dt className="text-mist">Dados da ficha (versão {version})</dt>
                 <dd>
                   {analysis.facts.length === 0 ? (
-                    "A ficha não responde diretamente a esta pergunta."
+                    "A ficha não cobre este pedido."
                   ) : (
                     <ul className="space-y-0.5">
                       {analysis.facts.map((f) => (

@@ -1,6 +1,6 @@
 import path from "node:path";
 import { devices, expect, test } from "@playwright/test";
-import { cleanupStoreOf } from "./helpers";
+import { cleanupStoreOf, setStoreOrigin } from "./helpers";
 
 const PHOTO = path.join(__dirname, "..", "fixtures", "garrafa-teste.jpg");
 
@@ -19,11 +19,11 @@ test("rascunho → nome chinês → publicação → link público estável", as
   try {
     // 1. Rascunho com foto real, preço e produtor
     const page = await producer.newPage();
+    await setStoreOrigin(page, "Engenho E2E");
     await page.goto("/meu-espaco/produtos/novo");
     await page.getByLabel("Nome da cachaça").fill(name);
     await page.getByLabel("Descrição curta").fill("Cachaça de alambique, 12 meses em amburana.");
     await page.getByLabel(/^Volume/).fill("700");
-    await page.getByLabel(/Nome do produtor ou engenho/).fill("Engenho E2E");
     await page.getByLabel(/Preço de referência/).fill("79,00");
     await page.locator('input[type="file"]').setInputFiles(PHOTO);
     await expect(page.getByText("1 de 3 fotos")).toBeVisible();
@@ -37,7 +37,7 @@ test("rascunho → nome chinês → publicação → link público estável", as
     await expect(page.getByLabel("Nome da cachaça")).toHaveValue(name);
 
     // 3. Gera a apresentação chinesa
-    await page.getByRole("button", { name: "Gerar apresentação chinesa" }).click();
+    await page.getByRole("button", { name: "Gerar versão em chinês" }).click();
     await expect(page).toHaveURL(/\/apresentacao$/);
     await expect(page.getByRole("heading", { name: "Apresentação em chinês" })).toBeVisible();
     await expect(page.getByText("Resposta de teste")).toBeVisible();

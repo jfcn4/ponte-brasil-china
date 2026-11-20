@@ -170,7 +170,7 @@ export function InquiryPanel({ slug, version }: { slug: string; version: number 
       <form id={formId} onSubmit={submit} noValidate className="space-y-4" aria-labelledby={`${formId}-title`}>
         <div>
           <h3 id={`${formId}-title`} className="text-lg font-semibold text-ink">
-            询价 <span lang="pt-BR" className="text-sm font-medium text-ink-soft">· Solicitar cotação</span>
+            询价
           </h3>
           <p className="mt-1 text-sm leading-relaxed text-ink-soft">
             无需注册。发送后将获得私密链接，可随时返回本对话。

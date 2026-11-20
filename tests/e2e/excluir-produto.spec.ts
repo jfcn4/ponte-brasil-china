@@ -1,6 +1,6 @@
 import path from "node:path";
 import { devices, expect, test, type BrowserContext, type Page } from "@playwright/test";
-import { cleanupStoreOf } from "./helpers";
+import { cleanupStoreOf, setStoreOrigin } from "./helpers";
 
 const PHOTO = path.join(__dirname, "..", "fixtures", "garrafa-teste.jpg");
 
@@ -12,16 +12,16 @@ const PHOTO = path.join(__dirname, "..", "fixtures", "garrafa-teste.jpg");
  * abrem as telas de indisponibilidade. AI_MODE=test no servidor.
  */
 async function publish(page: Page, name: string): Promise<string> {
+  await setStoreOrigin(page, "Engenho Exclusão");
   await page.goto("/meu-espaco/produtos/novo");
   await page.getByLabel("Nome da cachaça").fill(name);
   await page.getByLabel("Descrição curta").fill("Cachaça de alambique, 12 meses em amburana.");
   await page.getByLabel(/^Volume/).fill("700");
-  await page.getByLabel(/Nome do produtor ou engenho/).fill("Engenho Exclusão");
   await page.getByLabel(/Preço de referência/).fill("79,00");
   await page.locator('input[type="file"]').setInputFiles(PHOTO);
   await expect(page.getByText("1 de 3 fotos")).toBeVisible();
   await expect(page.getByRole("status").first()).toContainText("Rascunho salvo");
-  await page.getByRole("button", { name: "Gerar apresentação chinesa" }).click();
+  await page.getByRole("button", { name: "Gerar versão em chinês" }).click();
   await expect(page).toHaveURL(/\/apresentacao$/);
   await page.getByRole("button", { name: "Publicar vitrine" }).click();
   await page.getByRole("dialog", { name: "Confirmar publicação" }).getByRole("button", { name: "Confirmar publicação" }).click();
@@ -32,7 +32,7 @@ async function publish(page: Page, name: string): Promise<string> {
 async function inquire(context: BrowserContext, publicPath: string, text: string): Promise<string> {
   const buyer = await context.newPage();
   await buyer.goto(publicPath);
-  await buyer.getByRole("button", { name: /询价.*Solicitar cotação/ }).last().click();
+  await buyer.getByRole("button", { name: "询价", exact: true }).last().click();
   await buyer.getByLabel(/^留言/).fill(text);
   await buyer.getByRole("button", { name: "发送询价" }).click();
   await expect(buyer).toHaveURL(/\/conversa#t=[A-Za-z0-9_-]{43}$/);

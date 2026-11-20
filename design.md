@@ -36,12 +36,13 @@ As cores e famílias acima são escolhas para implementação. O contraste entre
 
 O exemplo pré-cadastrado para a banca também recebe identificação de demonstração: as lojas listadas em `DEMO_STORE_SLUGS` mostram o selo “演示店铺 · Loja de demonstração” no catálogo, na vitrine e na prévia de Minha loja. Quando o link público usa `localhost`, Link e QR e o cartão avisam que o QR só abre naquele computador. As vitrines criadas pelo produtor usam os dados e as fotos que ele fornecer.
 
-## Cadastro em quatro seções
+## Cadastro em três seções
 
 1. **Identidade.** Nome, marca, descrição curta, até três fotos reais e até duas características de personalidade. Tornar clara a foto principal. A categoria cachaça está definida no MVP.
 2. **Características.** Tipo, volume (mL), teor alcoólico (%), madeira, envelhecimento (meses), aroma e sabor. Colocar a unidade junto ao campo editável.
-3. **Origem e história.** Nome do produtor ou engenho, cidade, estado, região e história. “O que torna sua cachaça especial?” é opcional. Sinalizar a finalidade de qualquer contato privado.
-4. **Informações comerciais.** Preço de referência em reais, pedido mínimo, disponibilidade e observações opcionais. Ao preencher o preço, mostrar o equivalente demonstrativo em CNY na prévia.
+3. **Informações comerciais.** Preço de referência em reais, pedido mínimo, disponibilidade e observações opcionais. Ao preencher o preço, mostrar o equivalente demonstrativo em CNY na prévia.
+
+Produtor ou engenho, cidade, estado e região ficam em Minha loja (“Origem do produtor”) e valem para todos os produtos. O nome do produtor é necessário para publicar; a história do engenho fica na apresentação da loja.
 
 Oferecer geração quando houver nome, descrição e pelo menos uma foto. Ao concluir, a ficha é gerada automaticamente para revisão. Mostrar “Salvando”, “Rascunho salvo” ou erro com ação de recuperação conforme a persistência real.
 

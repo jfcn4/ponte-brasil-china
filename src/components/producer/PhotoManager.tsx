@@ -207,7 +207,7 @@ export function PhotoManager({
               >
                 {images.length === 0 ? "Adicionar foto" : "Adicionar outra"}
               </label>
-              <span className="text-xs text-mist">ou arraste aqui · resta(m) {remaining}</span>
+              <span className="text-xs text-mist">Arraste fotos para cá ou clique para adicionar</span>
             </div>
           </li>
         )}

@@ -2,23 +2,22 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { devices, expect, test, type Page } from "@playwright/test";
 import QRCode from "qrcode";
-import { cleanupStoreOf } from "./helpers";
+import { cleanupStoreOf, setStoreOrigin } from "./helpers";
 
 const PHOTO = path.join(__dirname, "..", "fixtures", "garrafa-teste.jpg");
 const PDF_DIR = path.join(__dirname, "..", "..", "test-results", "cartao-feira");
 
 async function publishCachaca(page: Page, name: string, price: string) {
+  await setStoreOrigin(page, "Engenho Feira E2E", "Salinas");
   await page.goto("/meu-espaco/produtos/novo");
   await page.getByLabel("Nome da cachaça").fill(name);
   await page.getByLabel("Descrição curta").fill("Cachaça de alambique, 12 meses em amburana.");
   await page.getByLabel(/^Volume/).fill("700");
-  await page.getByLabel(/Nome do produtor ou engenho/).fill("Engenho Feira E2E");
-  await page.getByLabel(/^Cidade/).fill("Salinas");
   await page.getByLabel(/Preço de referência/).fill(price);
   await page.locator('input[type="file"]').setInputFiles(PHOTO);
   await expect(page.getByText("1 de 3 fotos")).toBeVisible();
   await expect(page.getByRole("status").first()).toContainText("Rascunho salvo");
-  await page.getByRole("button", { name: "Gerar apresentação chinesa" }).click();
+  await page.getByRole("button", { name: "Gerar versão em chinês" }).click();
   await expect(page).toHaveURL(/\/apresentacao$/);
   await page.getByRole("button", { name: "Publicar vitrine" }).click();
   await page.getByRole("dialog", { name: "Confirmar publicação" }).getByRole("button", { name: "Confirmar publicação" }).click();
@@ -114,7 +113,7 @@ test("Minha loja → cartão para feira → PDF de uma página → QR → vitrin
     await buyer.getByRole("link").filter({ hasText: second }).click();
     await expect(buyer).toHaveURL(/\/p\/[a-z0-9]{10}$/);
     await expect(buyer.getByText(second).first()).toBeVisible();
-    await buyer.getByRole("button", { name: /询价.*Solicitar cotação/ }).first().click();
+    await buyer.getByRole("button", { name: "询价", exact: true }).first().click();
     await buyer.getByLabel(/^留言/).fill("你好，我们在展会上看到你们的名片。请问300瓶的价格是多少？");
     await buyer.getByRole("button", { name: "发送询价" }).click();
     await expect(buyer).toHaveURL(/\/conversa#t=[A-Za-z0-9_-]{43}$/);

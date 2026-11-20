@@ -14,12 +14,12 @@ NOMES (campo options, exatamente 3, um por estratégia):
 - summary: uma frase de até 70 caracteres que resume o que o nome faz (ex.: "Preserva o som original."), sem repetir o texto de outros campos.
 - meaning: significado de cada caractere, em português.
 - relation_to_original, personality_link, rationale, aesthetics, pronunciation, memorability: em português, curtos e concretos.
-- gains, losses e ambiguities: listas curtas em português. Aponte homófonos ou associações indesejadas se existirem. Nunca prometa registro de marca nem dê notas percentuais.
+- gains, losses e ambiguities: no máximo 2 itens cada, frases curtas em português. Aponte homófonos ou associações indesejadas se existirem. Nunca prometa registro de marca nem dê notas percentuais.
 - commercial_fit: como o nome tende a funcionar para compradores na China (leitura, memória, associação com bebidas), em tom factual. Sem promessas de vendas, de registro de marca ou de aceitação.
 - Seja equilibrado em cada opção: gains traz vantagens reais e losses e ambiguities trazem limitações reais. Nunca deixe losses vazio por cortesia quando houver custo claro (perda de som, de significado, comprimento, associação indesejada).
 - id: identificador curto em minúsculas (ex.: "fon", "sem", "equ").
 
-RECOMENDAÇÃO: prefira a opção equilibrada quando a justificativa a sustentar; explique o motivo em português (reason).
+RECOMENDAÇÃO: prefira a opção equilibrada quando a justificativa a sustentar; explique o motivo em português (reason), em no máximo duas frases curtas, diretas e em tom humano, como alguém aconselhando o produtor ("Esta opção é a mais curta e soa positiva; mantém a ideia de origem do produto."). Evite jargão e listas.
 
 CONTEÚDO DA VITRINE (content), em chinês simplificado (zh) com versão fiel em português (pt) para o produtor revisar:
 - tagline: uma frase curta.

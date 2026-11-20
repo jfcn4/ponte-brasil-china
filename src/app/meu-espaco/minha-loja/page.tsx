@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { StoreOriginEditor } from "@/components/producer/StoreOriginEditor";
 import { StoreIntroEditor } from "@/components/producer/StoreIntroEditor";
 import { ShareCard } from "@/components/producer/ShareCard";
 import { StoreCatalog } from "@/components/public/StoreCatalog";
@@ -31,16 +32,18 @@ export default async function MyStorePage() {
   const live = overview?.public ?? null;
 
   if (!live) {
-    const place = origin ? formatOrigin(origin) : null;
     return (
       <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6">
         <h1 className="text-2xl font-semibold tracking-tight text-snow">Minha loja</h1>
+        <section aria-labelledby="origem-titulo" className="mt-6 rounded-2xl border border-line bg-panel p-5 sm:p-6">
+          <h2 id="origem-titulo" className="text-lg font-semibold text-snow">
+            Origem do produtor
+          </h2>
+          <p className="mt-1 text-sm text-mist">Vale para todos os produtos. Aparece na vitrine e na loja quando você publicar ou republicar.</p>
+          <StoreOriginEditor initial={origin} />
+        </section>
         <div className="mt-6 rounded-xl border border-line bg-panel p-6">
-          <dl className="grid gap-4 sm:grid-cols-2">
-            <Field term="Produtor ou engenho">{origin?.producer_name ?? "Não informado"}</Field>
-            <Field term="Origem">{place ?? "Não informada"}</Field>
-          </dl>
-          <p className="mt-6 border-t border-line pt-4 text-sm text-mist">
+          <p className="text-sm text-mist">
             A loja em chinês, com link e QR, nasce ao publicar o primeiro produto.
           </p>
           <Link
@@ -73,6 +76,14 @@ export default async function MyStorePage() {
             para o comprador.
           </p>
         )}
+
+        <section aria-labelledby="origem-titulo" className="mt-6 rounded-2xl border border-line bg-panel p-5 sm:p-6">
+          <h2 id="origem-titulo" className="text-lg font-semibold text-snow">
+            Origem do produtor
+          </h2>
+          <p className="mt-1 text-sm text-mist">Vale para todos os produtos. Aparece na vitrine e na loja quando você publicar ou republicar.</p>
+          <StoreOriginEditor initial={origin} />
+        </section>
 
         <section aria-labelledby="perfil-titulo" className="mt-6 rounded-2xl border border-line bg-panel p-5 sm:p-6">
           <h2 id="perfil-titulo" className="text-lg font-semibold text-snow">

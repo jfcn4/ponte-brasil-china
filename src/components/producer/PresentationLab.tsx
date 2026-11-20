@@ -22,7 +22,7 @@ import {
   snapshotToView,
 } from "@/modules/products/presentation";
 import { formatBrl, formatCny } from "@/modules/products/pricing";
-import { PRODUCT_STATUS_LABELS } from "@/modules/products/schema";
+import { PERSONALITY_LABELS, PRODUCT_STATUS_LABELS } from "@/modules/products/schema";
 import { buildDraftPreview } from "@/modules/products/showcase";
 import { ShareCard } from "./ShareCard";
 
@@ -320,8 +320,8 @@ export function PresentationLab({ initial, autoGenerate }: { initial: LabState; 
                   {lab.publicationMissing.includes("producer_name") && (
                     <>
                       {" — "}
-                      <Link href={`/meu-espaco/produtos/${lab.product.id}#origem`} className="text-coral underline">
-                        informar no cadastro
+                      <Link href="/meu-espaco/minha-loja" className="text-coral underline">
+                        informar em Minha loja
                       </Link>
                     </>
                   )}
@@ -447,40 +447,100 @@ export function PresentationLab({ initial, autoGenerate }: { initial: LabState; 
 
 // ---------------------------------------------------------------------------
 
-// Marcos [ms desde o início, % exibido]: arranca rápido, desacelera e avança em saltos.
-const PROGRESS_STEPS: ReadonlyArray<readonly [number, number]> = [
-  [100, 12],
-  [600, 28],
-  [1200, 41],
-  [2500, 49],
-  [4000, 62],
-  [6500, 68],
-  [9000, 77],
-  [12500, 83],
-  [16000, 88],
-  [21000, 91],
-  [27000, 94],
-];
-
-function SimulatedProgress() {
-  const [pct, setPct] = useState(0);
+/**
+ * Área de processamento: mostra só o que é verdadeiro. Os dados vêm do
+ * cadastro salvo, o resultado esperado é o contrato da geração e o tempo é o
+ * relógio real. Não há etapas nem porcentagem inventadas.
+ */
+function ProcessingPanel({ lab }: { lab: LabState }) {
+  const [seconds, setSeconds] = useState(0);
 
   useEffect(() => {
-    const timers = PROGRESS_STEPS.map(([at, value]) => setTimeout(() => setPct(value), at));
-    // Depois do último marco, avança em fração mínima sem nunca chegar a 100%.
-    const creep = setInterval(() => setPct((p) => (p >= 94 ? Math.min(p + 0.4, 98) : p)), 3000);
-    return () => {
-      timers.forEach(clearTimeout);
-      clearInterval(creep);
-    };
+    const started = Date.now();
+    const timer = setInterval(() => setSeconds(Math.floor((Date.now() - started) / 1000)), 1000);
+    return () => clearInterval(timer);
   }, []);
 
+  const { draft, images, store } = lab;
+  const attributeCount = Object.values(draft.attributes).filter((v) => v !== null && v !== "").length;
+  const inputs: string[] = [
+    draft.name ? `Nome: ${draft.name}` : null,
+    draft.short_description ? "Descrição curta" : null,
+    images.length > 0 ? `${images.length} ${images.length === 1 ? "foto" : "fotos"}` : null,
+    attributeCount > 0 ? `${attributeCount} ${attributeCount === 1 ? "característica" : "características"} técnicas` : null,
+    draft.personality.length > 0 ? `Estilo: ${draft.personality.map((t) => PERSONALITY_LABELS[t]).join(", ")}` : null,
+    store.producer_name ? `Produtor: ${store.producer_name}` : null,
+    draft.price_brl_cents !== null ? "Preço de referência" : null,
+    draft.min_order_units !== null ? "Pedido mínimo" : null,
+  ].filter((v): v is string => v !== null);
+
+  const outputs = [
+    "Três propostas de nome em chinês, com pronúncia (pinyin) e significado",
+    "Vitrine em chinês com a descrição e as características do produto",
+    "Verificação de que cada informação vem do seu cadastro",
+  ];
+
   return (
-    <div aria-hidden="true" className="mt-3 h-1 overflow-hidden rounded-full bg-line">
-      <div
-        className="h-full rounded-full bg-coral transition-[width] duration-700 ease-out motion-reduce:transition-none"
-        style={{ width: `${pct}%` }}
-      />
+    <div className="rounded-2xl border border-line bg-panel p-5 sm:p-6">
+      <div className="flex items-start gap-4">
+        <span
+          aria-hidden="true"
+          className="mt-0.5 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-coral/10 text-lg text-coral"
+          lang="zh-Hans"
+        >
+          译
+        </span>
+        <div>
+          <p className="font-semibold text-snow">Preparando sua apresentação em chinês</p>
+          <p className="mt-1 text-sm leading-relaxed text-mist">
+            Estamos criando propostas de nome e adaptando as informações do seu produto.
+          </p>
+        </div>
+      </div>
+
+      <div aria-hidden="true" className="mt-5 h-1 overflow-hidden rounded-full bg-line">
+        <div className="h-full w-1/3 animate-[processing-slide_1.6s_ease-in-out_infinite] rounded-full bg-coral motion-reduce:w-full motion-reduce:animate-none motion-reduce:opacity-60" />
+      </div>
+      <p className="mt-3 flex items-center gap-2 text-sm text-snow">
+        <span aria-hidden="true" className="h-3 w-3 animate-pulse rounded-full bg-coral motion-reduce:animate-none" />
+        Gerando conteúdo…
+        <span className="tabular-nums text-mist" aria-hidden="true">
+          {seconds}s
+        </span>
+      </p>
+
+      <div className="mt-5 grid gap-5 border-t border-line pt-5 text-sm sm:grid-cols-2">
+        <div>
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-mist">Dados do seu cadastro</h3>
+          <ul className="mt-2 space-y-1.5 text-snow">
+            {inputs.map((item) => (
+              <li key={item} className="flex gap-2">
+                <span aria-hidden="true" className="text-ok">
+                  ✓
+                </span>
+                {item}
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div>
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-mist">O que será gerado</h3>
+          <ul className="mt-2 space-y-1.5 text-snow">
+            {outputs.map((item) => (
+              <li key={item} className="flex gap-2">
+                <span aria-hidden="true" className="text-mist">
+                  •
+                </span>
+                {item}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+
+      <p className="mt-5 text-sm text-mist">
+        Nada é publicado agora. Você revisa e escolhe antes. A prévia será atualizada quando a geração terminar.
+      </p>
     </div>
   );
 }
@@ -505,15 +565,7 @@ function GenerationPanel({
         Geração
       </h2>
       <div role="status" aria-live="polite">
-        {busy && (
-          <div className="rounded-xl border border-line bg-panel p-4">
-            <p className="flex items-center gap-3 font-medium text-snow">
-              <span aria-hidden="true" className="h-3 w-3 animate-pulse rounded-full bg-coral" />
-              Gerando três nomes e a vitrine em chinês…
-            </p>
-            <SimulatedProgress />
-          </div>
-        )}
+        {busy && <ProcessingPanel lab={lab} />}
       </div>
 
       {!busy && blocked && (
@@ -561,7 +613,7 @@ function GenerationPanel({
             onClick={onGenerate}
             className="mt-3 min-h-11 rounded-lg bg-brand px-5 font-semibold text-white hover:bg-brand-strong"
           >
-            Gerar apresentação chinesa
+            Gerar versão em chinês
           </button>
         </div>
       )}
@@ -591,9 +643,14 @@ function NameOptions({
   onGenerate: () => void;
 }) {
   const recommended = recommendedChoice(output);
-  // Qual análise está aberta é independente de qual nome está escolhido.
-  const [viewing, setViewing] = useState<Strategy>(() => (choice !== "original" ? choice : recommended));
-  const viewed = optionFor(output, viewing);
+  // A análise acompanha a opção escolhida; "Manter o nome original" a esconde.
+  // "Ver análise" abre uma opção sem escolhê-la.
+  const [viewing, setViewing] = useState<Strategy | null>(() => (choice !== "original" ? choice : null));
+  const viewed = viewing ? optionFor(output, viewing) : null;
+  const choose = (next: Choice) => {
+    onChoose(next);
+    setViewing(next === "original" ? null : next);
+  };
   const panelId = useId();
 
   return (
@@ -634,7 +691,7 @@ function NameOptions({
                       name="nome-chines"
                       value={strategy}
                       checked={selected}
-                      onChange={() => onChoose(strategy)}
+                      onChange={() => choose(strategy)}
                       className="h-4 w-4 accent-[#ff8587]"
                     />
                     {CHOICE_LABELS[strategy]}
@@ -683,7 +740,7 @@ function NameOptions({
           name="nome-chines"
           value="original"
           checked={choice === "original"}
-          onChange={() => onChoose("original")}
+          onChange={() => choose("original")}
           className="h-4 w-4 shrink-0 accent-[#ff8587]"
         />
         <span>
@@ -702,7 +759,7 @@ function NameOptions({
           recommended={viewing === recommended}
           recommendationReason={output.recommendation.reason}
           selected={choice === viewing}
-          onSelect={() => onChoose(viewing)}
+          onSelect={() => choose(viewing!)}
         />
       )}
     </fieldset>
@@ -724,7 +781,7 @@ function AnalysisPanel({
   selected: boolean;
   onSelect: () => void;
 }) {
-  const tradeoffs = [...option.losses, ...option.ambiguities];
+  const tradeoffs = [...option.losses, ...option.ambiguities].slice(0, 2);
   return (
     <div
       id={id}
@@ -758,10 +815,9 @@ function AnalysisPanel({
       )}
 
       <dl className="mt-4 grid gap-4 sm:grid-cols-2">
-        <Section term="Significado" value={option.meaning} />
-        <Section term="Relação com o original" value={option.relation_to_original} />
-        <Section term="Pontos positivos" value={option.gains} />
-        <Section term="Trade-offs" value={tradeoffs} empty="Nenhum trade-off relevante identificado." />
+        <Section term="Significado" value={option.meaning} wide />
+        <Section term="Pontos positivos" value={option.gains.slice(0, 2)} />
+        <Section term="O que considerar" value={tradeoffs} empty="Nada relevante a considerar." />
         <Section term="Adequação comercial" value={option.commercial_fit ?? option.rationale} wide />
       </dl>
 
@@ -773,7 +829,7 @@ function AnalysisPanel({
           </span>
         </summary>
         <dl className="mt-2 grid gap-3 text-mist sm:grid-cols-2">
-          <Section term="Significado dos caracteres" value={option.meaning} />
+          <Section term="Relação com o original" value={option.relation_to_original} />
           <Section term="Pinyin e pronúncia" value={`${option.pinyin}. ${option.pronunciation}`} />
           <Section term="Naturalidade e estética" value={option.aesthetics} />
           <Section term="Memorização" value={option.memorability} />

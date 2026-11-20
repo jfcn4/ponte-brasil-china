@@ -7,7 +7,7 @@ const KINDS = {
   product: {
     id: "compartilhar",
     title: "Link e QR do produto",
-    description: "Abre direto a vitrine deste produto. O endereço não muda.",
+    description: "Compartilhe este link ou QR Code para acessar a vitrine do produto.",
     qrLabel: "QR code da vitrine",
     open: "Abrir vitrine",
   },
